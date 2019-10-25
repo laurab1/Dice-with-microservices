@@ -1,13 +1,14 @@
-from classes import DiceSet
+from monolith.classes.DiceSet import DiceSet, Die
+import random as rnd
 import unittest
  
 class TestDie(unittest.TestCase):
  
-    def test_add_integers_positive(self):
-        die = Die("die0.txt")
-        rnd.seed(574891)
-        print(die.faces)
-        self.assertEqual(result, 3)
+    def test_create_dice_set_with_size(self):
+        diceset = DiceSet("standard", 6);
+        thrown = diceset.throw_dice();
+        self.assertEqual(len(thrown), 6);
+
 
     
  
