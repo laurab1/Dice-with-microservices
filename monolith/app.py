@@ -1,5 +1,6 @@
 import os
 from flask import Flask
+from flask_bootstrap import Bootstrap
 from monolith.database import db, User, Story
 from monolith.views import blueprints
 from monolith.auth import login_manager
@@ -7,6 +8,7 @@ import datetime
 
 def create_app():
     app = Flask(__name__)
+    Bootstrap(app)
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
     app.config['SECRET_KEY'] = 'ANOTHER ONE'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storytellers.db'
@@ -25,6 +27,7 @@ def create_app():
         user = q.first()
         if user is None:
             example = User()
+            example.username = 'Admin'
             example.firstname = 'Admin'
             example.lastname = 'Admin'
             example.email = 'example@example.com'

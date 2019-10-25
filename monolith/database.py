@@ -4,14 +4,15 @@ import enum
 from sqlalchemy.orm import relationship
 import datetime as dt
 from flask_sqlalchemy import SQLAlchemy
-
+from random import randint
 
 db = SQLAlchemy()
 
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    email = db.Column(db.Unicode(128), nullable=False)
+    username = db.Column(db.Unicode(128), unique=True, nullable=False)
+    email = db.Column(db.Unicode(128), unique=True, nullable=False)
     firstname = db.Column(db.Unicode(128))
     lastname = db.Column(db.Unicode(128))
     password = db.Column(db.Unicode(128))
@@ -25,7 +26,8 @@ class User(db.Model):
         self._authenticated = False
 
     def set_password(self, password):
-        self.password = generate_password_hash(password)
+        salt = randint(16, 32)
+        self.password = generate_password_hash(password, salt_length=salt)
 
     @property
     def is_authenticated(self):
@@ -38,14 +40,14 @@ class User(db.Model):
 
     def get_id(self):
         return self.id
-
+        
 
 class Story(db.Model):
     __tablename__ = 'story'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     text = db.Column(db.Text(1000)) # around 200 (English) words 
     date = db.Column(db.DateTime)
-    likes = db.Column(db.Integer) # will store the number of likes, periodically updated in background
+    likes = db.Column(db.Integer)  # will store the number of likes, periodically updated in background
     # define foreign key 
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = relationship('User', foreign_keys='Story.author_id')
@@ -53,6 +55,7 @@ class Story(db.Model):
     def __init__(self, *args, **kw):
         super(Story, self).__init__(*args, **kw)
         self.date = dt.datetime.now()
+
 
 class Like(db.Model):
     __tablename__ = 'like'
