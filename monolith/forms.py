@@ -19,6 +19,8 @@ class UserForm(FlaskForm):
     dateofbirth = DateField('Date of Birth', id='dateofbirth', format="%Y-%m-%d")
     display = ['email', 'username', 'password','firstname', 'lastname', 'dateofbirth']
 
+
 class StoryForm(FlaskForm):
-    text = f.TextField('text', validators=[DataRequired()]) #TODO: Add check on length (1000 chrs)
+    diceset = ""
+    text = f.TextField('text', validators=[DataRequired()])  # TODO: Add check on length (1000 chrs)
     display = ['text']

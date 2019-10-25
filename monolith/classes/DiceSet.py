@@ -1,4 +1,7 @@
 import random as rnd
+from monolith.definitions import RESOURCES_DIR
+from monolith.utility.diceutils import get_dice_sets_lsit
+
 
 class Die:
 
@@ -18,16 +21,27 @@ class Die:
             return self.pip
         else:
             raise IndexError("throw_die(): empty die error.")
-        
+
+
 class DiceSet:
 
-    def __init__(self, dice):
-        self.dice = []
-        self.pips = []
+    def __init__(self, setname, dicenumber):
+        self.dice = [Die]*dicenumber
+        self.pips = [Die]*dicenumber
+        self.dicenumber = dicenumber
+        self.setname = setname
+
+        # Check if given set exist #
+        if setname not in get_dice_sets_lsit():
+            raise InvalidDiceSet(setname)
+
+        # Create all the dice #
+        for i in range(0,dicenumber):
+            self.dice[i] = Die(RESOURCES_DIR+"/diceset/"+setname+"/die"+str(i)+".txt")
 
     def throw_dice(self):
-        for i in range(len(self.dice)):
-            self.pips[i] = dice[i].throw_die()
+        for i in range(0,self.dicenumber):
+            self.pips[i] = self.dice[i].throw_die()
         return self.pips
 
 import unittest
@@ -50,3 +64,11 @@ class TestDie(unittest.TestCase):
  
 if __name__ == '__main__':
     unittest.main()
+
+
+class InvalidDiceSet(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
