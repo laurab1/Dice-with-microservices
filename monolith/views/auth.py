@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, request, jsonify
+from flask import Blueprint, render_template, redirect, request, jsonify, Response
 from flask_login import (current_user, login_user, logout_user,
                          login_required)
 
@@ -10,6 +10,7 @@ auth = Blueprint('auth', __name__)
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+    form.password.errors = []
     if form.validate_on_submit():
         cred, password = form.data['usrn_eml'], form.data['password']
         if '@' in cred:
@@ -21,11 +22,14 @@ def login():
             login_user(user)
             return redirect('/')
         else:
-            return jsonify({'Error': 'the inserted credentials are wrong.'})
+            form.password.errors.append("Wrong username or password.")
     return render_template('login.html', form=form)
 
 
 @auth.route("/logout")
 def logout():
-    logout_user()
-    return redirect('/')
+    if current_user.is_authenticated:
+        logout_user()
+        return redirect('/')
+    else:
+        return Response(status=203)
