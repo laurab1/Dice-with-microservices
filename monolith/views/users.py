@@ -1,4 +1,5 @@
 from flask import Blueprint, redirect, render_template, request, jsonify
+from flask_login import login_user
 from monolith.database import db, User
 from monolith.auth import admin_required
 from monolith.forms import UserForm
@@ -9,9 +10,11 @@ from os import urandom
 users = Blueprint('users', __name__)
 
 @users.route('/users')
-def _users():
-    users = db.session.query(User)
-    return render_template("users.html", users=users)
+def users_():
+    def aux(*args, **kw):
+        users = db.session.query(User)
+        return render_template("users.html", users=users)
+    return admin_required(aux)()
 
 
 @users.route('/signup', methods=['GET', 'POST'])
@@ -24,7 +27,8 @@ def signup():
         db.session.add(new_user)
         try:
             db.session.commit()
-            return redirect('/users')
+            login_user(new_user)
+            return redirect('/')
         except IntegrityError as e:
             if 'user.username' in str(e):
                 return jsonify({'Error': 'This username already exists.'})

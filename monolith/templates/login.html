@@ -1,5 +1,12 @@
-<html>
- <body>
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block title %}
+Login
+{% endblock %}
+{% block content %}
+{{super()}}
+<div class="col-md-4 col-lg-offset-4">
+  <h1>Login</h1>
   <form action="" method="POST">
     {{ form.hidden_tag() }}
     <dl>
@@ -14,7 +21,7 @@
      {% endfor %}
     </dl>
     <p>
-    <input type=submit value="Publish">
+    <input class="btn btn-primary" type=submit value="Submit">
   </form>
- </body>
-</html>
+</div>
+{% endblock %}

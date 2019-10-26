@@ -11,6 +11,7 @@ def create_app():
     Bootstrap(app)
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
     app.config['SECRET_KEY'] = 'ANOTHER ONE'
+    app.config['PERMANENT_SESSION_LIFETIME'] =  datetime.timedelta(minutes=120)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storytellers.db'
 
     for bp in blueprints:

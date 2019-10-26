@@ -1,7 +1,14 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block title %}
+Home
+{% endblock %}
+{% block content %}
+{{super()}}
 <h1>Storytellers</h1>
 
 {% if current_user.is_authenticated %}
-  Hi {{ current_user.firstname }}! <a href="/logout">Logout</a>
+  Hi {{ current_user.username }}! <a href="/logout">Logout</a>
 
 
     <h2>Your Stories</h2>
@@ -15,5 +22,6 @@
 
 
 {% else %}
-  Hi Anonymous, <a href="/login">Log in</a>
+  Hi Anonymous, <a href="/login">Log in</a> or <a href="/signup">Sign Up</a>
 {% endif %}
+{% endblock %}
