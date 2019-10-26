@@ -3,7 +3,7 @@
 {% if current_user.is_authenticated %}
   Hi {{ current_user.firstname }}! <a href="/logout">Logout</a>
 
-  
+
     <h2>Your Stories</h2>
     {% for story in stories%}
       <div>

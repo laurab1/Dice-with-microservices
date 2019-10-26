@@ -54,16 +54,20 @@ class Story(db.Model):
         super(Story, self).__init__(*args, **kw)
         self.date = dt.datetime.now()
 
-class Like(db.Model):
-    __tablename__ = 'like'
+class Reaction(db.Model):
+    __tablename__ = 'reaction'
     
-    liker_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    liker = relationship('User', foreign_keys='Like.liker_id')
+    reactor_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    reactor = relationship('User', foreign_keys='Reaction.reactor_id')
 
     story_id = db.Column(db.Integer, db.ForeignKey('story.id'), primary_key=True)
-    author = relationship('Story', foreign_keys='Like.story_id')
+    author = relationship('Story', foreign_keys='Reaction.story_id')
 
-    liked_id = db.Column(db.Integer, db.ForeignKey('user.id')) # TODO: duplicated ?
-    liker = relationship('User', foreign_keys='Like.liker_id')
+    reaction_val = db.Column(db.Integer, default=0)	
+
+    #liked_id = db.Column(db.Integer, db.ForeignKey('user.id')) # TODO: duplicated ?
+    #liker = relationship('User', foreign_keys='Like.liker_id')
 
     marked = db.Column(db.Boolean, default = False) # True iff it has been counted in Story.likes 
+
+
