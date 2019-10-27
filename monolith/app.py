@@ -47,6 +47,14 @@ def create_app():
             print(example)
             db.session.add(example)
             db.session.commit()
+        else: #done to test if myWall works, adding an other story
+        	example = Story()
+        	example.text = 'New Trial story of example admin user :)' 
+        	example.likes = 30
+        	example.author_id = 1 #if it's different from 1 it's not in the wall of the admin user
+        	print(example)
+        	db.session.add(example)
+        	db.session.commit()
 
     return app
 
