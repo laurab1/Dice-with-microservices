@@ -3,7 +3,6 @@ import json
 from flask import request, jsonify
 
 from monolith.database import db, User, Story
-from monolith.tests.mock_app import MockApp
 from monolith.views.stories import _get_story
 from monolith.app import create_app
 
