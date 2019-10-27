@@ -16,6 +16,8 @@ def create_app(test=False):
     if not test:
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storytellers.db'
     else:
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
         shutil.rmtree('sqlite:///storytellers_tmp.db', ignore_errors=True)
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storytellers_tmp.db'
 

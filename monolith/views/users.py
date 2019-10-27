@@ -20,11 +20,13 @@ def users_():
 @users.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = UserForm()
+        
     if form.validate_on_submit():
         new_user = User()
         form.populate_obj(new_user)
         new_user.set_password(form.password.data)
         db.session.add(new_user)
+       
         try:
             db.session.commit()
             login_user(new_user)
