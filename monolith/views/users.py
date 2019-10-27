@@ -33,6 +33,6 @@ def signup():
             if 'user.username' in str(e):
                 form.username.errors.append('This username already exists.')
             elif 'user.email' in str(e):
-                form.email.errors.append('This email address is already used.')
+                form.email.errors.append('This email is already used.')
         
     return render_template('signup.html', form=form)
