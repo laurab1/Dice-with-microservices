@@ -13,6 +13,16 @@ def _stories(message=''):
     return render_template("stories.html", message=message, stories=allstories, like_it_url="http://127.0.0.1:5000/stories/like/")
 
 
+@stories.route('/stories/<storyid>', methods=['GET'])
+def _get_story(storyid, message=''):
+    story = db.session.query(Story).filter_by(id=storyid)
+
+    if story.first() is None:
+        message = 'story not found!'
+    
+    #TODO: change like_it_url
+    return render_template("stories.html", message=message, stories=story, like_it_url="http://127.0.0.1:5000/stories/like/")
+
 @stories.route('/stories/like/<authorid>/<storyid>')
 @login_required
 def _like(authorid, storyid):
