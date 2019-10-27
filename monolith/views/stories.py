@@ -41,7 +41,10 @@ def _stories(message=''):
 @login_required
 def _like(storyid, react):
     q = Reaction.query.filter_by(reactor_id=current_user.id, story_id=storyid)
-    if q.first() == None or q.first().reaction_val != react:
+    if q.first() is None or react != q.first().reaction_val:
+        if q.first != None and react != q.first().reaction_val:
+            db.session.delete(q.first())
+            db.session.commit()
         new_reaction = Reaction()
         new_reaction.reactor_id = current_user.id
         new_reaction.story_id = storyid
@@ -49,10 +52,8 @@ def _like(storyid, react):
         #new_like.liked_id = authorid
         db.session.add(new_reaction)
         db.session.commit()
-        message = ''
-    elif react == -1:
-        message = 'You\'ve already disliked this story!'
+        message = 'Got it!'
     else:
-        message = 'You\'ve already liked this story!'
+        message = 'You\'ve already voted this story!'
     return _stories(message)
 
