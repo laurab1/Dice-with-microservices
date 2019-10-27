@@ -20,13 +20,13 @@ class TestDie(unittest.TestCase):
             self.assertTrue(thrown[i] in face_list)
 
     def test_die_init(self):
-        die = Die("die0.txt")
+        die = Die(RESOURCES_DIR+"/diceset/standard/die0.txt")
         check = ['bike', 'moonandstars', 'bag', 'bird', 'crying', 'angry']
         self.assertEqual(die.faces, check)
 
     def test_die_pip(self):
         rnd.seed(574891)
-        die = Die("die0.txt")
+        die = Die(RESOURCES_DIR+"/diceset/standard/die0.txt")
         res = die.throw_die()
         self.assertEqual(res, 'bag')
 

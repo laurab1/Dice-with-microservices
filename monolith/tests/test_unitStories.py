@@ -1,6 +1,4 @@
 import unittest
-from monolith.definitions import ROOT_DIR
-import json
 from monolith import app as test_app
 
 
