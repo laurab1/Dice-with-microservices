@@ -1,71 +1,86 @@
 from unittest import TestCase
 from monolith.forms import LoginForm, UserForm 
 from flask import request
+from flask_login import current_user
 import json 
 
 from monolith.app import create_app
 from monolith.database import db, User, Story
 
 class AuthUnittest(TestCase):
+
     def test_signup(self):
-        global app 
-        app = create_app(test=True)
-        app_client = app.test_client()
+        myapp = create_app(test=True)
+        context = myapp.app_context()
+        app = myapp.test_client()
 
-        with app.test_request_context('/signup') as form:
-            #sign up new user
-            form.email = 'prova@prova.com'
-            form.username = 'prova'
-            form.password = 'prova123'
-            reply = app_client.post('/signup', data={'email': 'prova@prova.com',
-                                                     'username': 'prova',
-                                                     'password': 'prova123'})
+        reply = app.get('/signup')
+        self.assertEqual(reply.status_code, 200)
 
-            self.assertEqual(reply.status_code, 302)
+        reply = app.post('/signup', data={'email': 'prova@prova.com',
+                                          'username': 'prova',
+                                          'password': 'prova123'})
 
-            #database check
+        self.assertEqual(reply.status_code, 302)
+
+        with context:
             users = db.session.query(User).filter_by(username="prova")
-            self.assertEqual(users.first().username, "prova")
+            u = users.first()
 
-        with app.test_request_context('/signup'):
-            form = UserForm()
+        self.assertEqual([u.username, u.email], ["prova", "prova@prova.com"])
 
-            self.assertIsInstance(form, UserForm)
 
-            form.email = 'prova@prova.com'
-            form.username = 'prova2'
-            form.password = 'prova123'
-            reply = app_client.post('/signup', data={'email': 'prova@prova.com',
-                                                     'username': 'prova',
-                                                     'password': 'prova123'})
-            print(str(reply.data, "utf-8"))
-            self.assertEqual(form.email.errors[-1], 'This email is already used.')
-        '''
-        with app.test_request_context('/signup'):
-            form = UserForm()
+        reply = app.post('/signup', data={'email': 'prova@prova.com',
+                                          'username': 'prova',
+                                          'password': 'prova123'})
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(body, {'Error':'This email is already used.'})
 
-            self.assertIsInstance(form, UserForm)
-
-            form.email = 'prova2@prova.com'
-            form.username = 'prova'
-            form.password = 'prova123'
-            app_client.post('/signup')
-            self.assertEqual(form.email.errors[-1], 'This username already exists.')
-        '''
-    '''
-    def login_logout_test(self):
+        reply = app.post('/signup', data={'email': 'prova2@prova.com',
+                                          'username': 'prova',
+                                          'password': 'prova123'})
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(body, {'Error':'This username already exists.'})
         
-        # Act
-        with app.test_request_context('/login'):
-            form = MyForm()
+    def test_auth(self):
+        app = create_app(test=True).test_client()
 
-        # Assert
-        self.assertIsInstance(form, MyForm)
-    
-    def logout_test(self):
-        # Arrange
-        app = Flask(__name__)
+        reply = app.post('/signup', data={'email': 'prova@prova.com',
+                                          'username': 'prova',
+                                          'password': 'prova123'})
 
-        # Assert
-        self.assertIsInstance(form, MyForm)
-    '''
+        self.assertEqual(reply.status_code, 302)
+
+        reply = app.get('/logout')
+        self.assertEqual(reply.status_code, 302)
+
+        reply = app.get('/logout')
+        self.assertEqual(reply.status_code, 203)
+
+        reply = app.get('/login')
+        self.assertEqual(reply.status_code, 200)
+
+        reply = app.post('/login', data={'usrn_eml': 'prova@prova.com',
+                                          'password': 'prova123'})
+        self.assertEqual(reply.status_code, 302)
+
+        reply = app.post('/login', data={'usrn_eml': 'prova',
+                                          'password': 'prova123'})
+        self.assertEqual(reply.status_code, 302)
+
+        reply = app.post('/login', data={'usrn_eml': 'Admin',
+                                          'password': 'admin'})
+        self.assertEqual(reply.status_code, 302)
+
+        reply = app.get('/logout')
+        self.assertEqual(reply.status_code, 302)
+
+        reply = app.post('/login', data={'usrn_eml': 'Admin',
+                                          'password': 'boh'})
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(body, {'Error': 'Wrong username or password.'})
+
+        reply = app.post('/login', data={'usrn_eml': 'boh',
+                                          'password': 'admin'})
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(body, {'Error': 'Wrong username or password.'})

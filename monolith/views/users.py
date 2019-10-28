@@ -33,8 +33,8 @@ def signup():
             return redirect('/')
         except IntegrityError as e:
             if 'user.username' in str(e):
-                form.username.errors.append('This username already exists.')
+                return jsonify({'Error':'This username already exists.'})
             elif 'user.email' in str(e):
-                form.email.errors.append('This email is already used.')
+                return jsonify({'Error':'This email is already used.'})
         
     return render_template('signup.html', form=form)
