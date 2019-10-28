@@ -11,6 +11,7 @@ def create_app(test=False):
     app = Flask(__name__)
     Bootstrap(app)
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'ANOTHER ONE'
     app.config['PERMANENT_SESSION_LIFETIME'] =  datetime.timedelta(minutes=120)
     if not test:
