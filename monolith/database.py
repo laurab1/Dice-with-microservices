@@ -46,6 +46,7 @@ class Story(db.Model):
     text = db.Column(db.Text(1000)) # around 200 (English) words 
     date = db.Column(db.DateTime)
     likes = db.Column(db.Integer) # will store the number of likes, periodically updated in background
+    dislikes = db.Column(db.Integer) #will store the number of dislikes
     # define foreign key 
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = relationship('User', foreign_keys='Story.author_id')
@@ -63,7 +64,7 @@ class Reaction(db.Model):
     story_id = db.Column(db.Integer, db.ForeignKey('story.id'), primary_key=True)
     author = relationship('Story', foreign_keys='Reaction.story_id')
 
-    reaction_val = db.Column(db.Integer, default=0)	
+    reaction_val = db.Column(db.Integer)	
 
     #liked_id = db.Column(db.Integer, db.ForeignKey('user.id')) # TODO: duplicated ?
     #liker = relationship('User', foreign_keys='Like.liker_id')

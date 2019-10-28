@@ -42,7 +42,11 @@ def _stories(message=''):
 def _like(storyid, react):
     q = Reaction.query.filter_by(reactor_id=current_user.id, story_id=storyid)
     if q.first() is None or react != q.first().reaction_val:
-        if q.first != None and react != q.first().reaction_val:
+        if q.first() != None and react != q.first().reaction_val:
+            #CHECK
+            if q.first().marked:
+                s = Story.query.filter_by(story_id=storyid)
+                #TODO: remove the previous vote and add the new one to the queue
             db.session.delete(q.first())
             db.session.commit()
         new_reaction = Reaction()
@@ -53,6 +57,9 @@ def _like(storyid, react):
         db.session.add(new_reaction)
         db.session.commit()
         message = 'Got it!'
+        #TODO: here the like/dislike is performed, but still not counted.
+        #we need to update the form by showing the performed like/dislike
+        #to the user, yet counting votes asynchronously
     else:
         message = 'You\'ve already voted this story!'
     return _stories(message)
