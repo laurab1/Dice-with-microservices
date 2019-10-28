@@ -19,7 +19,8 @@ def create_app(test=False):
     else:
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
-        os.remove('storytellers_tmp.db')
+        if os.path.exists('storytellers_tmp.db'):
+            os.remove('storytellers_tmp.db')
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storytellers_tmp.db'
 
     for bp in blueprints:
