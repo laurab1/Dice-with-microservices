@@ -3,13 +3,23 @@ from flask import Flask
 from monolith.database import db, User, Story
 from monolith.views import blueprints
 from monolith.auth import login_manager
+from celery import Celery
 import datetime
+
+
 
 def create_app():
     app = Flask(__name__)
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
     app.config['SECRET_KEY'] = 'ANOTHER ONE'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storytellers.db'
+    app.config['CELERY_BROKER_URL'] = 'amqp://laura:laura@localhost:5672/myvhost'
+    app.config['CELERY_RESULT_BACKEND'] = 'amqp://laura:laura@localhost:5672/myvhost'
+    #maybe the backend is useless, to check
+    
+    #initialize Celery
+    celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
 
     for bp in blueprints:
         app.register_blueprint(bp)

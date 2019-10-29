@@ -45,8 +45,7 @@ def _like(storyid, react):
         if q.first() != None and react != q.first().reaction_val:
             #CHECK
             if q.first().marked:
-                s = Story.query.filter_by(story_id=storyid)
-                #TODO: remove the previous vote and add the new one to the queue
+                _remove_reaction(storyid, q.first().reaction_val)
             db.session.delete(q.first())
             db.session.commit()
         new_reaction = Reaction()
@@ -57,6 +56,7 @@ def _like(storyid, react):
         db.session.add(new_reaction)
         db.session.commit()
         message = 'Got it!'
+        _add_reaction(new_reaction, storyid, react)
         #TODO: here the like/dislike is performed, but still not counted.
         #we need to update the form by showing the performed like/dislike
         #to the user, yet counting votes asynchronously
@@ -64,3 +64,22 @@ def _like(storyid, react):
         message = 'You\'ve already voted this story!'
     return _stories(message)
 
+#@celery.task to run asynchronously
+def _add_reaction(reaction, storyid, react):
+    s = Story.query.filter_by(id=storyid)
+    if s.first() != None:
+        if react == 1:
+            s.first().likes += 1
+        elif s.first() != None and react == -1:
+            s.first().dislikes += 1
+    reaction.marked = True
+        
+    
+#another celery task to remove an old reaction
+def _remove_reaction(storyid, react):
+    s = Story.query.filter_by(id=storyid)
+    if s.first() != None:
+        if react == 1:
+            s.first().likes -= 1 #TODO: remove the previous vote and add the new one to the queue
+        elif s.first() != None and react == -1:
+            s.first().dislikes -= 1
