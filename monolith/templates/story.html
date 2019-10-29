@@ -5,7 +5,7 @@
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
             integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymDislike it!ous"></script>
+            crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
             integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
             crossorigin="anonymous"></script>
@@ -47,8 +47,13 @@
         <li>
             "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})
             {% if current_user.is_authenticated %}
-                <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
-      		    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
+                <!--<form action="/stories/<storyid>" method="POST""></form>-->
+                <form action="{{ url_for('stories._story', storyid=story.id) }}" method="post">
+                    <input type="submit" name="like" value="Like it!"/>
+                    <input type="submit" name="dislike" value="Dislike it!"/>
+                </form>
+                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>
+      		        <a href="{{like_it_url}}{{story.id}}/0">Dislike it!</a>-->
             {% endif %}
         </li>
     {% endfor %}
