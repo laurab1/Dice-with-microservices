@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, render_template, request
+from flask import Blueprint, redirect, render_template, request, abort
 from monolith.database import db, Story, Like
 from monolith.auth import admin_required, current_user
 from flask_login import (current_user, login_user, logout_user, login_required)
@@ -15,19 +15,31 @@ def _newstory():
     form = StoryForm()
     if request.method == 'POST':
         diceset = request.form['diceset']
-        # if dice set selected #
-        if diceset is not None:
-            diceset = DiceSet(diceset, 6)
-            roll = diceset.throw_dice()
-            return render_template("new_story.html", dice=roll, form=form)
-        else:
-            if form.validate_on_submit():
-                # new story inserted #
-                # TODO: write a story on the rolled dice #
-                return render_template("stories.html")
+        if form.validate_on_submit():
+            # new story inserted #
+            # TODO: write a story on the rolled dice #
+            return render_template("stories.html")
 
     if request.method == 'GET':
         return render_template("new_story.html", diceset=get_dice_sets_lsit())
+
+
+@stories.route('/rollDice', methods=['GET'])
+@login_required
+def _rollDice():
+    form = StoryForm()
+    diceset = request.args.get('diceset')
+    # default choose standard diceset
+    if diceset is None:
+        diceset = 'standard'
+
+    try:
+        dice = DiceSet(diceset, 6)
+        roll = dice.throw_dice()
+    except Exception as e:
+        abort(404)
+
+    return render_template("new_story.html", dice=roll, form=form)
 
 
 @stories.route('/stories')
