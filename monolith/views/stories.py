@@ -1,9 +1,7 @@
-from flask import Blueprint, redirect, render_template, request, jsonify
+from flask import Blueprint, redirect, render_template, request, abort, jsonify
 from monolith.database import db, Story, Like
-from monolith.auth import admin_required, current_user
 from flask_login import (current_user, login_user, logout_user, login_required)
 from flask import current_app as app
-
 from monolith.utility.diceutils import *
 from monolith.forms import *
 from monolith.classes.DiceSet import *
@@ -16,19 +14,32 @@ def _newstory():
     form = StoryForm()
     if request.method == 'POST':
         diceset = request.form['diceset']
-        # if dice set selected #
-        if diceset is not None:
-            diceset = DiceSet(diceset, 6)
-            roll = diceset.throw_dice()
-            return render_template("new_story.html", dice=roll, form=form)
-        else:
-            if form.validate_on_submit():
-                # new story inserted #
-                # TODO: write a story on the rolled dice #
-                return render_template("stories.html")
+        if form.validate_on_submit():
+            # new story inserted #
+            # TODO: write a story on the rolled dice #
+            return render_template("stories.html")
 
     if request.method == 'GET':
         return render_template("new_story.html", diceset=get_dice_sets_lsit())
+
+
+@stories.route('/rollDice', methods=['GET'])
+@login_required
+def _rollDice():
+    form = StoryForm()
+    diceset = 'standard' if request.args.get('diceset') is None else request.args.get('diceset')
+    dicenum = 6 if request.args.get('dicenum') is None else int(request.args.get('dicenum'))
+
+    try:
+        dice = DiceSet(diceset, dicenum)
+        roll = dice.throw_dice()
+    except Exception as e:
+        abort(400)
+
+    if app.config['TESTING']==True:
+        return jsonify(roll)
+    else:
+        return render_template("new_story.html", dice=roll, form=form)
 
 
 @stories.route('/stories')

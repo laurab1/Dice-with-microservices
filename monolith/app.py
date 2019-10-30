@@ -20,6 +20,7 @@ def create_app(test=False):
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        app.config['LOGIN_DISABLED'] = True
 
     for bp in blueprints:
         app.register_blueprint(bp)
