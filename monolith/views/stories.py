@@ -2,6 +2,9 @@ from flask import Blueprint, redirect, render_template, request, abort, jsonify
 from monolith.database import db, Story, Like
 from flask_login import (current_user, login_user, logout_user, login_required)
 from flask import current_app as app
+from random import randrange
+import datetime
+
 from monolith.utility.diceutils import *
 from monolith.forms import *
 from monolith.classes.DiceSet import *
@@ -64,6 +67,27 @@ def _get_story(storyid, message=''):
         return jsonify({'story': str(id), 'message' : message})
     else:
         return render_template("stories.html", message=message, stories=story, like_it_url="http://127.0.0.1:5000/stories/like/")
+
+@stories.route('/stories/<storyid>', methods=['GET'])
+def _get_random_recent_story(message=''):
+    #recent story = story of today
+    current_time = datetime.datetime.now()
+    recent_stories = db.session.query(Story).filter_by(date=current_time)
+
+    #get a random one
+    i = randrange(0, recent_stories.count() - 1)
+
+    if recent_stories.first() is None:
+        message = 'no recent stories'
+    random_story = recent_stories.get(i)
+
+    #TODO: change like_it_url
+    if app.config["TESTING"] == True:
+        return jsonify({'story': str(random_story.id), 'message' : message})
+    else:
+        return render_template("stories.html", message=message, stories=random_story, like_it_url="http://127.0.0.1:5000/stories/like/")
+
+
 
 @stories.route('/stories/like/<authorid>/<storyid>')
 @login_required
