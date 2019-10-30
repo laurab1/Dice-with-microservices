@@ -1,13 +1,14 @@
-from flask import Blueprint, redirect, render_template, request
+from flask import Blueprint, redirect, render_template, request, jsonify
 from monolith.database import db, Story, Like
 from monolith.auth import admin_required, current_user
 from flask_login import (current_user, login_user, logout_user, login_required)
+from flask import current_app as app
+
 from monolith.utility.diceutils import *
 from monolith.forms import *
 from monolith.classes.DiceSet import *
 
 stories = Blueprint('stories', __name__)
-
 
 @stories.route('/newStory', methods=['GET', 'POST'])
 @login_required
@@ -40,12 +41,18 @@ def _stories(message=''):
 @stories.route('/stories/<storyid>', methods=['GET'])
 def _get_story(storyid, message=''):
     story = db.session.query(Story).filter_by(id=storyid)
+    id = None
 
     if story.first() is None:
         message = 'story not found!'
+    else:
+        id = story.first().id
     
     #TODO: change like_it_url
-    return render_template("stories.html", message=message, stories=story, like_it_url="http://127.0.0.1:5000/stories/like/")
+    if app.config["TESTING"] == True:
+        return jsonify({'story': str(id), 'message' : message})
+    else:
+        return render_template("stories.html", message=message, stories=story, like_it_url="http://127.0.0.1:5000/stories/like/")
 
 @stories.route('/stories/like/<authorid>/<storyid>')
 @login_required
