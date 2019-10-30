@@ -1,0 +1,6 @@
+car
+snowman
+socks
+toy
+turkey
+tree
