@@ -40,22 +40,52 @@
     </div>
 </nav>
 
-<h1>Story List</h1>
-<h5>{{ message }}</h5>
+<h1>Story</h1>
+<!--<h5>{{ message }}</h5>-->
 <ul>
     {% for story in stories: %}
-        <li>
-            "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})
-            {% if current_user.is_authenticated %}
-                <!--<form action="/stories/<storyid>" method="POST""></form>-->
-                <form action="{{ url_for('stories._story', storyid=story.id) }}" method="post">
-                    <input type="submit" name="like" value="Like it!"/>
-                    <input type="submit" name="dislike" value="Dislike it!"/>
-                </form>
+        {% if marked == True %}
+            {% if val == 1 %}
+                <li>
+                    "{{ story.text }}" Likes: {{ story.likes + 1 }} Dislikes: {{ story.dislikes }} ({{ story.date }})
+                    {% if current_user.is_authenticated %}
+                    <!--<form action="/stories/<storyid>" method="POST""></form>-->
+                        <form action="{{ url_for('stories._story', storyid=story.id) }}" method="post">
+                            <input type="submit" name="like" value="Like it!"/>
+                            <input type="submit" name="dislike" value="Dislike it!"/>
+                        </form>
                     <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>
       		        <a href="{{like_it_url}}{{story.id}}/0">Dislike it!</a>-->
+                    {% endif %}
+                </li>
+            {% else %}
+                <li>
+                    "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes + 1 }} ({{ story.date }})
+                    {% if current_user.is_authenticated %}
+                    <!--<form action="/stories/<storyid>" method="POST""></form>-->
+                        <form action="{{ url_for('stories._story', storyid=story.id) }}" method="post">
+                            <input type="submit" name="like" value="Like it!"/>
+                            <input type="submit" name="dislike" value="Dislike it!"/>
+                        </form>
+                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>
+      		        <a href="{{like_it_url}}{{story.id}}/0">Dislike it!</a>-->
+                    {% endif %}
+                </li>
             {% endif %}
-        </li>
+        {% else %}
+            <li>
+                "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})
+                {% if current_user.is_authenticated %}
+                    <!--<form action="/stories/<storyid>" method="POST""></form>-->
+                    <form action="{{ url_for('stories._story', storyid=story.id) }}" method="post">
+                        <input type="submit" name="like" value="Like it!"/>
+                        <input type="submit" name="dislike" value="Dislike it!"/>
+                    </form>
+                        <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>
+      	    	        <a href="{{like_it_url}}{{story.id}}/0">Dislike it!</a>-->
+                {% endif %}
+            </li>
+        {% endif %}
     {% endfor %}
 </ul>
 </body>

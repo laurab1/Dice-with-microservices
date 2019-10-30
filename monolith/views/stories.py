@@ -32,7 +32,7 @@ def _newstory():
 
 
 @stories.route('/stories')
-def _stories(message=''):
+def _stories(message='', marked=True, storyid=0, react=0):
     allstories = db.session.query(Story)
     return render_template("stories.html", message=message, stories=allstories,
                            like_it_url="http://127.0.0.1:5000/stories/")
@@ -41,19 +41,25 @@ def _stories(message=''):
 @stories.route('/stories/<storyid>', methods=['GET','POST'])
 @login_required
 def _story(storyid):
+    q = Reaction.query.filter_by(reactor_id=current_user.id, story_id=storyid)
     if request.method == 'GET':
         thisstory = db.session.query(Story).filter_by(id=storyid)
-        return render_template("story.html", stories=thisstory)
+        if q.first().marked != True:
+            if q.first().reaction_val == 1:
+                return render_template("story.html", stories=thisstory, marked=False, val=1)
+            else:
+                return render_template("story.html", stories=thisstory, marked=False, val=-1)
+        else:
+            return render_template("story.html", stories=thisstory)
     if request.method == 'POST':
         react = 0
         if "like" in request.form:
             react = 1
         else:
             react = -1
-        q = Reaction.query.filter_by(reactor_id=current_user.id, story_id=storyid)
         if q.first() is None or react != q.first().reaction_val:
             if q.first() != None and react != q.first().reaction_val:
-                #CHECK
+                #remvoe the old reaction if the new one has different value
                 if q.first().marked:
                     remove_reaction(storyid, q.first().reaction_val)
                 db.session.delete(q.first())
@@ -67,9 +73,10 @@ def _story(storyid):
             db.session.commit()
             message = 'Got it!'
             add_reaction(new_reaction, storyid, react)
-            #TODO: here the like/dislike is performed, but still not counted.
-            #we need to update the form by showing the performed like/dislike
-            #to the user, yet counting votes asynchronously
+            #votes are registered asynchronously by celery tasks
         else:
-            message = 'You\'ve already voted this story!'
-        return _stories(message)
+            if react == 1:
+                message = 'You\'ve already liked this story!'
+            else:
+                message = 'You\'ve already disliked this story!'
+        return _stories(message, False, storyid, react)
