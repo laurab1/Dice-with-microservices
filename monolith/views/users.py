@@ -1,4 +1,5 @@
 from flask import Blueprint, redirect, render_template, request, jsonify
+from flask import current_app as app
 from flask_login import (current_user, login_user, login_required)
 from monolith.database import db, User
 from monolith.auth import admin_required
@@ -58,6 +59,9 @@ def follow(user_id):
         message = 'User with id {} does not exists'.format(user_id)
         return (jsonify(error=message), 404)
 
+    if followee == current_user:
+        return (jsonify(error='Cannot follow or unfollow yourself'), 400)
+
     if request.method == 'POST':
         current_user.follows.append(followee)
         db.session.commit()
@@ -72,3 +76,19 @@ def follow(user_id):
         return jsonify(message='User unfollowed')
 
     abort(405)
+
+
+def _get_followed_dict(user_id):
+    me = User.query.get(user_id)
+    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id} for x in me.follows]
+    return users
+
+
+@users.route('/followed', methods=['GET'])
+@login_required
+def get_followed():
+    users = _get_followed_dict(current_user.id)
+    if app.config['TESTING']:
+        return jsonify({'users': users})
+    else:
+        return render_template('followed.html', users=users)
