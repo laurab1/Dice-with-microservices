@@ -15,13 +15,13 @@ class TestFollowers(TestCase):
         self.app = self.app.test_client()
 
         with self.context:
-            u = User(username='test1', email='test1@example.com')
+            u = User(username='test1', email='test1@example.com', firstname='FirstTest1', lastname='LastTest1')
             u.set_password('test1123')
             db.session.add(u)
-            u = User(username='test2', email='test2@example.com')
+            u = User(username='test2', email='test2@example.com', firstname='FirstTest2', lastname='LastTest2')
             u.set_password('test2123')
             db.session.add(u)
-            u = User(username='test3', email='test3@example.com')
+            u = User(username='test3', email='test3@example.com', firstname='FirstTest3', lastname='LastTest3')
             u.set_password('test3123')
             db.session.add(u)
             db.session.commit()
@@ -118,3 +118,34 @@ class TestFollowers(TestCase):
         body = json.loads(str(reply.data, 'utf8'))
         self.assertEqual(body['error'], 'Cannot follow or unfollow yourself')
 
+    def test_followed_get(self):
+        with self.context:
+            u = db.session.query(User).filter_by(username='test1').one()
+
+        reply = self.app.post(
+            '/login', data={'usrn_eml': 'test1@example.com', 'password': 'test1123'})
+        self.assertEqual(reply.status_code, 302)
+
+        reply = self.app.post('/users/1/follow')
+        self.assertEqual(reply.status_code, 200)
+
+        reply = self.app.post('/users/3/follow')
+        self.assertEqual(reply.status_code, 200)
+
+        reply = self.app.get('/followed')
+        self.assertEqual(reply.status_code, 200)
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(len(body['users']), 2)
+        user1 = {'firstname': 'Admin', 'lastname': 'Admin', 'id': 1}
+        user3 = {'firstname': 'FirstTest2', 'lastname': 'LastTest2', 'id': 3}
+        self.assertEqual(body['users'][0], user1)
+        self.assertEqual(body['users'][1], user3)
+
+        reply = self.app.delete('/users/3/follow')
+        self.assertEqual(reply.status_code, 200)
+
+        reply = self.app.get('/followed')
+        self.assertEqual(reply.status_code, 200)
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(len(body['users']), 1)
+        self.assertEqual(body['users'][0], user1)
