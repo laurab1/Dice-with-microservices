@@ -2,6 +2,7 @@ import datetime
 import os
 import tempfile
 
+from flask import template_rendered
 import pytest
 
 from monolith.app import create_app
@@ -78,12 +79,6 @@ class AuthActions:
         self._app = app
         self._client = client
 
-    def disable(self):
-        self._app.config['LOGIN_DISABLED'] = True
-
-    def enable(self):
-        self._app.config['LOGIN_DISABLED'] = False
-
     def login(self, username='Admin', password='admin'):
         return self._client.post('/login',
                                  data={'usrn_eml': username, 'password': password})
@@ -95,3 +90,17 @@ class AuthActions:
 @pytest.fixture
 def auth(app, client):
     return AuthActions(app, client)
+
+# blinker is required
+@pytest.fixture
+def templates(app):
+    recorded = []
+
+    def record(sender, template, context, **kwargs):
+        recorded.append(context)
+
+    template_rendered.connect(record, app)
+    try:
+        yield recorded
+    finally:
+        template_rendered.disconnect(record, app)

@@ -88,6 +88,6 @@ def _get_followed_dict(user_id):
 @login_required
 def get_followed():
     template_dict = _get_followed_dict(current_user.id)
-    if app.config['TESTING']:
-        return jsonify(template_dict)
+    # if app.config['TESTING']:
+    #     return jsonify(template_dict)
     return render_template('followed.html', **template_dict)

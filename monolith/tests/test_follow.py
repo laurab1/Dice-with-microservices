@@ -74,7 +74,7 @@ def test_follow_delete(client, database, auth):
     assert reply.get_json()['error'] == 'Cannot follow or unfollow yourself'
 
 
-def test_followed_get(client, database, auth):
+def test_followed_get(client, database, auth, templates):
     reply = auth.login('test1', 'test1123')
     assert reply.status_code == 302
 
@@ -86,18 +86,20 @@ def test_followed_get(client, database, auth):
 
     reply = client.get('/followed')
     assert reply.status_code == 200
-    reply_users = reply.get_json()['users']
-    assert len(reply_users) == 2
+    assert templates
+    users = templates[-1]['users']
+    assert len(users) == 2
     user1 = {'firstname': 'Admin', 'lastname': 'Admin', 'id': 1}
     user3 = {'firstname': 'First2', 'lastname': 'Last2', 'id': 3}
-    assert reply_users[0] == user1
-    assert reply_users[1] == user3
+    assert users[0] == user1
+    assert users[1] == user3
 
     reply = client.delete('/users/3/follow')
     assert reply.status_code == 200
 
     reply = client.get('/followed')
     assert reply.status_code == 200
-    reply_users = reply.get_json()['users']
-    assert len(reply_users) == 1
-    assert reply_users[0] == user1
+    assert templates
+    users = templates[-1]['users']
+    assert len(users) == 1
+    assert users[0] == user1
