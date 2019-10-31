@@ -43,7 +43,7 @@ class TestFollowers(TestCase):
         body = json.loads(str(reply.data, 'utf8'))
         self.assertEqual(body['message'], 'User followed')
 
-        reply = self.app.post('/users/2/follow')
+        reply = self.app.post('/users/3/follow')
         self.assertEqual(reply.status_code, 200)
         body = json.loads(str(reply.data, 'utf8'))
         self.assertEqual(body['message'], 'User followed')
@@ -52,7 +52,7 @@ class TestFollowers(TestCase):
             u = db.session.query(User).filter_by(username='test1').one()
             self.assertEqual(len(u.follows), 2)
 
-        reply = self.app.post('/users/2/follow')
+        reply = self.app.post('/users/3/follow')
         self.assertEqual(reply.status_code, 200)
         body = json.loads(str(reply.data, 'utf8'))
         self.assertEqual(body['message'], 'User followed')
@@ -65,6 +65,11 @@ class TestFollowers(TestCase):
         self.assertEqual(reply.status_code, 404)
         body = json.loads(str(reply.data, 'utf8'))
         self.assertEqual(body['error'], 'User with id 5 does not exists')
+
+        reply = self.app.post('/users/2/follow')
+        self.assertEqual(reply.status_code, 400)
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(body['error'], 'Cannot follow or unfollow yourself')
 
     def test_follow_delete(self):
         with self.context:
@@ -79,7 +84,7 @@ class TestFollowers(TestCase):
         body = json.loads(str(reply.data, 'utf8'))
         self.assertEqual(body['message'], 'User followed')
 
-        reply = self.app.post('/users/2/follow')
+        reply = self.app.post('/users/3/follow')
         self.assertEqual(reply.status_code, 200)
         body = json.loads(str(reply.data, 'utf8'))
         self.assertEqual(body['message'], 'User followed')
@@ -88,7 +93,7 @@ class TestFollowers(TestCase):
             u = db.session.query(User).filter_by(username='test1').one()
             self.assertEqual(len(u.follows), 2)
 
-        reply = self.app.delete('/users/2/follow')
+        reply = self.app.delete('/users/3/follow')
         self.assertEqual(reply.status_code, 200)
         body = json.loads(str(reply.data, 'utf8'))
         self.assertEqual(body['message'], 'User unfollowed')
@@ -98,7 +103,7 @@ class TestFollowers(TestCase):
             self.assertEqual(len(u.follows), 1)
             self.assertEqual(u.follows[0].username, 'Admin')
 
-        reply = self.app.delete('/users/2/follow')
+        reply = self.app.delete('/users/3/follow')
         self.assertEqual(reply.status_code, 200)
         body = json.loads(str(reply.data, 'utf8'))
         self.assertEqual(body['message'], 'User unfollowed')
@@ -108,4 +113,8 @@ class TestFollowers(TestCase):
         body = json.loads(str(reply.data, 'utf8'))
         self.assertEqual(body['error'], 'User with id 5 does not exists')
 
+        reply = self.app.post('/users/2/follow')
+        self.assertEqual(reply.status_code, 400)
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(body['error'], 'Cannot follow or unfollow yourself')
 

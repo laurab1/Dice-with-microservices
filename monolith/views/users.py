@@ -59,6 +59,9 @@ def follow(user_id):
         message = 'User with id {} does not exists'.format(user_id)
         return (jsonify(error=message), 404)
 
+    if followee == current_user:
+        return (jsonify(error='Cannot follow or unfollow yourself'), 400)
+
     if request.method == 'POST':
         current_user.follows.append(followee)
         db.session.commit()
