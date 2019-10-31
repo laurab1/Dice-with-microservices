@@ -7,20 +7,19 @@ from monolith.views import blueprints
 from monolith.auth import login_manager
 import datetime
 
-def create_app(test=False):
+def create_app(test=False, database=None, login_disabled=False):
     app = Flask(__name__)
     Bootstrap(app)
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'ANOTHER ONE'
     app.config['PERMANENT_SESSION_LIFETIME'] =  datetime.timedelta(minutes=120)
-    if not test:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storytellers.db'
-    else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storytellers.db' if database is None else database
+    app.config['LOGIN_DISABLED'] = login_disabled
+    if test:
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        app.config['LOGIN_DISABLED'] = True
+        # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 
     for bp in blueprints:
         app.register_blueprint(bp)
@@ -53,7 +52,6 @@ def create_app(test=False):
             example.text = 'Trial story of example admin user :)'
             example.likes = 42
             example.author_id = 1
-            print(example)
             db.session.add(example)
             db.session.commit()
 

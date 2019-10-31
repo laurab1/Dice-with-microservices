@@ -20,6 +20,7 @@ def login():
         user = q.first()
         if user is not None and user.authenticate(password):
             login_user(user)
+            print(current_user)
             return redirect('/')
         else:
             return jsonify({'Error': 'Wrong username or password.'})
