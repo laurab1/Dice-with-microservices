@@ -61,8 +61,8 @@
                 <button type="submit" class="btn btn-success">Roll the dice</button>
             </form>
         {% else %}
-            <form action="/newStory" method="post" role="form">
-
+            <form action="/write_story" method="post" role="form">
+                {{ form.hidden_tag() }}
                 <label for="validationTooltip01">Current dice values</label>
                 <ul class="list-group list-group-flush">
                     {% for die in dice %}
@@ -70,8 +70,12 @@
                     {% endfor %}
                 </ul>
                 <br>
-                <label for="exampleFormControlTextarea1">Write your story</label>
-                <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+                {{ form['text'].label }}
+                <br>
+                {{ form['text']() }}
+                {% for e in form['text'].errors %}
+                 <p class="help-block">{{ e }}</p>
+                {% endfor %}
                 <br>
 
                 <button type="submit" class="btn btn-success">Submit Story</button>
@@ -92,5 +96,3 @@
 
 </body>
 </html>
-
-
