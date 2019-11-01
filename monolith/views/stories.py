@@ -121,9 +121,9 @@ def _get_random_recent_story(message=''):
 
     #TODO: change like_it_url
     if app.config["TESTING"] == True:
-        return jsonify({'story': str(id), 'message' : message})
-    else:
-        return render_template("stories.html", message=message, stories=recent_story, like_it_url="http://127.0.0.1:5000/stories/like/")
+        app.config["TEMPLATE_CONTEXT"] = jsonify({'story': str(id), 'message' : message})
+        
+    return render_template("stories.html", message=message, stories=recent_story, like_it_url="http://127.0.0.1:5000/stories/like/")
 
 @stories.route('/stories/like/<authorid>/<storyid>')
 @login_required
