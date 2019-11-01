@@ -1,0 +1,6 @@
+cauldron
+cemetery
+cobweb
+coffin
+ghost
+goblin

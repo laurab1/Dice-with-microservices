@@ -1,8 +1,8 @@
 from unittest import TestCase
-from monolith.forms import LoginForm, UserForm 
+from monolith.forms import LoginForm, UserForm
 from flask import request
 from flask_login import current_user
-import json 
+import json
 
 from monolith.app import create_app
 from monolith.database import db, User, Story
@@ -12,7 +12,7 @@ class AuthUnittest(TestCase):
         self.app = create_app(test=True)
         self.context = self.app.app_context()
         self.app = self.app.test_client()
-    
+
     def tearDown(self):
         with self.context:
             db.drop_all()
@@ -45,7 +45,7 @@ class AuthUnittest(TestCase):
                                           'password': 'prova123'})
         body = json.loads(str(reply.data, 'utf8'))
         self.assertEqual(body, {'Error':'This username already exists.'})
-        
+
     def test_auth(self):
         reply = self.app.post('/signup', data={'email': 'prova@prova.com',
                                           'username': 'prova',

@@ -1,0 +1,6 @@
+skull
+spider
+tomb
+vampire
+witch
+zombie
