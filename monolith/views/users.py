@@ -1,10 +1,11 @@
 from flask import Blueprint, redirect, render_template, request, jsonify
 from flask import current_app as app
 from flask_login import (current_user, login_user, login_required)
-from monolith.database import db, User
+from monolith.database import db, User, Story
 from monolith.auth import admin_required
 from monolith.forms import UserForm
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from os import urandom
 
 
@@ -12,11 +13,15 @@ users = Blueprint('users', __name__)
 
 
 @users.route('/users')
+@login_required
 def users_():
-    def aux(*args, **kw):
-        users = db.session.query(User)
-        return render_template("users.html", users=users)
-    return admin_required(aux)()
+    result = db.session.query(User.username, 
+                             Story.text,
+                             str(func.max(Story.date))
+            ).outerjoin(Story
+            ).group_by(User.id
+            ).all()
+    return render_template("users.html", result=result)
 
 
 @users.route('/signup', methods=['GET', 'POST'])
