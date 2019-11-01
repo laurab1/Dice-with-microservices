@@ -61,7 +61,7 @@
                 <button type="submit" class="btn btn-success">Roll the dice</button>
             </form>
         {% else %}
-            <form action="/write_story" method="post" role="form">
+            <form action="/writeStory" method="post" role="form">
                 {{ form.hidden_tag() }}
                 <label for="validationTooltip01">Current dice values</label>
                 <ul class="list-group list-group-flush">

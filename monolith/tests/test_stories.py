@@ -21,7 +21,7 @@ class StoriesUnittest(TestCase):
     def test_write_new_story(self):
         self.app.post('/login', data={'usrn_eml': 'Admin', 'password': 'admin'})
 
-        reply = self.app.post('/write_story', data={'text': 'test story'})
+        reply = self.app.post('/writeStory', data={'text': 'test story'})
 
         self.assertEqual(reply.status_code, 200)
 
@@ -32,6 +32,6 @@ class StoriesUnittest(TestCase):
         self.assertEqual(s.text, "test story")
         self.assertEqual(s.author_id, 1)
 
-        reply = self.app.post('/write_story', data={})
+        reply = self.app.post('/writeStory', data={})
 
         self.assertEqual(reply.status_code, 400)

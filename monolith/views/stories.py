@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, render_template, request, abort, jsonify
+from flask import Blueprint, redirect, render_template, request, abort, jsonify, current_app as app
 from monolith.database import db, Story, Like
 from monolith.auth import admin_required, current_user
 from flask_login import (current_user, login_user, logout_user, login_required)
@@ -8,27 +8,7 @@ from monolith.classes.DiceSet import *
 
 stories = Blueprint('stories', __name__)
 
-@stories.route('/write_story', methods=['POST'])
-@login_required
-def _writeStory():
-    form = StoryForm()
-    if form.validate_on_submit():
-        new_story = Story()
-        form.populate_obj(new_story)
-        new_story.author_id = current_user.id
-        db.session.add(new_story)
-
-        try:
-            db.session.commit()
-            return _stories()
-        except Exception as e:
-            return jsonify({'Error':'Your story could not be posted.'}), 400
-
-    return jsonify({'Error':'Your story is too long or data is missing.'}), 400
-
-
-
-@stories.route('/new_story', methods=['GET'])
+@stories.route('/newStory', methods=['GET'])
 @login_required
 def _newstory():
     return render_template("new_story.html", diceset=get_dice_sets_lsit())
@@ -51,6 +31,23 @@ def _rollDice():
 
     return render_template("new_story.html", dice=roll, form=form)
 
+@stories.route('/writeStory', methods=['POST'])
+@login_required
+def _writeStory():
+    form = StoryForm()
+    if form.validate_on_submit():
+        new_story = Story()
+        form.populate_obj(new_story)
+        new_story.author_id = current_user.id
+        db.session.add(new_story)
+
+        try:
+            db.session.commit()
+            return _stories()
+        except Exception as e:
+            return jsonify({'Error':'Your story could not be posted.'}), 400
+
+    return jsonify({'Error':'Your story is too long or data is missing.'}), 400
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message=''):
