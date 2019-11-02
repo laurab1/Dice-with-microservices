@@ -1,11 +1,6 @@
-<<<<<<< HEAD
-from monolith.classes.DiceSet import DiceSet, Die
-from monolith.utility.diceutils import *
-=======
 from monolith.classes.DiceSet import DiceSet, Die, InvalidDiceSet
 from monolith.utility.diceutils import *
 import random as rnd
->>>>>>> develop
 import unittest
 
 
