@@ -66,34 +66,59 @@ def test_auth(client, database):
     assert reply.get_json()['error'] == 'Wrong username or password.'
 
 def test_getusers(client, database):
-    client.post('/login', data={'usrn_eml': 'Admin',
-                                'password': 'admin'})
-                    
+    reply = client.post('/login', data={'usrn_eml': 'Admin',
+                                        'password': 'admin'})
+    assert reply.status_code == 302
     reply = client.get('/users')
-    assert reply.get_json()['users'] == [('Admin', 'Trial story of example admin user :)')]
+    assert reply.get_json()['users'] == [['Admin', None],
+                                         ['test1', None],
+                                         ['test2', None],
+                                         ['test3', None]]
     
     example = Story()
-    example.text = 'Second story of example admin user :)'
+    example.text = 'First story of admin user :)'
     example.author_id = 1
     database.session.add(example)
     database.session.commit()
     
     reply = client.get('/users')
-    assert reply.get_json()['users'] == [('Admin', 'Second story of example admin user :)')]
+    assert reply.get_json()['users'] == [['Admin', 'First story of admin user :)'],
+                                         ['test1', None],
+                                         ['test2', None],
+                                         ['test3', None]]
 
     client.post('/signup', data={'email': 'prova@prova.com',
                                  'username': 'prova',
                                  'password': 'prova123'})
     reply = client.get('/users')
-    assert reply.get_json()['users'] == [('Admin', 'Second story of example admin user :)'),
-                                         ('prova', None)]
+    assert reply.get_json()['users'] == [['Admin', 'First story of admin user :)'],
+                                         ['test1', None],
+                                         ['test2', None],
+                                         ['test3', None],
+                                         ['prova', None]]
     
     example = Story()
     example.text = 'First story of prova user :)'
-    example.author_id = 2
+    example.author_id = 5
     database.session.add(example)
     database.session.commit()
     
     reply = client.get('/users')
-    assert reply.get_json()['users'] == [('Admin', 'Second story of example admin user :)'),
-                                         ('prova', 'First story of prova user :)')]
+    assert reply.get_json()['users'] == [['Admin', 'First story of admin user :)'],
+                                         ['test1', None],
+                                         ['test2', None],
+                                         ['test3', None],
+                                         ['prova', 'First story of prova user :)']]
+    
+    example = Story()
+    example.text = 'Second story of admin user :)'
+    example.author_id = 1
+    database.session.add(example)
+    database.session.commit()
+
+    reply = client.get('/users')
+    assert reply.get_json()['users'] == [['Admin', 'Second story of admin user :)'],
+                                         ['test1', None],
+                                         ['test2', None],
+                                         ['test3', None],
+                                         ['prova', 'First story of prova user :)']]
