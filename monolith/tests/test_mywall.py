@@ -1,16 +1,16 @@
 #tests myWall functionality
 import unittest
-import json 
+import json
 from monolith.auth import current_user
-from monolith.app import create_app 
+from monolith.app import create_app
 from monolith.database import db, User, Story, Like
 from flask import Blueprint, render_template, request
 
 class TestMywall(unittest.TestCase):
     def setUp(self):
-        self.app = create_app() #self.app = create_app(test=True) is wrong with tox
+        self.app = create_app(test=True) #self.app = create_app(test=True) is wrong with tox
         self.context = self.app.app_context()
-        self.app = self.app.test_client()    
+        self.app = self.app.test_client()
 
     def tearDown(self):
         with self.context:
@@ -18,7 +18,7 @@ class TestMywall(unittest.TestCase):
 
     def test_check_mywall(self):
         reply = self.app.get('/')
-        self.assertEqual(reply.status_code, 200)        
+        self.assertEqual(reply.status_code, 200)
 
         reply = self.app.get('/1') #also with other numbers and characters
         self.assertEqual(reply.status_code, 404)
@@ -35,10 +35,11 @@ class TestMywall(unittest.TestCase):
                 db.session.add(example)
                 db.session.commit()
 
-        q = db.session.query(Story).filter(Story.id == 1)
-        story = q.first()
+        with self.context:
+            q = db.session.query(Story).filter(Story.id == 1)
+            story = q.first()
         #assert [story.text, story.likes, story.author_id] == ['Trial story of example admin user :)', 42, 1]
-        
+
         #print(reply)
 
 
@@ -48,7 +49,7 @@ class TestMywall(unittest.TestCase):
         #assert body['likes'] == 42
         #assert body['author_id'] == 1
         #assert reply.status_code == 200
-        
+
 
 #        with self.context:
 #            q = db.session.query(Story).filter(Story.id == 1)

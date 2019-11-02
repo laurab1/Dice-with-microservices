@@ -1,0 +1,6 @@
+run
+alarm
+candy
+poison
+alien
+tree

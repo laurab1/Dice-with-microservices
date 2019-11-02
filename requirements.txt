@@ -5,3 +5,4 @@ redis
 flask-wtf
 flask-sqlalchemy
 pip-tools
+flask_bootstrap
