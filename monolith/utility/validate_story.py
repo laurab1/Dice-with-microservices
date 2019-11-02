@@ -45,7 +45,7 @@ def _check_story(roll, story_text):
     
     n_dices = len(roll)
     roll_lower = [w.lower() for w in roll]
-    
+
     story_words = story_text.translate(str.maketrans(string.punctuation, ' ' * len(string.punctuation))).replace(' '*4, ' ').replace(' '*3, ' ').replace(' '*2, ' ').split()
     story_words = [w.lower() for w in story_words]
         
