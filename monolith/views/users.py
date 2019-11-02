@@ -1,22 +1,25 @@
-from flask import Blueprint, redirect, render_template, request, jsonify
-from flask import current_app as app
-from flask_login import (current_user, login_user, login_required)
-from monolith.database import db, User
-from monolith.auth import admin_required
-from monolith.forms import UserForm
-from sqlalchemy.exc import IntegrityError
 from os import urandom
+
+from flask import Blueprint
+from flask import abort, jsonify, redirect, render_template, request
+
+from flask_login import current_user, login_required, login_user
+
+from monolith.auth import admin_required
+from monolith.database import User, db
+from monolith.forms import UserForm
+
+from sqlalchemy.exc import IntegrityError
 
 
 users = Blueprint('users', __name__)
 
 
 @users.route('/users')
-def users_():
-    def aux(*args, **kw):
-        users = db.session.query(User)
-        return render_template("users.html", users=users)
-    return admin_required(aux)()
+@admin_required
+def _users():
+    users = db.session.query(User)
+    return render_template('users.html', users=users)
 
 
 @users.route('/signup', methods=['GET', 'POST'])
@@ -80,14 +83,13 @@ def follow(user_id):
 
 def _get_followed_dict(user_id):
     me = User.query.get(user_id)
-    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id} for x in me.follows]
-    return { 'users': users }
+    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id}
+             for x in me.follows]
+    return {'users': users}
 
 
 @users.route('/followed', methods=['GET'])
 @login_required
 def get_followed():
     template_dict = _get_followed_dict(current_user.id)
-    # if app.config['TESTING']:
-    #     return jsonify(template_dict)
     return render_template('followed.html', **template_dict)

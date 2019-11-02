@@ -1,36 +1,44 @@
-from flask import Blueprint, redirect, render_template, request, abort, jsonify
-from monolith.database import db, Story, Like
-from flask_login import (current_user, login_user, logout_user, login_required)
+from flask import Blueprint, abort
 from flask import current_app as app
-from monolith.utility.diceutils import *
-from monolith.forms import *
-from monolith.classes.DiceSet import *
+from flask import jsonify, render_template, request
+
+from flask_login import current_user, login_required
+
+from monolith.classes.DiceSet import DiceSet
+from monolith.database import Like, Story, db
+from monolith.forms import StoryForm
+from monolith.utility.diceutils import get_dice_sets_list
+
 
 stories = Blueprint('stories', __name__)
+
 
 @stories.route('/newStory', methods=['GET'])
 @login_required
 def _newstory():
-    return render_template("new_story.html", diceset=get_dice_sets_lsit())
+    return render_template('new_story.html', diceset=get_dice_sets_list())
 
 
 @stories.route('/rollDice', methods=['GET'])
 @login_required
 def _rollDice():
     form = StoryForm()
-    diceset = 'standard' if request.args.get('diceset') is None else request.args.get('diceset')
-    dicenum = 6 if request.args.get('dicenum') is None else int(request.args.get('dicenum'))
+    diceset = ('standard' if request.args.get('diceset') is None
+               else request.args.get('diceset'))
+    dicenum = (6 if request.args.get('dicenum') is None
+               else int(request.args.get('dicenum')))
 
     try:
         dice = DiceSet(diceset, dicenum)
         roll = dice.throw_dice()
-    except Exception as e:
+    except Exception:
         abort(400)
 
-    if app.config['TESTING']==True:
+    if app.config['TESTING']:
         return jsonify(roll)
-    else:
-        return render_template("new_story.html", dice=roll, form=form)
+
+    return render_template('new_story.html', dice=roll, form=form)
+
 
 @stories.route('/writeStory', methods=['POST'])
 @login_required
@@ -45,10 +53,12 @@ def _writeStory():
         try:
             db.session.commit()
             return _stories()
-        except Exception as e:
-            return jsonify({'Error':'Your story could not be posted.'}), 400
+        except Exception:
+            return jsonify({'Error': 'Your story could not be posted.'}), 400
 
-    return jsonify({'Error':'Your story is too long or data is missing.'}), 400
+    return (jsonify({'Error': 'Your story is too long or data is missing.'}),
+            400)
+
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message=''):
@@ -66,18 +76,20 @@ def _get_story(storyid, message=''):
         message = 'story not found!'
     else:
         id = story.first().id
-    
-    #TODO: change like_it_url
-    if app.config["TESTING"] == True:
-        return jsonify({'story': str(id), 'message' : message})
-    else:
-        return render_template("stories.html", message=message, stories=story, like_it_url="http://127.0.0.1:5000/stories/like/")
+
+    # TODO: change like_it_url
+    if app.config["TESTING"]:
+        return jsonify(story=str(id), message=message)
+
+    return render_template("stories.html", message=message, stories=story,
+                           like_it_url="http://127.0.0.1:5000/stories/like/")
+
 
 @stories.route('/stories/like/<authorid>/<storyid>')
 @login_required
 def _like(authorid, storyid):
     q = Like.query.filter_by(liker_id=current_user.id, story_id=storyid)
-    if q.first() != None:
+    if q.first() is not None:
         new_like = Like()
         new_like.liker_id = current_user.id
         new_like.story_id = storyid
@@ -87,4 +99,5 @@ def _like(authorid, storyid):
         message = ''
     else:
         message = 'You\'ve already liked this story!'
+
     return _stories(message)

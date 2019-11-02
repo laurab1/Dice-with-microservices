@@ -1,9 +1,3 @@
-from unittest import TestCase
-from flask import request
-from flask_login import current_user
-import json
-
-from monolith.app import create_app
 from monolith.database import User
 
 

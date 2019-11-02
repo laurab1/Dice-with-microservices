@@ -1,10 +1,9 @@
 import os
 import tempfile
 
-import pytest
+from monolith.utility.diceutils import get_die_faces_list
 
-from kombu.utils import json
-from monolith.utility.diceutils import *
+import pytest
 
 
 @pytest.fixture
@@ -26,9 +25,11 @@ def test_newStory(client):
     reply = client.get('/newStory')
     assert reply.status_code == 200
 
+
 def test_roll_valid_dice_success(client):
     reply = client.get('/rollDice?diceset=standard')
     assert reply.status_code == 200
+
 
 def test_roll_invalid_dice_fail(client):
     # new story page
@@ -47,6 +48,7 @@ def test_roll_invalid_dice_fail(client):
     reply = client.get('/rollDice?diceset=standard&dicenum=0')
     assert reply.status_code == 400
 
+
 def test_roll_dice_standard(client):
     # 6 standard dice
     reply = client.get('/rollDice?diceset=standard')
@@ -60,14 +62,16 @@ def test_roll_dice_standard(client):
     reply = client.get('/rollDice?diceset=standard&dicenum=4')
     assert len(reply.get_json()) == 4
 
+
 def test_roll_dice_halloween(client):
     # dice thrown in halloween set
     reply = client.get('/rollDice?diceset=halloween')
     body = reply.get_json()
     assert len(body) == 6
     for i in range(0, 6):
-        face_list = get_die_faces_lsit("halloween", i)
+        face_list = get_die_faces_list("halloween", i)
         assert body[i] in face_list
+
 
 def test_roll_dice_xmas(client):
     # dice thrown in xmas set
@@ -75,5 +79,5 @@ def test_roll_dice_xmas(client):
     body = reply.get_json()
     assert len(body) == 6
     for i in range(0, 6):
-        face_list = get_die_faces_lsit("xmas", i)
+        face_list = get_die_faces_list("xmas", i)
         assert body[i] in face_list
