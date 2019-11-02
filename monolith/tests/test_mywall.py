@@ -8,11 +8,7 @@ from flask import Blueprint, render_template, request
 
 class TestMywall(unittest.TestCase):
     def setUp(self):
-<<<<<<< HEAD
         self.app = create_app(test=True) 
-=======
-        self.app = create_app(test=True) #self.app = create_app(test=True) is wrong with tox
->>>>>>> f97da0f55bcbed3307a04f478228ae6ca64951d7
         self.context = self.app.app_context()
         self.app = self.app.test_client()
 
