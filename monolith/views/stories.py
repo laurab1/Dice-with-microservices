@@ -1,5 +1,5 @@
 from flask import Blueprint, redirect, render_template, request, abort, jsonify
-from monolith.database import db, Story, Like
+from monolith.database import db, Story, Reactions
 from flask_login import (current_user, login_user, logout_user, login_required)
 from flask import current_app as app
 from sqlalchemy import desc
