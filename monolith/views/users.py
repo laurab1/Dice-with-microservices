@@ -1,9 +1,11 @@
-from flask import Blueprint, redirect, render_template, request, jsonify
+from flask import Blueprint, redirect, render_template, request, jsonify, abort
 from flask import current_app as app
-from flask_login import (current_user, login_user, login_required)
+from flask_login import current_user, login_user, login_required
 from monolith.database import db, User, Story
 from monolith.auth import admin_required
+from monolith.database import User, db
 from monolith.forms import UserForm
+
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 from os import urandom
@@ -94,15 +96,13 @@ def follow(user_id):
 
 def _get_followed_dict(user_id):
     me = User.query.get(user_id)
-    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id} for x in me.follows]
-    return users
+    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id}
+             for x in me.follows]
+    return {'users': users}
 
 
 @users.route('/followed', methods=['GET'])
 @login_required
 def get_followed():
-    users = _get_followed_dict(current_user.id)
-    if app.config['TESTING']:
-        return jsonify({'users': users})
-    else:
-        return render_template('followed.html', users=users)
+    template_dict = _get_followed_dict(current_user.id)
+    return render_template('followed.html', **template_dict)

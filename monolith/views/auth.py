@@ -5,19 +5,21 @@ from flask import current_app as app
 from monolith.database import db, User
 from monolith.forms import LoginForm
 
+
 auth = Blueprint('auth', __name__)
+
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     form.password.errors = []
+
     if form.validate_on_submit():
         cred, password = form.data['usrn_eml'], form.data['password']
         if '@' in cred:
-            q = db.session.query(User).filter(User.email == cred)
+            user = db.session.query(User).filter(User.email == cred).first()
         else:
-            q = db.session.query(User).filter(User.username == cred)
-        user = q.first()
+            user = db.session.query(User).filter(User.username == cred).first()
         if user is not None and user.authenticate(password):
             login_user(user)
             return redirect('/')
@@ -33,5 +35,4 @@ def logout():
     if current_user.is_authenticated:
         logout_user()
         return redirect('/')
-    else:
-        return Response(status=203)
+    return Response(status=203)
