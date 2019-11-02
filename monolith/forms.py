@@ -23,7 +23,6 @@ class UserForm(FlaskForm):
     dateofbirth = DateField('Date of Birth', id='dateofbirth', validators=[Optional()])
     display = ['email', 'username', 'password','firstname', 'lastname', 'dateofbirth']
 
-
 class StoryForm(FlaskForm):
     diceset = ""
     text = f.TextAreaField('Write your story', id='text', validators=[DataRequired(), Length(max=1000)])
