@@ -7,7 +7,7 @@ from random import randint
 from flask import current_app as app
 
 from monolith.classes.DiceSet import DiceSet
-from monolith.database import Like, Story, db
+from monolith.database import Reaction, Story, db
 from monolith.forms import StoryForm
 from monolith.utility.diceutils import get_dice_sets_list
 
