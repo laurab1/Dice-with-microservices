@@ -12,6 +12,15 @@ class TestGetStory(unittest.TestCase):
         self.context = self.app.app_context()
         self.app = self.app.test_client()
 
+        with self.context:
+            example = Story()
+            example.text = 'Trial story of example admin user :)'
+            example.likes = 42
+            example.author_id = 1
+            
+            db.session.add(example)
+            db.session.commit()
+
     def tearDown(self):
         with self.context:
             db.drop_all()
