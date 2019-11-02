@@ -9,7 +9,6 @@ from celery import Celery
 import datetime
 
 def create_app(test=False):
->>>>>>> develop
     app = Flask(__name__)
     Bootstrap(app)
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
