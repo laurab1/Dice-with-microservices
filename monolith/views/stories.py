@@ -112,15 +112,29 @@ def _get_random_recent_story(message=''):
 @login_required
 def _get_story(storyid):
     q = Reaction.query.filter_by(reactor_id=current_user.id, story_id=storyid)
+    message = ''
+    
     if request.method == 'GET':
         thisstory = db.session.query(Story).filter_by(id=storyid)
-        if q.first() != None and q.first().marked != True:
+        
+        if thisstory.first() is None:
+            message = 'story not found!'
+            if app.config["TESTING"]:
+                return jsonify({'story' : 'None', 'message' : message})
+            else:
+                return _stories(message) 
+        else:
+            if app.config['TESTING']:
+                return jsonify({'story' : str(thisstory.first().id), 'message' : message})  
+               
+        if q.first() != None and q.first().marked != True:   
             if q.first().reaction_val == 1:
                 return render_template("story.html", stories=thisstory, marked=False, val=1)
             else:
                 return render_template("story.html", stories=thisstory, marked=False, val=-1)
         else:
             return render_template("story.html", stories=thisstory)
+        
     if request.method == 'POST':
         react = 0
         if "like" in request.form:
@@ -149,4 +163,7 @@ def _get_story(storyid):
                 message = 'You\'ve already liked this story!'
             else:
                 message = 'You\'ve already disliked this story!'
-        return _stories(message, False, storyid, react)
+        if app.config['TESTING']:
+            return jsonify({'story' : storyid, 'message' : message})
+        else:
+            return _stories(message, False, storyid, react)

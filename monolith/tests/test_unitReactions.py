@@ -28,23 +28,30 @@ class ReactionsUnitTest(TestCase):
         
         #retrieve non-existing story
         reply = self.app.get('/stories/0')
-        self.assertEqual(reply.message, 'Story not found')
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(body['message'], 'story not found!')
 
     def test_like(self):
+        self.app.post('/login', data={'usrn_eml': 'Admin', 'password': 'admin'})
 
         # first like
         reply = self.app.post('/stories/1', data={'like' :'Like it!'})
-        self.assertEqual(reply.message, 'Got it!')
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(body['message'], 'Got it!')
         
         # duplicated like
         reply = self.app.post('/stories/1', data={'like' :'Like it!'})
-        self.assertEqual(reply.message, 'You\'ve already liked this story!')
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(body['message'], 'You\'ve already liked this story!')
 
     def test_dislike(self):
+        self.app.post('/login', data={'usrn_eml': 'Admin', 'password': 'admin'})
 
         # same as likes: this also tests reaction changes
-        reply = self.app.post('/stories/1', data={'like' :'Like it!'})
-        self.assertEqual(reply.message, 'Got it!')
+        reply = self.app.post('/stories/1', data={'dislike' :'Disike it!'})
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(body['message'], 'Got it!')
         
-        reply = self.app.post('/stories/1', data={'like' :'Like it!'})
-        self.assertEqual(reply.message, 'You\'ve already disliked this story!')
+        reply = self.app.post('/stories/1', data={'dislike' :'Dislike it!'})
+        body = json.loads(str(reply.data, 'utf8'))
+        self.assertEqual(body['message'], 'You\'ve already disliked this story!')
