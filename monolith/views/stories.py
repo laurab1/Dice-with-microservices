@@ -1,10 +1,15 @@
 from flask import Blueprint, redirect, render_template, request, abort, jsonify
 from monolith.database import db, Story, Reaction
 from flask_login import (current_user, login_user, logout_user, login_required)
+import datetime as dt
+from random import randint
+
 from flask import current_app as app
-from sqlalchemy import desc
-import random
-import datetime
+
+from monolith.classes.DiceSet import DiceSet
+from monolith.database import Like, Story, db
+from monolith.forms import StoryForm
+from monolith.utility.diceutils import get_dice_sets_list
 
 from monolith.utility.diceutils import *
 from monolith.forms import *
@@ -13,29 +18,33 @@ from monolith.task import *
 
 stories = Blueprint('stories', __name__)
 
+
 @stories.route('/newStory', methods=['GET'])
 @login_required
 def _newstory():
-    return render_template("new_story.html", diceset=get_dice_sets_lsit())
+    return render_template('new_story.html', diceset=get_dice_sets_list())
 
 
 @stories.route('/rollDice', methods=['GET'])
 @login_required
 def _rollDice():
     form = StoryForm()
-    diceset = 'standard' if request.args.get('diceset') is None else request.args.get('diceset')
-    dicenum = 6 if request.args.get('dicenum') is None else int(request.args.get('dicenum'))
+    diceset = ('standard' if request.args.get('diceset') is None
+               else request.args.get('diceset'))
+    dicenum = (6 if request.args.get('dicenum') is None
+               else int(request.args.get('dicenum')))
 
     try:
         dice = DiceSet(diceset, dicenum)
         roll = dice.throw_dice()
-    except Exception as e:
+    except Exception:
         abort(400)
 
-    if app.config['TESTING']==True:
+    if app.config['TESTING']:
         return jsonify(roll)
-    else:
-        return render_template("new_story.html", dice=roll, form=form)
+
+    return render_template('new_story.html', dice=roll, form=form)
+
 
 @stories.route('/writeStory', methods=['POST'])
 @login_required
@@ -52,52 +61,59 @@ def _writeStory():
         try:
             db.session.commit()
             return _stories()
-        except Exception as e:
-            return jsonify({'Error':'Your story could not be posted.'}), 400
+        except Exception:
+            return jsonify({'Error': 'Your story could not be posted.'}), 400
 
-    return jsonify({'Error':'Your story is too long or data is missing.'}), 400
+    return (jsonify({'Error': 'Your story is too long or data is missing.'}),
+            400)
+
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
     allstories = db.session.query(Story)
     return render_template("stories.html", message=message, stories=allstories,
-                           like_it_url="http://127.0.0.1:5000/stories/", storyid=id, react=react)
+                           like_it_url="http://127.0.0.1:5000/stories/like/", storyid=id, react=react)
+
 
 @stories.route('/stories/random_story', methods=['GET'])
 def _get_random_recent_story(message=''):
-    stories = db.session.query(Story) #.order_by(Story.date.desc())
+    stories = db.session.query(Story)  # .order_by(Story.date.desc())
     recent_story = []
     id = None
 
     if stories.first() is not None:
         recent_stories = stories.group_by(Story.date)
-        
-        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+
+        yesterday = dt.datetime.now() - dt.timedelta(days=1)
         today_stories = recent_stories.having(Story.date >= yesterday)
-        
-        #check if there are stories posted today
+
+        # check if there are stories posted today
         if today_stories.first() is not None:
             query_size = today_stories.count()
-            #we will pick randomly between at most *pool_size* stories from today
+            # we will pick randomly between at most *pool_size* stories
+            # from today
             pool_size = 5
-            
+
             if pool_size > query_size:
                 pool_size = query_size
-            
-            #I want to pick between the last *pool_size* elements
-            #(randint returns a fixed value when using pytest, but works fine in reality)
-            i = random.randint(query_size - pool_size, query_size - 1)
 
-            #convert the query result in list (Unfortunately, I can't apply the get() method on the query)
+            # I want to pick between the last *pool_size* elements
+            # (randint returns a fixed value when using pytest, but works fine
+            # in reality)
+            i = randint(query_size - pool_size, query_size - 1)
+
+            # convert the query result in list (Unfortunately, I can't apply
+            # the get() method on the query)
             today_stories = [story for story in today_stories]
-            
+
             recent_story.append(today_stories[i])
             id = today_stories[i].id
         else:
             message = "no stories today. Here is a random one:"
-            #(randint returns a fixed value when using pytest, but works fine in reality)
-            i = random.randint(1, stories.count() - 1)
-            
+            # (randint returns a fixed value when using pytest, but works fine
+            # in reality)
+            i = randint(1, stories.count() - 1)
+
             recent_story.append(stories.get(i))
             id = recent_story[0].id
     else:
@@ -106,7 +122,8 @@ def _get_random_recent_story(message=''):
     if app.config["TESTING"] == True:
         app.config["TEMPLATE_CONTEXT"] = jsonify({'story': str(id), 'message' : message})
         
-    return render_template("stories.html", message=message, stories=recent_story, like_it_url="http://127.0.0.1:5000/stories/")
+    return render_template("stories.html", message=message, stories=recent_story, like_it_url="http://127.0.0.1:5000/stories/like/")
+
 
 @stories.route('/stories/<storyid>', methods=['GET','POST'])
 @login_required
@@ -167,3 +184,19 @@ def _get_story(storyid):
             return jsonify({'story' : storyid, 'message' : message})
         else:
             return _stories(message, False, storyid, react)
+
+
+def _like(authorid, storyid):
+    q = Like.query.filter_by(liker_id=current_user.id, story_id=storyid)
+    if q.first() is not None:
+        new_like = Like()
+        new_like.liker_id = current_user.id
+        new_like.story_id = storyid
+        new_like.liked_id = authorid
+        db.session.add(new_like)
+        db.session.commit()
+        message = ''
+    else:
+        message = 'You\'ve already liked this story!'
+
+    return _stories(message)
