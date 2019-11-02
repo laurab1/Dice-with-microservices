@@ -68,10 +68,10 @@ if __name__ == '__main__':
     self.pips = [Die] * dicenumber
     self.dicenumber = dicenumber
     self.setname = setname
-
+    
     # Check given parameters #
     self._dice_preconditions(setname, dicenumber);
-
+    
     # Create all the dice #
     for i in range(0, dicenumber):
         self.dice[i] = Die(RESOURCES_DIR + "/diceset/" + setname + "/die" + str(i) + ".txt")
