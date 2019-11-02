@@ -12,7 +12,11 @@ import pytest
 
 @pytest.fixture
 def app():
-    """Create and configure a new app instance for each test."""
+    """Builds and configures a new app instance for each test, using the test
+    flag and a temporary fresh database. Automatically manages the temporary
+    files. Can be overridden locally to pass different flags to the
+    app instance, see test_unitStories for reference.
+    """
     db_fd, db_path = tempfile.mkstemp()
     db_url = 'sqlite:///' + db_path
     app = create_app(test=True, database=db_url)
@@ -25,6 +29,7 @@ def app():
 
 @pytest.fixture
 def client(app):
+    """Builds a new test client instance."""
     return app.test_client()
 
 
@@ -64,6 +69,9 @@ def _init_database(db):
 
 @pytest.fixture
 def database(app):
+    """Provides a reference to the temporary database in the app context. Use
+    this instance instead of importing db from monolith.db.
+    """
     with app.app_context():
         db.create_all()
 
@@ -75,26 +83,34 @@ def database(app):
 
 
 class AuthActions:
+    """Class for login/logout management."""
 
     def __init__(self, app, client):
         self._app = app
         self._client = client
 
     def login(self, username='Admin', password='admin'):
+        """Sends a login request."""
         return self._client.post('/login', data={
             'usrn_eml': username, 'password': password})
 
     def logout(self):
+        """Sends a logout request."""
         return self._client.get('/logout')
 
 
 @pytest.fixture
 def auth(app, client):
+    """Provides login/logout capabilities."""
     return AuthActions(app, client)
 
 
 @pytest.fixture
 def templates(app):
+    """Provides an array of captured templates. The last element in the array
+    is the template context of the last client call. This fixture can be used
+    to avoid inserting testing code and duplication inside the views
+    implementation."""
     recorded = []
 
     def record(sender, template, context, **kwargs):

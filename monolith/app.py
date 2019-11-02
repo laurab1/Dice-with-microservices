@@ -5,7 +5,7 @@ from flask import Flask
 from flask_bootstrap import Bootstrap
 
 from monolith.auth import login_manager
-from monolith.database import Story, User, db
+from monolith.database import User, db
 from monolith.views import blueprints
 
 

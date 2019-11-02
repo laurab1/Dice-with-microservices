@@ -2,6 +2,16 @@ from monolith.database import User
 
 
 def test_follow_post(client, database, auth):
+    """Tests the POST endpoint of a follow request.
+    This tests use the fixtures defined in conftest.py extensively. Using a
+    fixtures is as simple as defining a parameter with the same name in the
+    function definition. auth is used for login, while client is used for the
+    requests, with database to check that the calls are functioning correctly.
+    Instead of defining a subclass of unittest.TestCase, asserts are used in
+    the same manner of assertEqual. If assertRaises is needed, pytest.raises
+    may be imported. All contexts management, login and templates are managed
+    by the fixtures.
+    """
     reply = auth.login('test1', 'test1123')
     assert reply.status_code == 302
 
@@ -33,6 +43,7 @@ def test_follow_post(client, database, auth):
 
 
 def test_follow_delete(client, database, auth):
+    """Tests the DELETE endpoint of a unfollow request."""
     reply = auth.login('test1', 'test1123')
     assert reply.status_code == 302
 
@@ -69,6 +80,10 @@ def test_follow_delete(client, database, auth):
 
 
 def test_followed_get(client, database, auth, templates):
+    """Test the view the returns the list of followed users.
+    Notably, the templates capturing fixtures is used with templates[-1] to
+    retrieve the last request template context.
+    """
     reply = auth.login('test1', 'test1123')
     assert reply.status_code == 302
 
@@ -93,7 +108,6 @@ def test_followed_get(client, database, auth, templates):
 
     reply = client.get('/followed')
     assert reply.status_code == 200
-    assert templates
     users = templates[-1]['users']
     assert len(users) == 1
     assert users[0] == user1

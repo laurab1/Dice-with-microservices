@@ -1,5 +1,3 @@
-from os import urandom
-
 from flask import Blueprint
 from flask import abort, jsonify, redirect, render_template, request
 
