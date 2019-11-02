@@ -5,7 +5,7 @@
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
             integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymDislike it!ous"></script>
+            crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
             integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
             crossorigin="anonymous"></script>
@@ -33,6 +33,9 @@
                 <a class="nav-link" href="#">My Wall <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="/followed">Followed users</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="/logout">Logout ({{ current_user.firstname }})</a>
             </li>
 
@@ -52,6 +55,10 @@
                         {% if current_user.is_authenticated %}
                             <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
           	        	    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
+                                    <a href="{{ like_it_url }}{{ story.author.id }}/{{ story.id }}">Like it!</a>
+                                    {% if story.author.id != current_user.id %}
+                                         <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+                                    {% endif %}
                         {% endif %}
                     </li>
                 {% else %}
@@ -60,6 +67,10 @@
                         {% if current_user.is_authenticated %}
                             <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
           	        	    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
+                                    <a href="{{ like_it_url }}{{ story.author.id }}/{{ story.id }}">Like it!</a>
+                                    {% if story.author.id != current_user.id %}
+                                         <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+                                    {% endif %}
                         {% endif %}
                     </li>
                 {% endif %}
@@ -69,6 +80,10 @@
                     {% if current_user.is_authenticated %}
                         <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
           	    	    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
+                            <a href="{{ like_it_url }}{{ story.author.id }}/{{ story.id }}">Like it!</a>
+                            {% if story.author.id != current_user.id %}
+                                 <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+                            {% endif %}
                     {% endif %}
                 </li>
             {% endif %}
@@ -80,10 +95,28 @@
                 {% if current_user.is_authenticated %}
                     <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
           		    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
+                            <a href="{{ like_it_url }}{{ story.author.id }}/{{ story.id }}">Like it!</a>
+                            {% if story.author.id != current_user.id %}
+                                 <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+                            {% endif %}
                 {% endif %}
             </li>
         {% endfor %}
     {% endif %}
 </ul>
+
+  <script>
+    function follow(user_id) {
+      fetch('/users/' + user_id + '/follow', { method: 'POST' })
+        .then(function(response) {
+          if (response.ok) {
+            alert('Now following user ' + user_id)
+          } else {
+            console.log('Invalid follow request to user: ' + user_id)
+          }
+        });
+    }
+  </script>
+
 </body>
 </html>
