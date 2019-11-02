@@ -35,7 +35,7 @@ def test_follow_post(client, database, auth):
 
     reply = client.post('/users/5/follow')
     assert reply.status_code == 404
-    assert reply.get_json()['error'] == 'User with id 5 does not exists'
+    assert reply.get_json()['error'] == 'User with id 5 does not exist'
 
     reply = client.post('/users/2/follow')
     assert reply.status_code == 400
@@ -72,7 +72,7 @@ def test_follow_delete(client, database, auth):
 
     reply = client.delete('/users/5/follow')
     assert reply.status_code == 404
-    assert reply.get_json()['error'] == 'User with id 5 does not exists'
+    assert reply.get_json()['error'] == 'User with id 5 does not exist'
 
     reply = client.post('/users/2/follow')
     assert reply.status_code == 400
