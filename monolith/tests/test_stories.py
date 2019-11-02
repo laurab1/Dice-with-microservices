@@ -35,3 +35,17 @@ class StoriesUnittest(TestCase):
         reply = self.app.post('/writeStory', data={})
 
         self.assertEqual(reply.status_code, 400)
+
+    def test_see_all_stories(self):
+        reply = self.app.get('/stories')
+        self.assertEqual(reply.status_code, 200)
+
+        with self.context:
+            queried = db.session.query(Story)
+
+        body = json.loads(str(reply.data, 'UTF8'))
+        self.assertEqual(len(body), queried.count())
+
+        for i in range(0, len(body)):
+            self.assertEqual(reply[i].body['id'], queried[i].id)
+            self.assertEqual(reply[i].body['text'], queried[i].text)

@@ -68,6 +68,7 @@ class Story(db.Model):
     text = db.Column(db.Text(1000)) # around 200 (English) words
     date = db.Column(db.DateTime)
     likes = db.Column(db.Integer)  # will store the number of likes, periodically updated in background
+    deleted = db.Column(db.Boolean, default=False)
     # define foreign key
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = relationship('User', foreign_keys='Story.author_id')

@@ -53,6 +53,8 @@
                 <a href="{{ like_it_url }}{{ story.author.id }}/{{ story.id }}">Like it!</a>
                 {% if story.author.id != current_user.id %}
                   <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+                {% else %}
+                  <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>
                 {% endif %}
             {% endif %}
         </li>
@@ -69,6 +71,10 @@
             console.log('Invalid follow request to user: ' + user_id)
           }
         });
+    }
+
+    function deleteStory(story_id) {
+      fetch('/stories/' + story_id, { method: 'DELETE' });
     }
   </script>
 </body>

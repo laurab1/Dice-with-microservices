@@ -50,10 +50,37 @@ def _writeStory():
 
     return jsonify({'Error':'Your story is too long or data is missing.'}), 400
 
+@stories.route('/stories/<storyid>', methods=['DELETE'])
+@login_required
+def _deleteStory(storyid):
+    story = Story.query.get(storyid)
+    if story is None:
+        abort(404) #story not found
+    else:
+        if story.deleted == True:
+            return jsonify({'Error': 'This story was already deleted.'}), 400
+        else:
+            message = ''
+            if story.author_id != current_user.id:
+                abort(403) #unauthorized request
+            story.deleted = True
+            try:
+                db.session.commit()
+                message = 'The story was succesfully deleted'
+            except Exception as e:
+                message = 'Your story could not be deleted'
+            return _stories(message)
+
 @stories.route('/stories', methods=['GET'])
 def _stories(message=''):
-    allstories = db.session.query(Story)
-    return render_template("stories.html", message=message, stories=allstories,
+    allstories = db.session.query(Story).filter_by(deleted=False)
+    if app.config["TESTING"] == True:
+        stories = []
+        for story in allstories:
+            stories.append({'id': story.id, 'text': story.text})
+        return jsonify(stories)
+    else:
+        return render_template("stories.html", message=message, stories=allstories,
                            like_it_url="http://127.0.0.1:5000/stories/like/")
 
 
@@ -66,7 +93,7 @@ def _get_story(storyid, message=''):
         message = 'story not found!'
     else:
         id = story.first().id
-    
+
     #TODO: change like_it_url
     if app.config["TESTING"] == True:
         return jsonify({'story': str(id), 'message' : message})
