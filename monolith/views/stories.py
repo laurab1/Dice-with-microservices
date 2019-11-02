@@ -92,34 +92,24 @@ def _get_random_recent_story(message=''):
         #check if there are stories posted today
         if today_stories.first() is not None:
             query_size = today_stories.count()
-            #we will pick randomly between at most pool_size stories from today
+            #we will pick randomly between at most *pool_size* stories from today
             pool_size = 5
             
             if pool_size > query_size:
                 pool_size = query_size
             
-            #returns a fixed value when using pytest, but works fine in reality
-            i = random.randint(0, pool_size - 1)
+            #I want to pick between the last *pool_size* elements
+            #(randint returns a fixed value when using pytest, but works fine in reality)
+            i = random.randint(query_size - pool_size, query_size - 1)
 
             #convert the query result in list (Unfortunately, I can't apply the get() method on the query)
             today_stories = [story for story in today_stories]
-
-            '''
-            for s in recent_stories:
-                print(s.id, s.date)
-            print("-")
-            for s in today_stories:
-                print(s.id, s.date)
-            print("-")
-            print(i)
-            print(today_stories[i].id, today_stories[i].date)
-            '''
-
+            
             recent_story.append(today_stories[i])
             id = today_stories[i].id
         else:
             message = "no stories today. Here is a random one:"
-            #returns a fixed value when using pytest, but works fine in reality
+            #(randint returns a fixed value when using pytest, but works fine in reality)
             i = random.randint(1, stories.count() - 1)
             
             recent_story.append(stories.get(i))

@@ -51,7 +51,7 @@ class TestGetStory(unittest.TestCase):
         self.assertEqual(template_context['story'], '1')
         self.assertEqual(template_context['message'], '')
 
-    '''
+    
     #two recent stories to pick from, two not so recent
     def test_get_random_recent_story_2(self):
         with self.context:
@@ -85,11 +85,11 @@ class TestGetStory(unittest.TestCase):
         
         #story found
         reply = self.test_client.get('/stories/random_story')
-        body = json.loads(str(reply.data, 'utf8'))
-        
-        self.assertTrue(body['story'] == '1' or body['story'] == '3')
-        self.assertEqual(body['message'], '')
         self.assertEqual(reply.status_code, 200)
+
+        template_context = json.loads(str(self.app.config['TEMPLATE_CONTEXT'].data, 'utf8'))
+        self.assertTrue(template_context['story'] == '1' or template_context['story'] == '3')
+        self.assertEqual(template_context['message'], '')
 
     #no recent story, get a random one
     def test_get_random_story(self):
@@ -112,19 +112,18 @@ class TestGetStory(unittest.TestCase):
         
         #story found
         reply = self.test_client.get('/stories/random_story')
-        body = json.loads(str(reply.data, 'utf8'))
-        
-        self.assertTrue(body['story'] == '1' or body['story'] == '2')
-        self.assertEqual(body['message'], 'no stories today. Here is a random one:')
         self.assertEqual(reply.status_code, 200)
+
+        template_context = json.loads(str(self.app.config['TEMPLATE_CONTEXT'].data, 'utf8'))
+        self.assertTrue(template_context['story'] == '1' or template_context['story'] == '2')
+        self.assertEqual(template_context['message'], 'no stories today. Here is a random one:')
     
     def test_no_stories(self):
         #story not found
         reply = self.test_client.get('/stories/random_story')
-        body = json.loads(str(reply.data, 'utf8'))
-        
-        self.assertEqual(body['story'], 'None')
-        self.assertEqual(body['message'], 'no stories!')
         self.assertEqual(reply.status_code, 200)
-    '''
+
+        template_context = json.loads(str(self.app.config['TEMPLATE_CONTEXT'].data, 'utf8'))
+        self.assertEqual(template_context['story'], 'None')
+        self.assertEqual(template_context['message'], 'no stories!')
 
