@@ -47,16 +47,6 @@ def create_app(test=False, database='sqlite:///storytellers.db',
             db.session.add(example)
             db.session.commit()
 
-        q = db.session.query(Story).filter(Story.id == 1)
-        story = q.first()
-        if story is None:
-            example = Story()
-            example.text = 'Trial story of example admin user :)'
-            example.likes = 42
-            example.author_id = 1
-            db.session.add(example)
-            db.session.commit()
-
     return app
 
 
