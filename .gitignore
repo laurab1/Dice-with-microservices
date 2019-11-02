@@ -3,5 +3,6 @@ __pycache__/
 .idea/
 .vscode/
 .coverage
+.tox/
 storytellers_monolith.egg-info/
 storytellers.db

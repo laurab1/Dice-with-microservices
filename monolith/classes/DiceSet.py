@@ -1,6 +1,7 @@
 import random as rnd
+
 from monolith.definitions import RESOURCES_DIR
-from monolith.utility.diceutils import get_dice_sets_lsit
+from monolith.utility.diceutils import get_dice_sets_list
 
 
 class Die:
@@ -8,19 +9,16 @@ class Die:
     def __init__(self, filename):
         self.faces = []
         self.pip = None
-        f = open(filename, "r")
-        lines = f.readlines()
-        for line in lines:
-            self.faces.append(line.replace("\n", ""))
-        self.throw_die()
-        f.close()
+        with open(filename, 'r') as f:
+            for line in f.readlines():
+                self.faces.append(line.replace('\n', ''))
+            self.throw_die()
 
     def throw_die(self):
-        if self.faces:  # pythonic for list is not empty
+        if self.faces:
             self.pip = rnd.choice(self.faces)
             return self.pip
-        else:
-            raise IndexError("throw_die(): empty die error.")
+        raise IndexError("throw_die(): empty die error.")
 
 
 class DiceSet:
@@ -32,14 +30,15 @@ class DiceSet:
         self.setname = setname
 
         # Check given parameters #
-        self._dice_preconditions(setname, dicenumber);
+        self._dice_preconditions(setname, dicenumber)
 
         # Create all the dice #
-        for i in range(0, dicenumber):
-            self.dice[i] = Die(RESOURCES_DIR + "/diceset/" + setname + "/die" + str(i) + ".txt")
+        for i in range(dicenumber):
+            path = '{}/diceset/{}/die{}.txt'.format(RESOURCES_DIR, setname, i)
+            self.dice[i] = Die(path)
 
     def throw_dice(self):
-        for i in range(0, self.dicenumber):
+        for i in range(self.dicenumber):
             self.pips[i] = self.dice[i].throw_die()
         return self.pips
 
@@ -47,11 +46,8 @@ class DiceSet:
         if dicenum < 4 or dicenum > 6:
             raise InvalidDiceSet()
 
-        if setname not in get_dice_sets_lsit():
+        if setname not in get_dice_sets_list():
             raise InvalidDiceSet(setname)
-
-
-
 
 
 class InvalidDiceSet(Exception):
