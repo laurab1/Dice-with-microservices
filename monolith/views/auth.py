@@ -23,7 +23,7 @@ def login():
             return redirect('/')
         else:
             if app.config['TESTING']:
-                app.config['TEMPLATE_CONTEXT'] = {'Error': 'Wrong username or password.'}
+                return jsonify(error='Wrong username or password.')
                 form.password.errors.append('Wrong username or password.')
     return render_template('login.html', form=form)
 

@@ -20,7 +20,6 @@ def create_app(test=False, database='sqlite:///storytellers.db',
     app.config['SQLALCHEMY_DATABASE_URI'] = database
     app.config['LOGIN_DISABLED'] = login_disabled
     if test:
-        app.config['TEMPLATE_CONTEXT'] = None
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
 

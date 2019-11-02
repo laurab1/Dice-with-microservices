@@ -22,7 +22,7 @@ def users_():
             ).group_by(User.id
             ).all()
     if app.config['TESTING']:
-        app.config['TEMPLATE_CONTEXT'] = {'users': [(r[0],r[1]) for r in result]}
+        return jsonify({'users': [(r[0],r[1]) for r in result]})
     return render_template("users.html", result=result)
 
 
@@ -41,17 +41,16 @@ def signup():
             login_user(new_user)
             return redirect('/')
         except IntegrityError as e:
-            if 'user.username' in str(e):
-                if app.config['TESTING']:
-                    app.config['TEMPLATE_CONTEXT'] = {'Error': 'This username already exists.'}
-                form.username.errors.append('This username already exists.')
-            elif 'user.email' in str(e):
-                if app.config['TESTING']:
-                    app.config['TEMPLATE_CONTEXT'] = {'Error': 'This email is already used.'}
-                form.email.errors.append('This email is already used.')
-            
             status = 409 
+            if 'user.username' in str(e):
+                err = 'This username already exists.'
+            elif 'user.email' in str(e):
+                err = 'This email is already used.'
 
+            if app.config['TESTING']:
+                return jsonify(error=err), status
+            form.email.errors.append(err)
+            
     return render_template('signup.html', form=form), status
 
 
