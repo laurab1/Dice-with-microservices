@@ -18,6 +18,7 @@ def create_app(test=False):
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storytellers.db'
     else:
         app.config['TESTING'] = True
+        app.config['TEMPLATE_CONTEXT'] = None
         app.config['WTF_CSRF_ENABLED'] = False
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         app.config['LOGIN_DISABLED'] = True

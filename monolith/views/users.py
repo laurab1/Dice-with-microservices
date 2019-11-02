@@ -21,13 +21,15 @@ def users_():
             ).outerjoin(Story
             ).group_by(User.id
             ).all()
+    if app.config['TESTING']:
+        app.config['TEMPLATE_CONTEXT'] = {'users': [(r[0],r[1]) for r in result]}
     return render_template("users.html", result=result)
 
 
 @users.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = UserForm()
-
+    status = 200
     if form.validate_on_submit():
         new_user = User()
         form.populate_obj(new_user)
@@ -40,28 +42,36 @@ def signup():
             return redirect('/')
         except IntegrityError as e:
             if 'user.username' in str(e):
-                return jsonify({'Error': 'This username already exists.'})
+                if app.config['TESTING']:
+                    app.config['TEMPLATE_CONTEXT'] = {'Error': 'This username already exists.'}
+                form.username.errors.append('This username already exists.')
             elif 'user.email' in str(e):
-                return jsonify({'Error': 'This email is already used.'})
+                if app.config['TESTING']:
+                    app.config['TEMPLATE_CONTEXT'] = {'Error': 'This email is already used.'}
+                form.email.errors.append('This email is already used.')
+            
+            status = 409 
 
-    return render_template('signup.html', form=form)
+    return render_template('signup.html', form=form), status
 
 
 @users.route('/users/<user_id>/follow', methods=['DELETE', 'POST'])
 @login_required
 def follow(user_id):
-    """POST requests add the user with primary key `user_id` to the list of
+    """
+    POST requests add the user with primary key `user_id` to the list of
     user followed by the currenly logged user. If it is already in the list
     returns successfully without updating the database.
     DELETE requests remove the user from the list and if it is not in the list
     returns successfully without updating the database.
     User must be logged to access this endpoint.
     All responses are in JSON format and are meant to be invokated within the
-    the frontend (eg. AJAX or fetch), not by url access."""
+    the frontend (eg. AJAX or fetch), not by url access.
+    """
 
     followee = User.query.get(user_id)
     if followee is None:
-        message = 'User with id {} does not exists'.format(user_id)
+        message = 'User with id {} does not exist'.format(user_id)
         return (jsonify(error=message), 404)
 
     if followee == current_user:

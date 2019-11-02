@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, request, jsonify, Response
 from flask_login import (current_user, login_user, logout_user,
                          login_required)
-
+from flask import current_app as app
 from monolith.database import db, User
 from monolith.forms import LoginForm
 
@@ -22,7 +22,9 @@ def login():
             login_user(user)
             return redirect('/')
         else:
-            return jsonify({'Error': 'Wrong username or password.'})
+            if app.config['TESTING']:
+                app.config['TEMPLATE_CONTEXT'] = {'Error': 'Wrong username or password.'}
+                form.password.errors.append('Wrong username or password.')
     return render_template('login.html', form=form)
 
 
