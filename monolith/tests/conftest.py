@@ -3,16 +3,16 @@ import os
 import tempfile
 
 from flask import template_rendered
-import pytest
 
 from monolith.app import create_app
-from monolith.database import db, User
+from monolith.database import User, db
+
+import pytest
 
 
 @pytest.fixture
 def app():
     """Create and configure a new app instance for each test."""
-    from monolith.app import create_app
     db_fd, db_path = tempfile.mkstemp()
     db_url = 'sqlite:///' + db_path
     app = create_app(test=True, database=db_url)
@@ -61,6 +61,7 @@ def _init_database(db):
 
     db.session.commit()
 
+
 @pytest.fixture
 def database(app):
     with app.app_context():
@@ -80,8 +81,8 @@ class AuthActions:
         self._client = client
 
     def login(self, username='Admin', password='admin'):
-        return self._client.post('/login',
-                                 data={'usrn_eml': username, 'password': password})
+        return self._client.post('/login', data={
+            'usrn_eml': username, 'password': password})
 
     def logout(self):
         return self._client.get('/logout')
@@ -91,7 +92,7 @@ class AuthActions:
 def auth(app, client):
     return AuthActions(app, client)
 
-# blinker is required
+
 @pytest.fixture
 def templates(app):
     recorded = []
