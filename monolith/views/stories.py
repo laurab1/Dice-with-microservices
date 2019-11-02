@@ -12,19 +12,10 @@ from monolith.classes.DiceSet import *
 
 stories = Blueprint('stories', __name__)
 
-@stories.route('/newStory', methods=['GET', 'POST'])
+@stories.route('/newStory', methods=['GET'])
 @login_required
 def _newstory():
-    form = StoryForm()
-    if request.method == 'POST':
-        diceset = request.form['diceset']
-        if form.validate_on_submit():
-            # new story inserted #
-            # TODO: write a story on the rolled dice #
-            return render_template("stories.html")
-
-    if request.method == 'GET':
-        return render_template("new_story.html", diceset=get_dice_sets_lsit())
+    return render_template("new_story.html", diceset=get_dice_sets_lsit())
 
 
 @stories.route('/rollDice', methods=['GET'])
@@ -45,8 +36,25 @@ def _rollDice():
     else:
         return render_template("new_story.html", dice=roll, form=form)
 
+@stories.route('/writeStory', methods=['POST'])
+@login_required
+def _writeStory():
+    form = StoryForm()
+    if form.validate_on_submit():
+        new_story = Story()
+        form.populate_obj(new_story)
+        new_story.author_id = current_user.id
+        db.session.add(new_story)
 
-@stories.route('/stories')
+        try:
+            db.session.commit()
+            return _stories()
+        except Exception as e:
+            return jsonify({'Error':'Your story could not be posted.'}), 400
+
+    return jsonify({'Error':'Your story is too long or data is missing.'}), 400
+
+@stories.route('/stories', methods=['GET'])
 def _stories(message=''):
     allstories = db.session.query(Story)
     return render_template("stories.html", message=message, stories=allstories,

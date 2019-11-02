@@ -12,8 +12,8 @@ class LoginForm(FlaskForm):
 
 class UserForm(FlaskForm):
     email = EmailField('E-mail*', id='email', validators=[DataRequired(), Email()])
-    username = f.StringField('Username*', 
-                            id='username', 
+    username = f.StringField('Username*',
+                            id='username',
                             validators=[DataRequired(),
                                         Regexp('^\w+$', message="Username must contain only letters, numbers or underscore."),
                                         Length(min=5, max=25, message="Username must be betwen 5 and 25 characters")])
@@ -26,5 +26,5 @@ class UserForm(FlaskForm):
 
 class StoryForm(FlaskForm):
     diceset = ""
-    text = f.TextField('text', validators=[DataRequired(), Length(max=1000)])
+    text = f.TextAreaField('Write your story', id='text', validators=[DataRequired(), Length(max=1000)])
     display = ['text']
