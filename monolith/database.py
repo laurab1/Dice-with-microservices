@@ -83,10 +83,10 @@ class Reaction(db.Model):
     __tablename__ = 'reaction'
     
     reactor_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    reactor = relationship('User', foreign_keys='Reaction.reactor_id')
+    reactor = db.relationship('User', foreign_keys='Reaction.reactor_id')
 
     story_id = db.Column(db.Integer, db.ForeignKey('story.id'), primary_key=True)
-    author = relationship('Story', foreign_keys='Reaction.story_id')
+    author = db.relationship('Story', foreign_keys='Reaction.story_id')
 
     reaction_val = db.Column(db.Integer)	
 
