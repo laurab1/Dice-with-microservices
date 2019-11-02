@@ -50,7 +50,7 @@
                     "{{ story.text }}" Likes: {{ story.likes + 1 }} Dislikes: {{ story.dislikes }} ({{ story.date }})
                     {% if current_user.is_authenticated %}
                     <!--<form action="/stories/<storyid>" method="POST""></form>-->
-                        <form action="{{ url_for('stories._story', storyid=story.id) }}" method="post">
+                        <form action="{{ url_for('stories._get_story', storyid=story.id) }}" method="post">
                             <input type="submit" name="like" value="Like it!"/>
                             <input type="submit" name="dislike" value="Dislike it!"/>
                         </form>
@@ -63,7 +63,7 @@
                     "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes + 1 }} ({{ story.date }})
                     {% if current_user.is_authenticated %}
                     <!--<form action="/stories/<storyid>" method="POST""></form>-->
-                        <form action="{{ url_for('stories._story', storyid=story.id) }}" method="post">
+                        <form action="{{ url_for('stories._get_story', storyid=story.id) }}" method="post">
                             <input type="submit" name="like" value="Like it!"/>
                             <input type="submit" name="dislike" value="Dislike it!"/>
                         </form>
@@ -77,7 +77,7 @@
                 "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})
                 {% if current_user.is_authenticated %}
                     <!--<form action="/stories/<storyid>" method="POST""></form>-->
-                    <form action="{{ url_for('stories._story', storyid=story.id) }}" method="post">
+                    <form action="{{ url_for('stories._get_story', storyid=story.id) }}" method="post">
                         <input type="submit" name="like" value="Like it!"/>
                         <input type="submit" name="dislike" value="Dislike it!"/>
                     </form>

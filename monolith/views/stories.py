@@ -1,5 +1,5 @@
 from flask import Blueprint, redirect, render_template, request, abort, jsonify
-from monolith.database import db, Story, Reactions
+from monolith.database import db, Story, Reaction
 from flask_login import (current_user, login_user, logout_user, login_required)
 from flask import current_app as app
 from sqlalchemy import desc
@@ -9,6 +9,7 @@ import datetime
 from monolith.utility.diceutils import *
 from monolith.forms import *
 from monolith.classes.DiceSet import *
+from monolith.task import *
 
 stories = Blueprint('stories', __name__)
 
@@ -44,6 +45,8 @@ def _writeStory():
         new_story = Story()
         form.populate_obj(new_story)
         new_story.author_id = current_user.id
+        new_story.likes = 0
+        new_story.dislikes = 0
         db.session.add(new_story)
 
         try:
@@ -55,10 +58,10 @@ def _writeStory():
     return jsonify({'Error':'Your story is too long or data is missing.'}), 400
 
 @stories.route('/stories', methods=['GET'])
-def _stories(message=''):
+def _stories(message='', marked=True, id=0, react=0):
     allstories = db.session.query(Story)
     return render_template("stories.html", message=message, stories=allstories,
-                           like_it_url="http://127.0.0.1:5000/stories/")
+                           like_it_url="http://127.0.0.1:5000/stories/", storyid=id, react=react)
 
 @stories.route('/stories/random_story', methods=['GET'])
 def _get_random_recent_story(message=''):
@@ -111,7 +114,7 @@ def _get_story(storyid):
     q = Reaction.query.filter_by(reactor_id=current_user.id, story_id=storyid)
     if request.method == 'GET':
         thisstory = db.session.query(Story).filter_by(id=storyid)
-        if q.first().marked != True:
+        if q.first() != None and q.first().marked != True:
             if q.first().reaction_val == 1:
                 return render_template("story.html", stories=thisstory, marked=False, val=1)
             else:

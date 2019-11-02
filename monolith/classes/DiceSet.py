@@ -64,17 +64,17 @@ class TestDie(unittest.TestCase):
  
 if __name__ == '__main__':
     unittest.main()
-        self.dice = [Die] * dicenumber
-        self.pips = [Die] * dicenumber
-        self.dicenumber = dicenumber
-        self.setname = setname
+    self.dice = [Die] * dicenumber
+    self.pips = [Die] * dicenumber
+    self.dicenumber = dicenumber
+    self.setname = setname
 
-        # Check given parameters #
-        self._dice_preconditions(setname, dicenumber);
+    # Check given parameters #
+    self._dice_preconditions(setname, dicenumber);
 
-        # Create all the dice #
-        for i in range(0, dicenumber):
-            self.dice[i] = Die(RESOURCES_DIR + "/diceset/" + setname + "/die" + str(i) + ".txt")
+    # Create all the dice #
+    for i in range(0, dicenumber):
+        self.dice[i] = Die(RESOURCES_DIR + "/diceset/" + setname + "/die" + str(i) + ".txt")
 
     def throw_dice(self):
         for i in range(0, self.dicenumber):
