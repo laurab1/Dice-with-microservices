@@ -1,0 +1,27 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block title %}
+Sign Up
+{% endblock %}
+{% block content %}
+{{super()}}
+<div class="col-md-4 col-lg-offset-4">
+<h1>Sign Up</h1>
+    <form action="" method="POST">
+        {{ form.hidden_tag() }}
+        <dl>
+         {% for field in form.display %}
+         <dt>{{ form[field].label }}</dt>
+         <dd>{{ form[field]() }}</dd>
+           {% if form[field].errors %}
+              {% for e in form[field].errors %}
+               <p class="help-block">{{ e }}</p>
+              {% endfor %}
+           {% endif %}
+         {% endfor %}
+        </dl>
+        <p>
+        <input class="btn btn-primary" type=submit value="Submit">
+      </form>
+</div>
+{% endblock %}
