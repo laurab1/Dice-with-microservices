@@ -24,6 +24,7 @@ class TestDie(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
     def test_dice_set_not_exists_fail(self):
         self.assertRaises(InvalidDiceSet, DiceSet, 'LukeImYourFather', 6)
 
