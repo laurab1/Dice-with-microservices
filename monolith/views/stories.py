@@ -43,11 +43,11 @@ def _rollDice():
     except Exception:
         abort(400)
 
+    current_roll = roll
+
     if app.config['TESTING']:
         return jsonify(roll)
     
-    current_roll = roll
-
     return render_template('new_story.html', dice=roll, form=form)
 
 

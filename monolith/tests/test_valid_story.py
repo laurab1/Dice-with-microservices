@@ -71,4 +71,3 @@ class TestApp(unittest.TestCase):
             _check_story(roll,story)
         except NotValidStoryError as error:
             print(str(error))
-        
