@@ -28,6 +28,27 @@ def users_():
     return render_template("users.html", result=result)
 
 
+@users.route('/user/<username>')
+@login_required
+def get_user(username):
+    stories = None # query da cui prenderai le storie
+    # TODO: la query dovrà ricercare tutte le storie del singolo
+    #       utente con username <username>. Ricorda che per ottenere
+    #       l'effettivo risultato della query ti serve chiamare .all()
+    #       (guarda negli altri metodi per avere un esempio).
+    #       Ovviamente questa query deve ritornare un risultato anche se
+    #       l'utente non ha storie. (hint: usa una outerjoin)
+
+    # User does not exist, failure with exit 404.
+    if stories is None:
+        abort(404)
+
+    if app.config['TESTING']:
+        return jsonify({'user': username,
+                        'stories': [s.toJSON() for s in stories]})
+    return render_template("get_user.html", user=username, stories=stories)
+
+
 @users.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = UserForm()
