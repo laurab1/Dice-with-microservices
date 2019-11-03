@@ -71,6 +71,8 @@ class Story(db.Model):
 
     likes = db.Column(db.Integer) # will store the number of likes, periodically updated in background
     dislikes = db.Column(db.Integer) #will store the number of dislikes
+
+    dice_set = db.Column(db.Text(100))
     # define foreign key 
 
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
