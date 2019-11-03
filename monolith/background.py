@@ -19,4 +19,3 @@ def fetch_all_runs():
         app = _APP
 
     return runs_fetched
-

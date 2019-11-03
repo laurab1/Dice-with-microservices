@@ -1,5 +1,4 @@
 from flask import Blueprint, abort
-from flask import current_app as app
 from flask import jsonify, redirect, render_template, request
 
 from flask_login import current_user, login_required, login_user
@@ -36,14 +35,13 @@ def signup():
             login_user(new_user)
             return redirect('/')
         except IntegrityError as e:
+            db.session.rollback()
             status = 409
             if 'user.username' in str(e):
                 err = 'This username already exists.'
             elif 'user.email' in str(e):
                 err = 'This email is already used.'
 
-            if app.config['TESTING']:
-                return jsonify(error=err), status
             form.email.errors.append(err)
 
     return render_template('signup.html', form=form), status
