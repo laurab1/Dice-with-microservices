@@ -72,7 +72,7 @@ def _writeStory():
 def _stories(message='', marked=True, id=0, react=0):
     allstories = db.session.query(Story)
     return render_template("stories.html", message=message, stories=allstories,
-                           like_it_url="http://127.0.0.1:5000/stories/like/", storyid=id, react=react)
+                           like_it_url="http://127.0.0.1:5000/stories/", storyid=id, react=react)
 
 
 @stories.route('/stories/random_story', methods=['GET'])
@@ -122,7 +122,7 @@ def _get_random_recent_story(message=''):
     if app.config["TESTING"] == True:
         app.config["TEMPLATE_CONTEXT"] = jsonify({'story': str(id), 'message' : message})
         
-    return render_template("stories.html", message=message, stories=recent_story, like_it_url="http://127.0.0.1:5000/stories/like/")
+    return render_template("stories.html", message=message, stories=recent_story, like_it_url="http://127.0.0.1:5000/stories/")
 
 
 @stories.route('/stories/<storyid>', methods=['GET','POST'])
