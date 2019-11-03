@@ -1,17 +1,20 @@
+from flask import Blueprint, redirect, render_template, request, abort, jsonify
+from monolith.database import db, Story, Reaction
+from flask_login import (current_user, login_user, logout_user, login_required)
 import datetime as dt
 from random import randint
 
-from flask import Blueprint, abort
 from flask import current_app as app
-from flask import jsonify, render_template, request
-
-from flask_login import current_user, login_required
 
 from monolith.classes.DiceSet import DiceSet
-from monolith.database import Like, Story, db
+from monolith.database import Reaction, Story, db
 from monolith.forms import StoryForm
 from monolith.utility.diceutils import get_dice_sets_list
 
+from monolith.utility.diceutils import *
+from monolith.forms import *
+from monolith.classes.DiceSet import *
+from monolith.task import *
 
 stories = Blueprint('stories', __name__)
 
@@ -51,6 +54,8 @@ def _writeStory():
         new_story = Story()
         form.populate_obj(new_story)
         new_story.author_id = current_user.id
+        new_story.likes = 0
+        new_story.dislikes = 0
         db.session.add(new_story)
 
         try:
@@ -64,28 +69,10 @@ def _writeStory():
 
 
 @stories.route('/stories', methods=['GET'])
-def _stories(message=''):
+def _stories(message='', marked=True, id=0, react=0):
     allstories = db.session.query(Story)
     return render_template("stories.html", message=message, stories=allstories,
-                           like_it_url="http://127.0.0.1:5000/stories/like/")
-
-
-@stories.route('/stories/<storyid>', methods=['GET'])
-def _get_story(storyid, message=''):
-    story = db.session.query(Story).filter_by(id=storyid)
-    id = None
-
-    if story.first() is None:
-        message = 'story not found!'
-    else:
-        id = story.first().id
-
-    # TODO: change like_it_url
-    if app.config["TESTING"]:
-        return jsonify(story=str(id), message=message)
-
-    return render_template("stories.html", message=message, stories=story,
-                           like_it_url="http://127.0.0.1:5000/stories/like/")
+                           like_it_url="http://127.0.0.1:5000/stories/", storyid=id, react=react)
 
 
 @stories.route('/stories/random_story', methods=['GET'])
@@ -132,18 +119,73 @@ def _get_random_recent_story(message=''):
     else:
         message = "no stories!"
 
-    # TODO: change like_it_url
-    # if app.config["TESTING"]:
-    #     app.config["TEMPLATE_CONTEXT"] = jsonify(
-    #         {'story': str(id), 'message': message})
-
-    return render_template("stories.html", message=message,
-                           stories=recent_story,
-                           like_it_url="http://127.0.0.1:5000/stories/like/")
+    if app.config["TESTING"] == True:
+        app.config["TEMPLATE_CONTEXT"] = jsonify({'story': str(id), 'message' : message})
+        
+    return render_template("stories.html", message=message, stories=recent_story, like_it_url="http://127.0.0.1:5000/stories/")
 
 
-@stories.route('/stories/like/<authorid>/<storyid>')
+@stories.route('/stories/<storyid>', methods=['GET','POST'])
 @login_required
+def _get_story(storyid):
+    q = Reaction.query.filter_by(reactor_id=current_user.id, story_id=storyid)
+    message = ''
+    
+    if request.method == 'GET':
+        thisstory = db.session.query(Story).filter_by(id=storyid)
+        
+        if thisstory.first() is None:
+            message = 'story not found!'
+            if app.config["TESTING"]:
+                return jsonify({'story' : 'None', 'message' : message})
+            else:
+                return _stories(message) 
+        else:
+            if app.config['TESTING']:
+                return jsonify({'story' : str(thisstory.first().id), 'message' : message})  
+               
+        if q.first() != None and q.first().marked != True:   
+            if q.first().reaction_val == 1:
+                return render_template("story.html", stories=thisstory, marked=False, val=1)
+            else:
+                return render_template("story.html", stories=thisstory, marked=False, val=-1)
+        else:
+            return render_template("story.html", stories=thisstory)
+        
+    if request.method == 'POST':
+        react = 0
+        if "like" in request.form:
+            react = 1
+        else:
+            react = -1
+        if q.first() is None or react != q.first().reaction_val:
+            if q.first() != None and react != q.first().reaction_val:
+                #remvoe the old reaction if the new one has different value
+                if q.first().marked:
+                    remove_reaction(storyid, q.first().reaction_val)
+                db.session.delete(q.first())
+                db.session.commit()
+            new_reaction = Reaction()
+            new_reaction.reactor_id = current_user.id
+            new_reaction.story_id = storyid
+            new_reaction.reaction_val = react
+            #new_like.liked_id = authorid
+            db.session.add(new_reaction)
+            db.session.commit()
+            message = 'Got it!'
+            add_reaction(new_reaction, storyid, react)
+            #votes are registered asynchronously by celery tasks
+        else:
+            if react == 1:
+                message = 'You\'ve already liked this story!'
+            else:
+                message = 'You\'ve already disliked this story!'
+        if app.config['TESTING']:
+            return jsonify({'story' : storyid, 'message' : message})
+        else:
+            return _stories(message, False, storyid, react)
+
+
 def _like(authorid, storyid):
     q = Like.query.filter_by(liker_id=current_user.id, story_id=storyid)
     if q.first() is not None:

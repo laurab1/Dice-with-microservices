@@ -10,12 +10,14 @@ def test_get_story(client, database):
     database.session.add(example)
     database.session.commit()
 
+    client.post('/login', data={'usrn_eml': 'Admin', 'password': 'admin'})
+    
     # story found
     reply = client.get('/stories/1')
     body = reply.get_json()
+    assert reply.status_code == 200
     assert body['story'] == '1'
     assert body['message'] == ''
-    assert reply.status_code == 200
 
     # story not found
     reply = client.get('/stories/0')

@@ -67,9 +67,11 @@ class Story(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     text = db.Column(db.Text(1000))  # around 200 (English) words
     date = db.Column(db.DateTime)
-    # will store the number of likes, periodically updated in background
-    likes = db.Column(db.Integer)
-    # define foreign key
+
+    likes = db.Column(db.Integer) # will store the number of likes, periodically updated in background
+    dislikes = db.Column(db.Integer) #will store the number of dislikes
+    # define foreign key 
+
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', foreign_keys='Story.author_id')
 
@@ -77,18 +79,16 @@ class Story(db.Model):
         super().__init__(*args, **kw)
         self.date = dt.datetime.now()
 
+class Reaction(db.Model):
+    __tablename__ = 'reaction'
+    
+    reactor_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    reactor = db.relationship('User', foreign_keys='Reaction.reactor_id')
 
-class Like(db.Model):
-    __tablename__ = 'like'
-    liker_id = db.Column(db.Integer, db.ForeignKey('user.id'),
-                         primary_key=True)
-    liker = db.relationship('User', foreign_keys='Like.liker_id')
-    story_id = db.Column(db.Integer, db.ForeignKey('story.id'),
-                         primary_key=True)
-    author = db.relationship('Story', foreign_keys='Like.story_id')
-    # TODO: duplicated ?
-    liked_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    liked = db.relationship('User', foreign_keys='Like.liked_id')
+    story_id = db.Column(db.Integer, db.ForeignKey('story.id'), primary_key=True)
+    author = db.relationship('Story', foreign_keys='Reaction.story_id')
 
-    # True iff it has been counted in Story.likes
-    marked = db.Column(db.Boolean, default=False)
+    reaction_val = db.Column(db.Integer)	
+
+    marked = db.Column(db.Boolean, default = False) # True iff it has been counted in Story.likes 
+

@@ -5,6 +5,7 @@ from flask import Flask
 from flask_bootstrap import Bootstrap
 
 from monolith.auth import login_manager
+from celery import Celery
 from monolith.database import User, db
 from monolith.views import blueprints
 
@@ -16,6 +17,12 @@ def create_app(test=False, database='sqlite:///storytellers.db',
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'ANOTHER ONE'
+    app.config['CELERY_BROKER_URL'] = 'amqp://dice:dice@localhost:5672/myvhost'
+    app.config['CELERY_RESULT_BACKEND'] = 'amqp://dice:dice@localhost:5672/myvhost'
+    
+    #initialize Celery
+    celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
     app.config['PERMANENT_SESSION_LIFETIME'] = dt.timedelta(minutes=120)
     app.config['SQLALCHEMY_DATABASE_URI'] = database
     app.config['LOGIN_DISABLED'] = login_disabled
