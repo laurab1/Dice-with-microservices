@@ -1,5 +1,6 @@
 from flask import Blueprint, abort
 from flask import jsonify, redirect, render_template, request
+from flask import current_app as app
 
 from flask_login import current_user, login_required, login_user
 
@@ -23,23 +24,13 @@ def users_():
 @users.route('/user/<username>')
 @login_required
 def get_user(username):
-    stories = None # query da cui prenderai le storie
-    # TODO: la query dovrà ricercare tutte le storie del singolo
-    #       utente con username <username>. Ricorda che per ottenere
-    #       l'effettivo risultato della query ti serve chiamare .all()
-    #       (guarda negli altri metodi per avere un esempio).
-    #       Ovviamente questa query deve ritornare un risultato anche se
-    #       l'utente non ha storie. (hint: usa una outerjoin)
-
-    #ho avuto problemi con la outerjoin, vedi se così va comunque bene
     us = None
-    us = db.session.query(User).filter(User.username == username )
+    us = db.session.query(User).filter(User.username == username)
     us = us.first()
     if us is not None:
         stories = db.session.query(Story).filter(Story.author_id == us.id).all()
 
-    # User does not exist, failure with exit 404.
-    if stories is None:
+    else:   # User does not exist, failure with exit 404.
         abort(404)
 
     if app.config['TESTING']:
