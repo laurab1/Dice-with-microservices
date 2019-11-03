@@ -81,8 +81,35 @@ def _writeStory():
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
-    allstories = db.session.query(Story)
-    return render_template("stories.html", message=message, stories=allstories,
+    stories = []
+    #check for query parameters
+    if len(request.args) != 0:
+        from_date = request.args.get('from')
+        to_date = request.args.get('to')
+
+        #check if the query parameters from and to
+        if from_date is not None and to_date is not None:
+            from_dt = None
+            to_dt = None
+
+            #check if the values are valid
+            try:
+                from_dt = dt.datetime.strptime(from_date, '%Y-%m-%d')
+                to_dt = dt.datetime.strptime(to_date, '%Y-%m-%d')
+            except ValueError as _:
+                message = "INVALID date in query parameters: use yyyy-mm-dd"
+            else: #successful try!
+                #query the database with the given values
+                stories = db.session.query(Story).group_by(Story.date).having(Story.date >= from_dt).having(Story.date <= to_dt)
+
+                if stories.first() is None:
+                    message='no stories with the given dates'
+            
+        else:
+            message = 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd!'
+    else:    
+        stories = db.session.query(Story)
+    return render_template("stories.html", message=message, stories=stories,
                            like_it_url="http://127.0.0.1:5000/stories/", storyid=id, react=react)
 
 
