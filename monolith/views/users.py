@@ -31,6 +31,13 @@ def get_user(username):
     #       Ovviamente questa query deve ritornare un risultato anche se
     #       l'utente non ha storie. (hint: usa una outerjoin)
 
+    #ho avuto problemi con la outerjoin, vedi se così va comunque bene
+    us = None
+    us = db.session.query(User).filter(User.username == username )
+    us = us.first()
+    if us is not None:
+        stories = db.session.query(Story).filter(Story.author_id == us.id).all()
+
     # User does not exist, failure with exit 404.
     if stories is None:
         abort(404)
