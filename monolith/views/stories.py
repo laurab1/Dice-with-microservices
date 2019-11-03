@@ -1,8 +1,7 @@
 import datetime as dt
 from random import randint
 
-from flask import Blueprint, abort
-from flask import current_app as app
+from flask import Blueprint, abort, redirect
 from flask import jsonify, render_template, request
 
 from flask_login import current_user, login_required
@@ -37,9 +36,6 @@ def _rollDice():
     except Exception:
         abort(400)
 
-    if app.config['TESTING']:
-        return jsonify(roll)
-
     return render_template('new_story.html', dice=roll, form=form)
 
 
@@ -55,44 +51,34 @@ def _writeStory():
 
         try:
             db.session.commit()
-            return _stories()
+            return redirect('/stories')
         except Exception:
-            return jsonify({'Error': 'Your story could not be posted.'}), 400
-
-    return (jsonify({'Error': 'Your story is too long or data is missing.'}),
-            400)
+            return jsonify(error='Your story could not be posted.'), 400
+    return jsonify(error='Your story is too long or data is missing.'), 400
 
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message=''):
     allstories = db.session.query(Story)
-    return render_template("stories.html", message=message, stories=allstories,
-                           like_it_url="http://127.0.0.1:5000/stories/like/")
+    return render_template('stories.html', message=message, stories=allstories,
+                           like_it_url='http://127.0.0.1:5000/stories/like/')
 
 
 @stories.route('/stories/<storyid>', methods=['GET'])
 def _get_story(storyid, message=''):
     story = db.session.query(Story).filter_by(id=storyid)
-    id = None
 
     if story.first() is None:
         message = 'story not found!'
-    else:
-        id = story.first().id
 
-    # TODO: change like_it_url
-    if app.config["TESTING"]:
-        return jsonify(story=str(id), message=message)
-
-    return render_template("stories.html", message=message, stories=story,
-                           like_it_url="http://127.0.0.1:5000/stories/like/")
+    return render_template('stories.html', message=message, stories=story,
+                           like_it_url='http://127.0.0.1:5000/stories/like/')
 
 
 @stories.route('/stories/random_story', methods=['GET'])
 def _get_random_recent_story(message=''):
     stories = db.session.query(Story)  # .order_by(Story.date.desc())
     recent_story = []
-    id = None
 
     if stories.first() is not None:
         recent_stories = stories.group_by(Story.date)
@@ -120,26 +106,24 @@ def _get_random_recent_story(message=''):
             today_stories = [story for story in today_stories]
 
             recent_story.append(today_stories[i])
-            id = today_stories[i].id
         else:
-            message = "no stories today. Here is a random one:"
+            message = 'no stories today. Here is a random one:'
             # (randint returns a fixed value when using pytest, but works fine
             # in reality)
             i = randint(1, stories.count() - 1)
 
             recent_story.append(stories.get(i))
-            id = recent_story[0].id
     else:
-        message = "no stories!"
+        message = 'no stories!'
 
     # TODO: change like_it_url
     # if app.config["TESTING"]:
     #     app.config["TEMPLATE_CONTEXT"] = jsonify(
     #         {'story': str(id), 'message': message})
 
-    return render_template("stories.html", message=message,
+    return render_template('stories.html', message=message,
                            stories=recent_story,
-                           like_it_url="http://127.0.0.1:5000/stories/like/")
+                           like_it_url='http://127.0.0.1:5000/stories/like/')
 
 
 @stories.route('/stories/like/<authorid>/<storyid>')

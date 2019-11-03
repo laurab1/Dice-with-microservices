@@ -1,4 +1,4 @@
-from monolith.database import User, Story
+from monolith.database import Story, User
 
 
 def test_signup(client, database):
@@ -27,7 +27,7 @@ def test_signup(client, database):
     database.session.rollback()
 
 
-def test_auth(client, database):
+def test_auth(client, database, templates):
     reply = client.post('/signup', data={'email': 'prova@prova.com',
                                          'username': 'prova',
                                          'password': 'prova123'})
@@ -59,57 +59,68 @@ def test_auth(client, database):
 
     reply = client.post('/login', data={'usrn_eml': 'Admin',
                                         'password': 'boh'})
-    assert reply.get_json()['error'] == 'Wrong username or password.'
+    template_capture = templates[-1]['form']['password'].errors
+    assert 'Wrong username or password.' in template_capture
 
     reply = client.post('/login', data={'usrn_eml': 'boh',
                                         'password': 'admin'})
-    assert reply.get_json()['error'] == 'Wrong username or password.'
+    template_capture = templates[-1]['form']['password'].errors
+    assert 'Wrong username or password.' in template_capture
 
-def test_getusers(client, database):
-    reply = client.post('/login', data={'usrn_eml': 'Admin',
-                                        'password': 'admin'})
+
+def test_getusers(client, database, auth, templates):
+    reply = auth.login('Admin', 'admin')
     assert reply.status_code == 302
+
     reply = client.get('/users')
-    assert reply.get_json()['users'] == [['Admin', None],
-                                         ['test1', None],
-                                         ['test2', None],
-                                         ['test3', None]]
-    
+    template_capture = templates[-1]['result']
+    users = [(r[0], r[1]) for r in template_capture]
+    assert users == [('Admin', None),
+                     ('test1', None),
+                     ('test2', None),
+                     ('test3', None)]
+
     example = Story()
     example.text = 'First story of admin user :)'
     example.author_id = 1
     database.session.add(example)
     database.session.commit()
-    
+
     reply = client.get('/users')
-    assert reply.get_json()['users'] == [['Admin', 'First story of admin user :)'],
-                                         ['test1', None],
-                                         ['test2', None],
-                                         ['test3', None]]
+    template_capture = templates[-1]['result']
+    users = [(r[0], r[1]) for r in template_capture]
+    assert users == [('Admin', 'First story of admin user :)'),
+                     ('test1', None),
+                     ('test2', None),
+                     ('test3', None)]
 
     client.post('/signup', data={'email': 'prova@prova.com',
                                  'username': 'prova',
                                  'password': 'prova123'})
     reply = client.get('/users')
-    assert reply.get_json()['users'] == [['Admin', 'First story of admin user :)'],
-                                         ['test1', None],
-                                         ['test2', None],
-                                         ['test3', None],
-                                         ['prova', None]]
-    
+    template_capture = templates[-1]['result']
+    users = [(r[0], r[1]) for r in template_capture]
+    assert users == [('Admin', 'First story of admin user :)'),
+                     ('test1', None),
+                     ('test2', None),
+                     ('test3', None),
+                     ('prova', None)]
+
     example = Story()
     example.text = 'First story of prova user :)'
     example.author_id = 5
     database.session.add(example)
     database.session.commit()
-    
+
     reply = client.get('/users')
-    assert reply.get_json()['users'] == [['Admin', 'First story of admin user :)'],
-                                         ['test1', None],
-                                         ['test2', None],
-                                         ['test3', None],
-                                         ['prova', 'First story of prova user :)']]
-    
+    template_capture = templates[-1]['result']
+    users = [(r[0], r[1]) for r in template_capture]
+    assert users == [('Admin', 'First story of admin user :)'),
+                     ('test1', None),
+                     ('test2', None),
+                     ('test3', None),
+                     ('prova', 'First story of prova user :)')]
+
     example = Story()
     example.text = 'Second story of admin user :)'
     example.author_id = 1
@@ -117,8 +128,10 @@ def test_getusers(client, database):
     database.session.commit()
 
     reply = client.get('/users')
-    assert reply.get_json()['users'] == [['Admin', 'Second story of admin user :)'],
-                                         ['test1', None],
-                                         ['test2', None],
-                                         ['test3', None],
-                                         ['prova', 'First story of prova user :)']]
+    template_capture = templates[-1]['result']
+    users = [(r[0], r[1]) for r in template_capture]
+    assert users == [('Admin', 'Second story of admin user :)'),
+                     ('test1', None),
+                     ('test2', None),
+                     ('test3', None),
+                     ('prova', 'First story of prova user :)')]
