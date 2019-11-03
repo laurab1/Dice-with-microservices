@@ -11,3 +11,4 @@ def test_getuser_fail(client, database):
     # TODO: implementa un test in cui effettui il login,
     #       chiami la get_user su un utente non esistente e
     #       controlli lo status code
+    pass
