@@ -67,4 +67,8 @@ class TestApp(unittest.TestCase):
     def test_wrong_word_in_roll(self):
         roll = ['table','window','cat','chai']
         story = 'The cat is on the board, the chair is near the window.'
-        self.assertRaises(NotValidStoryError,_check_story,roll,story)
+        try:
+            _check_story(roll,story)
+        except NotValidStoryError as error:
+            print(str(error))
+        
