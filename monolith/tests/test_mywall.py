@@ -6,12 +6,12 @@ def test_check_mywall(client, database):
     assert reply.status_code == 200
     assert reply.get_json()['login'] == 'needed'
 
-    client.post('/login', {'usrn_eml': 'Admin',
-                           'password': 'admin'})
+    client.post('/login', data={'usrn_eml': 'Admin',
+                                'password': 'admin'})
 
     reply = client.get('/')
     assert reply.status_code == 200
-    assert reply.get_json()['stories'] == None
+    assert reply.get_json()['stories'] == []
 
     example = Story()
     example.text = 'Trial story of example admin user :)' #gets story_id=1 as user_id or as the first?
@@ -22,7 +22,7 @@ def test_check_mywall(client, database):
 
     reply = client.get('/')
     assert reply.status_code == 200
-    assert reply.get_json()['stories'] == [example]
+    assert reply.get_json()['stories'] == [example.toJSON()]
 
     example2 = Story()
     example2.text = 'New story of example admin user :)' #gets story_id=1 as user_id or as the first?
@@ -33,7 +33,7 @@ def test_check_mywall(client, database):
 
     reply = client.get('/')
     assert reply.status_code == 200
-    assert reply.get_json()['stories'] == [example, example2]
+    assert reply.get_json()['stories'] == [example.toJSON(), example2.toJSON()]
 
 
 def test_statistics(client, database):
