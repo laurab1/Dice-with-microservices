@@ -1,17 +1,17 @@
-# -*- encoding: utf8 -*-
-from werkzeug.security import generate_password_hash, check_password_hash
-import enum
-from sqlalchemy.orm import relationship
 import datetime as dt
-from flask_sqlalchemy import SQLAlchemy
 from random import randint
+
+from flask_sqlalchemy import SQLAlchemy
+
+from werkzeug.security import check_password_hash, generate_password_hash
 
 db = SQLAlchemy()
 
 
 """Followers table, provides the many-to-many relationship between followers
 and followee. Primary key is composed by both the foreign keys."""
-followers = db.Table('followers',
+followers = db.Table(
+    'followers',
     db.Column('follower_id', db.Integer, db.ForeignKey('user.id'),
               primary_key=True),
     db.Column('followee_id', db.Integer, db.ForeignKey('user.id'),
@@ -42,7 +42,7 @@ class User(db.Model):
                               backref=db.backref('followed', lazy=True))
 
     def __init__(self, *args, **kw):
-        super(User, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._authenticated = False
 
     def set_password(self, password):
@@ -65,28 +65,30 @@ class User(db.Model):
 class Story(db.Model):
     __tablename__ = 'story'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    text = db.Column(db.Text(1000)) # around 200 (English) words
+    text = db.Column(db.Text(1000))  # around 200 (English) words
     date = db.Column(db.DateTime)
-    likes = db.Column(db.Integer)  # will store the number of likes, periodically updated in background
-    # define foreign key
+
+    likes = db.Column(db.Integer) # will store the number of likes, periodically updated in background
+    dislikes = db.Column(db.Integer) #will store the number of dislikes
+    # define foreign key 
+
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    author = relationship('User', foreign_keys='Story.author_id')
+    author = db.relationship('User', foreign_keys='Story.author_id')
 
     def __init__(self, *args, **kw):
-        super(Story, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.date = dt.datetime.now()
 
-
-class Like(db.Model):
-    __tablename__ = 'like'
-
-    liker_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    liker = relationship('User', foreign_keys='Like.liker_id')
+class Reaction(db.Model):
+    __tablename__ = 'reaction'
+    
+    reactor_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    reactor = db.relationship('User', foreign_keys='Reaction.reactor_id')
 
     story_id = db.Column(db.Integer, db.ForeignKey('story.id'), primary_key=True)
-    author = relationship('Story', foreign_keys='Like.story_id')
+    author = db.relationship('Story', foreign_keys='Reaction.story_id')
 
-    liked_id = db.Column(db.Integer, db.ForeignKey('user.id')) # TODO: duplicated ?
-    liker = relationship('User', foreign_keys='Like.liker_id')
+    reaction_val = db.Column(db.Integer)	
 
-    marked = db.Column(db.Boolean, default = False) # True iff it has been counted in Story.likes
+    marked = db.Column(db.Boolean, default = False) # True iff it has been counted in Story.likes 
+

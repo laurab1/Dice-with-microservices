@@ -1,129 +1,113 @@
-import unittest
-import json
-import datetime
-from flask import request, jsonify
+import datetime as dt
 
-from monolith.database import db, User, Story
-from monolith.views.stories import _get_story
-from monolith.app import create_app
-from flask import current_app
+from monolith.database import Story
 
-class TestGetStory(unittest.TestCase):
-    def setUp(self):
-        self.app = create_app(test=True)
-        self.context = self.app.app_context()
-        self.test_client = self.app.test_client()
 
-    def tearDown(self):
-        with self.context:
-            db.drop_all()
-    
-    #one recent story, two not so recent
-    def test_get_random_recent_story_1(self):
-        with self.context:
-            example = Story()
-            example.text = 'recent story'
-            example.likes = 0
-            example.author_id = 1
-            db.session.add(example)
-  
-            example = Story()
-            example.text = 'old story (months/years ago)'
-            example.likes = 0
-            example.author_id = 1
-            example.date = datetime.datetime(2019, 9, 5)
-            db.session.add(example)
+# one recent story, two not so recent
+def test_get_random_recent_story_1(client, database, templates):
+    example = Story()
+    example.text = 'recent story'
+    example.likes = 0
+    example.author_id = 1
+    database.session.add(example)
 
-            example = Story()
-            example.text = 'not recent story (yesterday)'
-            example.date = datetime.datetime.now() - datetime.timedelta(days=1)
-            example.likes = 0
-            example.author_id = 2
-            db.session.add(example)
+    example = Story()
+    example.text = 'old story (months/years ago)'
+    example.likes = 0
+    example.author_id = 1
+    example.date = dt.datetime(2019, 9, 5)
+    database.session.add(example)
 
-            db.session.commit()
-        
-        #story found
-        reply = self.test_client.get('/stories/random_story')
-        self.assertEqual(reply.status_code, 200)
+    example = Story()
+    example.text = 'not recent story (yesterday)'
+    example.date = dt.datetime.now() - dt.timedelta(days=1)
+    example.likes = 0
+    example.author_id = 2
+    database.session.add(example)
 
-        template_context = json.loads(str(self.app.config['TEMPLATE_CONTEXT'].data, 'utf8'))
-        self.assertEqual(template_context['story'], '1')
-        self.assertEqual(template_context['message'], '')
+    database.session.commit()
 
-    
-    #two recent stories to pick from, two not so recent
-    def test_get_random_recent_story_2(self):
-        with self.context:
-            example = Story()
-            example.text = 'recent story 1'
-            example.likes = 0
-            example.author_id = 1
-            db.session.add(example)
-  
-            example = Story()
-            example.text = 'very not recent story (months/years ago)'
-            example.likes = 0
-            example.author_id = 1
-            example.date = datetime.datetime(2019, 9, 5)
-            db.session.add(example)
+    # story found
+    reply = client.get('/stories/random_story')
+    assert reply.status_code == 200
 
-            example = Story()
-            example.text = 'recent story 2'
-            example.likes = 0
-            example.author_id = 1
-            db.session.add(example)
+    template_context = templates[-1]
+    assert template_context['stories'][0].id == 1
+    assert template_context['message'] == ''
 
-            example = Story()
-            example.text = 'not recent story (yesterday)'
-            example.date = datetime.datetime.now() - datetime.timedelta(days=1)
-            example.likes = 0
-            example.author_id = 2
-            db.session.add(example)
 
-            db.session.commit()
-        
-        #story found
-        reply = self.test_client.get('/stories/random_story')
-        self.assertEqual(reply.status_code, 200)
+# two recent stories to pick from, two not so recent
+def test_get_random_recent_story_2(client, database, templates):
+    example = Story()
+    example.text = 'recent story 1'
+    example.likes = 0
+    example.author_id = 1
+    database.session.add(example)
 
-        template_context = json.loads(str(self.app.config['TEMPLATE_CONTEXT'].data, 'utf8'))
-        self.assertTrue(template_context['story'] == '1' or template_context['story'] == '3')
-        self.assertEqual(template_context['message'], '')
+    example = Story()
+    example.text = 'very not recent story (months/years ago)'
+    example.likes = 0
+    example.author_id = 1
+    example.date = dt.datetime(2019, 9, 5)
+    database.session.add(example)
 
-    #no recent story, get a random one
-    def test_get_random_story(self):
-        with self.context:
-            example = Story()
-            example.text = 'very not recent story (months/years ago)'
-            example.likes = 0
-            example.author_id = 1
-            example.date = datetime.datetime(2019, 9, 5)
-            db.session.add(example)
+    example = Story()
+    example.text = 'recent story 2'
+    example.likes = 0
+    example.author_id = 1
+    database.session.add(example)
 
-            example = Story()
-            example.text = 'not recent story (yesterday)'
-            example.date = datetime.datetime.now() - datetime.timedelta(days=1)
-            example.likes = 0
-            example.author_id = 2
-            db.session.add(example)
+    example = Story()
+    example.text = 'not recent story (yesterday)'
+    example.date = dt.datetime.now() - dt.timedelta(days=1)
+    example.likes = 0
+    example.author_id = 2
+    database.session.add(example)
 
-            db.session.commit()
-        
-        #story found
-        reply = self.test_client.get('/stories/random_story')
-        self.assertEqual(reply.status_code, 200)
+    database.session.commit()
 
-        template_context = json.loads(str(self.app.config['TEMPLATE_CONTEXT'].data, 'utf8'))
-        self.assertTrue(template_context['story'] == '1' or template_context['story'] == '2')
-        self.assertEqual(template_context['message'], 'no stories today. Here is a random one:')
-    
-    def test_no_stories(self):
-        #story not found
-        reply = self.test_client.get('/stories/random_story')
-        self.assertEqual(reply.status_code, 200)
+    # story found
+    reply = client.get('/stories/random_story')
+    assert reply.status_code == 200
 
-        template_context = json.loads(str(self.app.config['TEMPLATE_CONTEXT'].data, 'utf8'))
-        self.assertEqual(template_context['story'], 'None')
-        self.assertEqual(template_context['message'], 'no stories!')
+    template_context = templates[-1]
+    assert template_context['stories'][0].id == 1 or template_context['stories'][0].id == 3
+    assert template_context['message'] == ''
 
+# no recent story, get a random one
+
+
+def test_get_random_story(client, database, templates):
+    example = Story()
+    example.text = 'very not recent story (months/years ago)'
+    example.likes = 0
+    example.author_id = 1
+    example.date = dt.datetime(2019, 9, 5)
+    database.session.add(example)
+
+    example = Story()
+    example.text = 'not recent story (yesterday)'
+    example.date = dt.datetime.now() - dt.timedelta(days=1)
+    example.likes = 0
+    example.author_id = 2
+    database.session.add(example)
+
+    database.session.commit()
+
+    # story found
+    reply = client.get('/stories/random_story')
+    assert reply.status_code == 200
+
+    template_context = templates[-1]
+    assert template_context['stories'][0].id == 1 or template_context['stories'][0].id == 2
+    assert template_context['message'] == 'no stories today. Here is a random one:'
+
+
+def test_no_stories(client, templates):
+    # story not found
+    reply = client.get('/stories/random_story')
+    assert reply.status_code == 200
+
+    template_context = templates[-1]
+    assert template_context['stories'] == []
+    assert template_context['message'] == 'no stories!'
