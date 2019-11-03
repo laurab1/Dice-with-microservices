@@ -77,7 +77,34 @@ def _writeStory():
     return (jsonify({'Error': 'Your story is too long or data is missing.'}),
             400)
 
+    return render_template('new_story.html', dice=roll, form=form)
 
+<<<<<<< HEAD
+=======
+
+@stories.route('/writeStory', methods=['POST'])
+@login_required
+def _writeStory():
+    form = StoryForm()
+    if form.validate_on_submit():
+        new_story = Story()
+        form.populate_obj(new_story)
+        new_story.author_id = current_user.id
+        new_story.likes = 0
+        new_story.dislikes = 0
+        db.session.add(new_story)
+
+        try:
+            db.session.commit()
+            return _stories()
+        except Exception:
+            return jsonify({'Error': 'Your story could not be posted.'}), 400
+
+    return (jsonify({'Error': 'Your story is too long or data is missing.'}),
+            400)
+
+
+>>>>>>> develop
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
     allstories = db.session.query(Story)
