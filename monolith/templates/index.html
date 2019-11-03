@@ -52,14 +52,24 @@
 
   <h2>Your stats</h2>
   
-  Total number of likes: {{ likes[0].total }}
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+        Total number of likes received: {{ likes[0].total }}
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"> Avg likes per stories: {{ likes[0].total/likes[0].number_of_stories }} </li>
+        </ul>
+      </li> 
+      <li class="list-group-item">
+        Total number of dislikes received: {{ dislikes[0].total }}
+      </li>
+    </ul>
   
   <h2>Your Stories</h2>
 
   {% for story in stories%}
     <div>
       <li>
-        {{ story.text }} -- published in date {{ story.date }}
+        <a href="/stories/{{ story.id }}"> {{ story.text }} </a>-- published in date {{ story.date }}
         <ul>
           <li>Likes:{{ story.likes }} Dislikes:{{ story.dislikes }}</li>
         </ul>
