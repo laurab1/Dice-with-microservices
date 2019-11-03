@@ -16,7 +16,15 @@ def index():
     if current_user is not None and hasattr(current_user, 'id'):
         stories = db.session.query(Story).filter(
             Story.author_id == current_user.id)
+
+        likes = db.session.query(
+                db.func.sum(Story.likes).label('total')
+            ).filter(
+                Story.author_id == current_user.id
+            ).group_by(Story.author_id)
+
     else:
         stories = None
+        likes = None
 
-    return render_template("index.html", stories=stories)
+    return render_template("index.html", stories=stories, likes=likes)

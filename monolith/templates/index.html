@@ -13,6 +13,7 @@
             integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
             crossorigin="anonymous"></script>
 </head>
+
 <body>
 {% if current_user.is_authenticated %}
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -30,7 +31,7 @@
                 <a class="nav-link" href="/newStory">New Story</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">My Wall <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="/">My Wall <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/followed">Followed users</a>
@@ -43,21 +44,35 @@
     </div>
 </nav>
 
+<div class="container-fluid">
+
+<div class="jumbotron">
+
   Hi {{ current_user.firstname }}! <a href="/logout">Logout</a>
 
+  <h2>Your stats</h2>
+  
+  Total number of likes: {{ likes[0].total }}
+  
+  <h2>Your Stories</h2>
 
-    <h2>Your Stories</h2>
-    {% for story in stories%}
-      <div>
-        <li>
-          {{story.text}} -- Likes:{{story.likes}}
-        </li>
-      </div>
-    {% endfor %}
+  {% for story in stories%}
+    <div>
+      <li>
+        {{ story.text }} -- published in date {{ story.date }}
+        <ul>
+          <li>Likes:{{ story.likes }} Dislikes:{{ story.dislikes }}</li>
+        </ul>
+      </li>
+    </div>
+  {% endfor %}
 
+</div>
 
 {% else %}
   Hi Anonymous, <a href="/login">Log in</a> or <a href="/signup">Sign Up</a>
 {% endif %}
+
+</div>
 </body>
 </html>
