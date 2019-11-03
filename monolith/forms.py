@@ -48,7 +48,6 @@ class UserForm(FlaskForm):
                'firstname', 'lastname', 'dateofbirth']
 
 
-
 class StoryForm(FlaskForm):
     diceset = ''
     text = f.TextAreaField(

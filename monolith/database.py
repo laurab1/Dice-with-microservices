@@ -1,6 +1,7 @@
 import datetime as dt
 from random import randint
 
+import json
 from flask_sqlalchemy import SQLAlchemy
 
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -78,6 +79,18 @@ class Story(db.Model):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         self.date = dt.datetime.now()
+
+    def toJSON(self):
+        """
+        Makes the class JSON serializable
+        """
+        return json.dumps({'id': self.id,
+                           'text': self.text,
+                           'date': str(self.date),
+                           'likes': self.likes,
+                           'dislikes': self.dislikes,
+                           'author_id': self.author_id})
+
 
 class Reaction(db.Model):
     __tablename__ = 'reaction'
