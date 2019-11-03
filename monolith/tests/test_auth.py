@@ -38,13 +38,13 @@ class AuthUnittest(TestCase):
                                           'username': 'prova',
                                           'password': 'prova123'})
         body = json.loads(str(reply.data, 'utf8'))
-        self.assertEqual(body, {'Error':'This email is already used.'})
+        self.assertEqual(body, {'error':'This email is already used.'})
 
         reply = self.app.post('/signup', data={'email': 'prova2@prova.com',
                                           'username': 'prova',
                                           'password': 'prova123'})
         body = json.loads(str(reply.data, 'utf8'))
-        self.assertEqual(body, {'Error':'This username already exists.'})
+        self.assertEqual(body, {'error':'This username already exists.'})
 
     def test_auth(self):
         reply = self.app.post('/signup', data={'email': 'prova@prova.com',
@@ -80,9 +80,9 @@ class AuthUnittest(TestCase):
         reply = self.app.post('/login', data={'usrn_eml': 'Admin',
                                           'password': 'boh'})
         body = json.loads(str(reply.data, 'utf8'))
-        self.assertEqual(body, {'Error': 'Wrong username or password.'})
+        self.assertEqual(body, {'error': 'Wrong username or password.'})
 
         reply = self.app.post('/login', data={'usrn_eml': 'boh',
                                           'password': 'admin'})
         body = json.loads(str(reply.data, 'utf8'))
-        self.assertEqual(body, {'Error': 'Wrong username or password.'})
+        self.assertEqual(body, {'error': 'Wrong username or password.'})

@@ -1,5 +1,5 @@
 from flask import Blueprint, redirect, render_template, request, abort, jsonify
-from monolith.database import db, Story, Like
+from monolith.database import db, Story, Reaction
 from flask import current_app as app
 from monolith.utility.diceutils import *
 from monolith.forms import *
