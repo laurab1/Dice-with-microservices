@@ -10,6 +10,7 @@ from monolith.classes.DiceSet import DiceSet
 from monolith.database import Reaction, Story, db
 from monolith.forms import StoryForm
 from monolith.utility.diceutils import get_dice_sets_list
+from monolith.utility.validate_story import _check_story, NotValidStoryError
 
 from monolith.utility.diceutils import *
 from monolith.forms import *
@@ -17,6 +18,7 @@ from monolith.classes.DiceSet import *
 from monolith.task import *
 
 stories = Blueprint('stories', __name__)
+current_roll = []
 
 
 @stories.route('/newStory', methods=['GET'])
@@ -28,6 +30,7 @@ def _newstory():
 @stories.route('/rollDice', methods=['GET'])
 @login_required
 def _rollDice():
+    global current_roll
     form = StoryForm()
     diceset = ('standard' if request.args.get('diceset') is None
                else request.args.get('diceset'))
@@ -40,9 +43,11 @@ def _rollDice():
     except Exception:
         abort(400)
 
+    current_roll = roll
+
     if app.config['TESTING']:
         return jsonify(roll)
-
+    
     return render_template('new_story.html', dice=roll, form=form)
 
 
@@ -56,6 +61,11 @@ def _writeStory():
         new_story.author_id = current_user.id
         new_story.likes = 0
         new_story.dislikes = 0
+        try:
+            _check_story(current_roll, new_story.text)
+        except NotValidStoryError:
+            return jsonify({'Error': 'Your story is not valid'}), 400
+            
         db.session.add(new_story)
 
         try:
@@ -67,6 +77,7 @@ def _writeStory():
     return (jsonify({'Error': 'Your story is too long or data is missing.'}),
             400)
 
+    return render_template('new_story.html', dice=roll, form=form)
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
@@ -184,19 +195,3 @@ def _get_story(storyid):
             return jsonify({'story' : storyid, 'message' : message})
         else:
             return _stories(message, False, storyid, react)
-
-
-def _like(authorid, storyid):
-    q = Like.query.filter_by(liker_id=current_user.id, story_id=storyid)
-    if q.first() is not None:
-        new_like = Like()
-        new_like.liker_id = current_user.id
-        new_like.story_id = storyid
-        new_like.liked_id = authorid
-        db.session.add(new_like)
-        db.session.commit()
-        message = ''
-    else:
-        message = 'You\'ve already liked this story!'
-
-    return _stories(message)
