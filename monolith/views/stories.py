@@ -99,11 +99,6 @@ def _stories(message='', marked=True, id=0, react=0):
             message = 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd!'
     else:
         stories = db.session.query(Story).filter_by(deleted=False)
-        if app.config['TESTING'] == True:
-            storiesJson = []
-            for story in stories:
-                storiesJson.append({'id': story.id, 'text': story.text})
-            return jsonify(storiesJson)
     return render_template("stories.html", message=message, stories=stories,
                            like_it_url="http://127.0.0.1:5000/stories/", storyid=id, react=react)
 
