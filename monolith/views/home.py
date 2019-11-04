@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, jsonify
 from flask import current_app as app
 
 from monolith.auth import current_user
@@ -16,7 +16,7 @@ def _strava_auth_url(config):
 def index():
     if current_user is not None and hasattr(current_user, 'id'):
         stories = db.session.query(Story).filter(
-            Story.author_id == current_user.id)
+            Story.author_id == current_user.id).all()
 
         likes = db.session.query(
                 db.func.sum(Story.likes).label('total'),
@@ -25,17 +25,11 @@ def index():
                 Story.author_id == current_user.id
             ).group_by(Story.author_id)
 
-        dislikes = db.session.query(
-                db.func.sum(Story.dislikes).label('total')
-            ).filter(
-                Story.author_id == current_user.id
-            ).group_by(Story.author_id)
-
+        if app.config['TESTING']:
+            return jsonify({'stories':[s.toJSON() for s in stories]})
     else:
         stories = None
-        likes = None
+        if app.config['TESTING']:
+            return jsonify(login='needed')
 
-    if app.config["TESTING"] == True:
-        app.config["TEMPLATE_CONTEXT"] = jsonify({'stories': str(stories), 'likes': str(likes), 'dislikes': str(dislikes)})
-
-    return render_template("index.html", stories=stories, likes=likes, dislikes=dislikes)
+    return render_template('index.html', stories=stories, likes=likes)

@@ -48,6 +48,10 @@
             {% if val == 1 %}
                 <li>
                     "{{ story.text }}" Likes: {{ story.likes + 1 }} Dislikes: {{ story.dislikes }} ({{ story.date }})
+                    <br />
+                    {% if story.dice_set != None %}
+                        Story generated with the following dice set: {{ story.dice_set.split('?') }}
+                    {% endif %}
                     {% if current_user.is_authenticated %}
                     <!--<form action="/stories/<storyid>" method="POST""></form>-->
                         <form action="{{ url_for('stories._get_story', storyid=story.id) }}" method="post">
@@ -61,6 +65,10 @@
             {% else %}
                 <li>
                     "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes + 1 }} ({{ story.date }})
+                    <br />
+                    {% if story.dice_set != None %}
+                        Story generated with the following dice set: {{ story.dice_set.split('?') }}
+                    {% endif %}
                     {% if current_user.is_authenticated %}
                     <!--<form action="/stories/<storyid>" method="POST""></form>-->
                         <form action="{{ url_for('stories._get_story', storyid=story.id) }}" method="post">
@@ -75,6 +83,10 @@
         {% else %}
             <li>
                 "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})
+                <br />
+                {% if story.dice_set != None %}
+                    Story generated with the following dice set: {{ story.dice_set.split('?') }}
+                {% endif %}
                 {% if current_user.is_authenticated %}
                     <!--<form action="/stories/<storyid>" method="POST""></form>-->
                     <form action="{{ url_for('stories._get_story', storyid=story.id) }}" method="post">

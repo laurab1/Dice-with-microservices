@@ -21,9 +21,6 @@ class TestDie(unittest.TestCase):
             face_list = get_die_faces_list("standard", i)
             self.assertTrue(thrown[i] in face_list)
 
-
-if __name__ == '__main__':
-    unittest.main()
     def test_dice_set_not_exists_fail(self):
         self.assertRaises(InvalidDiceSet, DiceSet, 'LukeImYourFather', 6)
 
@@ -37,3 +34,7 @@ if __name__ == '__main__':
         die = Die(RESOURCES_DIR + '/diceset/standard/die0.txt')
         res = die.throw_die()
         self.assertEqual(res, 'bag')
+
+
+if __name__ == '__main__':
+    unittest.main()
