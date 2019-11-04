@@ -70,6 +70,9 @@
                                          <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
                                     {% endif %}
                         {% endif %}
+                        {% if story.author.id == current_user.id %}
+                          <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>
+                        {% endif %}
                     </li>
                 {% endif %}
             {% else %}
@@ -78,9 +81,12 @@
                     {% if current_user.is_authenticated %}
                         <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
           	    	    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
-                            
+
                             {% if story.author.id != current_user.id %}
                                  <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+                            {% endif %}
+                            {% if story.author.id == current_user.id %}
+                              <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>
                             {% endif %}
                     {% endif %}
                 </li>
@@ -93,9 +99,12 @@
                 {% if current_user.is_authenticated %}
                     <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
           		    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
-                            
+
                             {% if story.author.id != current_user.id %}
                                  <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+                            {% endif %}
+                            {% if story.author.id == current_user.id %}
+                              <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>
                             {% endif %}
                 {% endif %}
             </li>
@@ -112,6 +121,15 @@
           } else {
             console.log('Invalid follow request to user: ' + user_id)
           }
+        });
+    }
+
+    function deleteStory(story_id) {
+      fetch('/stories/' + story_id, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+          alert(data.message)
+          window.location.replace('/stories');
         });
     }
   </script>

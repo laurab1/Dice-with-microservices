@@ -1,4 +1,5 @@
 from monolith.database import Story
+import json
 
 
 def test_new_story(client, auth, database, templates):
@@ -131,3 +132,59 @@ def test_edit_get(client, auth, database, templates):
     template_capture = templates[-1]
     assert template_capture['story_id'] == new_id
     assert template_capture['dice'] == roll
+
+def test_delete_story(client, auth, database, templates):
+    auth.login('Admin', 'admin')
+
+    reply = client.delete('/stories/0') # delete non-existing story
+    assert reply.status_code == 404
+
+    # new story
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    #delete the newly created story
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 200
+    deletedStory = database.session.query(Story).get(new_id)
+    assert deletedStory.deleted == True
+
+    #delete already deleted story
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 400
+
+    #delete already deleted story again
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 400
+
+    auth.logout()
+
+    auth.login('test1', 'test1123')
+    # new story by user test1
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+    auth.logout()
+
+    auth.login('Admin', 'admin')
+
+    #delete story of another user
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 403

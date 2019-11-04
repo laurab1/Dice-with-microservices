@@ -79,6 +79,7 @@ class Story(db.Model):
 
     _dice_set = db.Column(db.Text(100))
 
+    deleted = db.Column(db.Boolean, default=False)
     # define foreign key
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', foreign_keys='Story.author_id')

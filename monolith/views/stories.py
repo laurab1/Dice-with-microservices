@@ -3,7 +3,7 @@ from random import randint
 
 from flask import Blueprint, abort
 from flask import jsonify, redirect, render_template, request
-
+from flask import current_app as app
 from flask_login import current_user, login_required
 
 from monolith.classes.DiceSet import DiceSet
@@ -49,6 +49,26 @@ def _rollDice():
     return redirect(f'/stories/{story.id}/edit')
 
 
+@stories.route('/stories/<storyid>', methods=['DELETE'])
+@login_required
+def _deleteStory(storyid):
+    story = Story.query.get(storyid)
+    if story is None:
+        abort(404) #story not found
+    else:
+        if story.deleted == True:
+            return jsonify(error='This story was already deleted'), 400
+        else:
+            message = ''
+            if story.author_id != current_user.id:
+                abort(403) #unauthorized request
+            story.deleted = True
+            try:
+                db.session.commit()
+                return jsonify(message='The story was succesfully deleted')
+            except Exception as e:
+                return jsonify(message='Your story could not be deleted'), 500
+
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
     stories = []
@@ -70,15 +90,15 @@ def _stories(message='', marked=True, id=0, react=0):
                 message = "INVALID date in query parameters: use yyyy-mm-dd"
             else: #successful try!
                 #query the database with the given values
-                stories = db.session.query(Story).group_by(Story.date).having(Story.date >= from_dt).having(Story.date <= to_dt)
-               
+                stories = db.session.query(Story).group_by(Story.date).having(Story.date >= from_dt).having(Story.date <= to_dt).filter_by(deleted=False)
+
                 if stories.count() == 0:
                     message='no stories with the given dates'
-            
+
         else:
             message = 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd!'
-    else:    
-        stories = db.session.query(Story)
+    else:
+        stories = db.session.query(Story).filter_by(deleted=False)
     return render_template("stories.html", message=message, stories=stories,
                            like_it_url="http://127.0.0.1:5000/stories/", storyid=id, react=react)
 
