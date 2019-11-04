@@ -74,6 +74,8 @@ class Story(db.Model):
     # will store the number of dislikes
     dislikes = db.Column(db.Integer)
 
+    dice_set = db.Column(db.Text(100))
+
     # define foreign key
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', foreign_keys='Story.author_id')

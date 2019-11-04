@@ -57,6 +57,10 @@ def _writeStory():
         new_story.author_id = current_user.id
         new_story.likes = 0
         new_story.dislikes = 0
+
+        # Saving the current roll in the database with '?' separator
+        new_story.dice_set = '?'.join(map(str, current_roll))
+
         try:
             _check_story(current_roll, new_story.text)
         except NotValidStoryError:
