@@ -54,4 +54,6 @@ class StoryForm(FlaskForm):
         'Write your story',
         id='text',
         validators=[DataRequired(), Length(max=1000)])
-    display = ['text']
+    is_draft = f.BooleanField('Draft', id='is_draft',
+                              default=False)
+    display = ['text', 'is_draft']

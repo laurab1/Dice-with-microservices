@@ -1,37 +1,21 @@
-import os
-import tempfile
-
 from monolith.utility.diceutils import get_die_faces_list
 
-import pytest
 
-
-@pytest.fixture
-def app():
-    """Create and configure a new app instance for each test."""
-    from monolith.app import create_app
-    db_fd, db_path = tempfile.mkstemp()
-    db_url = 'sqlite:///' + db_path
-    app = create_app(test=True, database=db_url, login_disabled=True)
-
-    yield app
-
-    os.close(db_fd)
-    os.unlink(db_path)
-
-
-def test_newStory(client):
+def test_newStory(client, auth):
+    auth.login('Admin', 'admin')
     # new story page
     reply = client.get('/newStory')
     assert reply.status_code == 200
 
 
-def test_roll_valid_dice_success(client):
+def test_roll_valid_dice_success(client, auth):
+    auth.login('Admin', 'admin')
     reply = client.get('/rollDice?diceset=standard')
-    assert reply.status_code == 200
+    assert reply.status_code == 302
 
 
-def test_roll_invalid_dice_fail(client):
+def test_roll_invalid_dice_fail(client, auth):
+    auth.login('Admin', 'admin')
     # new story page
     reply = client.get('/rollDice?diceset=LukeImYourFather')
     assert reply.status_code == 400
@@ -49,35 +33,46 @@ def test_roll_invalid_dice_fail(client):
     assert reply.status_code == 400
 
 
-def test_roll_dice_standard(client):
+def test_roll_dice_standard(client, auth, templates):
+    auth.login('Admin', 'admin')
     # 6 standard dice
-    reply = client.get('/rollDice?diceset=standard')
-    assert len(reply.get_json()) == 6
+    reply = client.get('/rollDice?diceset=standard', follow_redirects=True)
+    assert reply.status_code == 200
+    template_capture = templates[-1]['dice']
+    assert len(template_capture) == 6
 
     # 5 standard dice
-    reply = client.get('/rollDice?diceset=standard&dicenum=5')
-    assert len(reply.get_json()) == 5
+    reply = client.get('/rollDice?diceset=standard&dicenum=5', follow_redirects=True)
+    assert reply.status_code == 200
+    template_capture = templates[-1]['dice']
+    assert len(template_capture) == 5
 
     # 4 standard dice
-    reply = client.get('/rollDice?diceset=standard&dicenum=4')
-    assert len(reply.get_json()) == 4
+    reply = client.get('/rollDice?diceset=standard&dicenum=4', follow_redirects=True)
+    assert reply.status_code == 200
+    template_capture = templates[-1]['dice']
+    assert len(template_capture) == 4
 
 
-def test_roll_dice_halloween(client):
+def test_roll_dice_halloween(client, auth, templates):
+    auth.login('Admin', 'admin')
     # dice thrown in halloween set
-    reply = client.get('/rollDice?diceset=halloween')
-    body = reply.get_json()
-    assert len(body) == 6
+    reply = client.get('/rollDice?diceset=halloween', follow_redirects=True)
+    assert reply.status_code == 200
+    template_capture = templates[-1]['dice']
+    assert len(template_capture) == 6
     for i in range(0, 6):
-        face_list = get_die_faces_list("halloween", i)
-        assert body[i] in face_list
+        face_list = get_die_faces_list('halloween', i)
+        assert template_capture[i] in face_list
 
 
-def test_roll_dice_xmas(client):
+def test_roll_dice_xmas(client, auth, templates):
+    auth.login('Admin', 'admin')
     # dice thrown in xmas set
-    reply = client.get('/rollDice?diceset=xmas')
-    body = reply.get_json()
-    assert len(body) == 6
+    reply = client.get('/rollDice?diceset=xmas', follow_redirects=True)
+    assert reply.status_code == 200
+    template_capture = templates[-1]['dice']
+    assert len(template_capture) == 6
     for i in range(0, 6):
-        face_list = get_die_faces_list("xmas", i)
-        assert body[i] in face_list
+        face_list = get_die_faces_list('xmas', i)
+        assert template_capture[i] in face_list

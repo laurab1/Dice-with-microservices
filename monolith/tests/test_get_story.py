@@ -1,36 +1,33 @@
 from monolith.database import Story
 
 
-def test_get_story(client, database):
+def test_get_story(client, database, templates):
     example = Story()
     example.text = 'Trial story of example admin user :)'
     example.likes = 42
     example.author_id = 1
+    example.dice_set = ['dice1', 'dice2']
 
     database.session.add(example)
     database.session.commit()
 
     client.post('/login', data={'usrn_eml': 'Admin', 'password': 'admin'})
-    
+
     # story found
     reply = client.get('/stories/1')
-    body = reply.get_json()
+    template_capture = templates[-1]
     assert reply.status_code == 200
-    assert body['story'] == '1'
-    assert body['message'] == ''
+    assert template_capture['stories'].first().id == 1
+    # assert template_capture['message'] == ''
 
     # story not found
     reply = client.get('/stories/0')
-    body = reply.get_json()
-
-    assert body['story'] == 'None'
-    assert body['message'] == 'story not found!'
+    template_capture = templates[-1]
+    assert template_capture['message'] == 'story not found!'
     assert reply.status_code == 200
 
     # invalid input
     reply = client.get('stories/ciao')
-    body = reply.get_json()
-
-    assert body['story'] == 'None'
-    assert body['message'] == 'story not found!'
+    template_capture = templates[-1]
+    assert template_capture['message'] == 'story not found!'
     assert reply.status_code == 200

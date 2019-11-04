@@ -1,15 +1,14 @@
-from flask import Blueprint, redirect, render_template, request, jsonify, abort
+from flask import Blueprint, abort
+from flask import jsonify, redirect, render_template, request
 from flask import current_app as app
-from flask_login import current_user, login_user, login_required
-from monolith.database import db, User, Story
-from monolith.auth import admin_required
-from monolith.database import User, db
+
+from flask_login import current_user, login_required, login_user
+
+from monolith.database import Story, User, db
 from monolith.forms import UserForm
 
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
-from os import urandom
-
+from sqlalchemy.exc import IntegrityError
 
 users = Blueprint('users', __name__)
 
@@ -17,15 +16,27 @@ users = Blueprint('users', __name__)
 @users.route('/users')
 @login_required
 def users_():
-    result = db.session.query(User.username, 
-                             Story.text,
-                             str(func.max(Story.date))
-            ).outerjoin(Story
-            ).group_by(User.id
-            ).all()
+    res = db.session.query(User.username, Story.text, func.max(Story.date)) \
+            .outerjoin(Story).group_by(User.id).all()
+    return render_template('users.html', result=res)
+
+
+@users.route('/user/<username>')
+@login_required
+def get_user(username):
+    us = None
+    us = db.session.query(User).filter(User.username == username)
+    us = us.first()
+    if us is not None:
+        stories = db.session.query(Story).filter(Story.author_id == us.id).all()
+
+    else:   # User does not exist, failure with exit 404.
+        abort(404)
+
     if app.config['TESTING']:
-        return jsonify({'users': [(r[0],r[1]) for r in result]})
-    return render_template("users.html", result=result)
+        return jsonify({'user': username,
+                        'stories': [s.toJSON() for s in stories]})
+    return render_template("get_user.html", user=username, stories=stories)
 
 
 @users.route('/signup', methods=['GET', 'POST'])
@@ -43,16 +54,15 @@ def signup():
             login_user(new_user)
             return redirect('/')
         except IntegrityError as e:
-            status = 409 
+            db.session.rollback()
+            status = 409
             if 'user.username' in str(e):
                 err = 'This username already exists.'
             elif 'user.email' in str(e):
                 err = 'This email is already used.'
 
-            if app.config['TESTING']:
-                return jsonify(error=err), status
             form.email.errors.append(err)
-            
+
     return render_template('signup.html', form=form), status
 
 
