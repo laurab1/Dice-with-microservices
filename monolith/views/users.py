@@ -1,5 +1,6 @@
 from flask import Blueprint, abort
 from flask import jsonify, redirect, render_template, request
+from flask import current_app as app
 
 from flask_login import current_user, login_required, login_user
 
@@ -18,6 +19,24 @@ def users_():
     res = db.session.query(User.username, Story.text, func.max(Story.date)) \
             .outerjoin(Story).group_by(User.id).all()
     return render_template('users.html', result=res)
+
+
+@users.route('/user/<username>')
+@login_required
+def get_user(username):
+    us = None
+    us = db.session.query(User).filter(User.username == username)
+    us = us.first()
+    if us is not None:
+        stories = db.session.query(Story).filter(Story.author_id == us.id).all()
+
+    else:   # User does not exist, failure with exit 404.
+        abort(404)
+
+    if app.config['TESTING']:
+        return jsonify({'user': username,
+                        'stories': [s.toJSON() for s in stories]})
+    return render_template("get_user.html", user=username, stories=stories)
 
 
 @users.route('/signup', methods=['GET', 'POST'])
