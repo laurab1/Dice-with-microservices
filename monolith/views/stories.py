@@ -4,7 +4,6 @@ from random import randint
 from flask import Blueprint, abort
 from flask import jsonify, redirect, render_template, request
 from flask import current_app as app
-
 from flask_login import current_user, login_required
 
 from monolith.classes.DiceSet import DiceSet
@@ -70,20 +69,43 @@ def _deleteStory(storyid):
             except Exception as e:
                 return jsonify(message='Your story could not be deleted'), 500
 
-
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
-    allstories = db.session.query(Story).filter_by(deleted=False)
-    if app.config['TESTING'] == True:
-        stories = []
-        for story in allstories:
-            stories.append({'id': story.id, 'text': story.text})
-        return jsonify(stories)
-    else:
-        return render_template('stories.html', message=message, stories=allstories,
-                               like_it_url='http://127.0.0.1:5000/stories/',
-                               storyid=id, react=react)
+    stories = []
+    #check for query parameters
+    if len(request.args) != 0:
+        from_date = request.args.get('from')
+        to_date = request.args.get('to')
 
+        #check if the query parameters from and to
+        if from_date is not None and to_date is not None:
+            from_dt = None
+            to_dt = None
+
+            #check if the values are valid
+            try:
+                from_dt = dt.datetime.strptime(from_date, '%Y-%m-%d')
+                to_dt = dt.datetime.strptime(to_date, '%Y-%m-%d')
+            except ValueError as _:
+                message = "INVALID date in query parameters: use yyyy-mm-dd"
+            else: #successful try!
+                #query the database with the given values
+                stories = db.session.query(Story).group_by(Story.date).having(Story.date >= from_dt).having(Story.date <= to_dt).filter_by(deleted=False)
+
+                if stories.count() == 0:
+                    message='no stories with the given dates'
+
+        else:
+            message = 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd!'
+    else:
+        stories = db.session.query(Story).filter_by(deleted=False)
+        if app.config['TESTING'] == True:
+            storiesJson = []
+            for story in stories:
+                storiesJson.append({'id': story.id, 'text': story.text})
+            return jsonify(storiesJson)
+    return render_template("stories.html", message=message, stories=stories,
+                           like_it_url="http://127.0.0.1:5000/stories/", storyid=id, react=react)
 
 @stories.route('/stories/random_story', methods=['GET'])
 def _get_random_recent_story(message=''):
@@ -164,7 +186,7 @@ def _get_story(storyid):
             if q.first() is not None and react != q.first().reaction_val:
                 # remvoe the old reaction if the new one has different value
                 if q.first().marked:
-                    remove_reaction(storyid, q.first().reaction_val)
+                    remove_reaction.delay(storyid, q.first().reaction_val)
                 db.session.delete(q.first())
                 db.session.commit()
             new_reaction = Reaction()
@@ -174,8 +196,9 @@ def _get_story(storyid):
             # new_like.liked_id = authorid
             db.session.add(new_reaction)
             db.session.commit()
+            db.session.refresh(new_reaction)
             message = 'Got it!'
-            add_reaction(new_reaction, storyid, react)
+            add_reaction.delay(current_user.id, storyid, react)
             # votes are registered asynchronously by celery tasks
         else:
             if react == 1:
