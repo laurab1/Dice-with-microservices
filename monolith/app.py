@@ -1,23 +1,48 @@
-import os
+import datetime as dt
+
+from celery import Celery
+
 from flask import Flask
-from monolith.database import db, User, Story
-from monolith.views import blueprints
+
+from flask_bootstrap import Bootstrap
+
+from monolith import celeryapp
 from monolith.auth import login_manager
-import datetime
+from monolith.database import User, db
 
-def create_app():
+
+def create_app(test=False, database='sqlite:///storytellers.db',
+               login_disabled=False):
     app = Flask(__name__)
+    Bootstrap(app)
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'ANOTHER ONE'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storytellers.db'
+    app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+    app.config['BROKER_URL'] = 'redis://localhost:6379/0'
+    app.config['CELERY_RESULT_BACKED'] = 'redis://localhost:6379/0'
 
-    for bp in blueprints:
-        app.register_blueprint(bp)
-        bp.app = app
+    app.config['PERMANENT_SESSION_LIFETIME'] = dt.timedelta(minutes=120)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database
+    app.config['LOGIN_DISABLED'] = login_disabled
+    if test:
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['CELERY_ALWAYS_EAGER'] = True
+
+    # initialize Celery
+    celery = celeryapp.create_celery_app(app)
+    celeryapp.celery = celery
 
     db.init_app(app)
     login_manager.init_app(app)
     db.create_all(app=app)
+
+    # Required to avoid circular dependencies
+    from monolith.views import blueprints
+    for bp in blueprints:
+        app.register_blueprint(bp)
+        bp.app = app
 
     # create a first admin user
     with app.app_context():
@@ -25,23 +50,13 @@ def create_app():
         user = q.first()
         if user is None:
             example = User()
+            example.username = 'Admin'
             example.firstname = 'Admin'
             example.lastname = 'Admin'
             example.email = 'example@example.com'
-            example.dateofbirth = datetime.datetime(2020, 10, 5)
+            example.dateofbirth = dt.datetime(2020, 10, 5)
             example.is_admin = True
             example.set_password('admin')
-            db.session.add(example)
-            db.session.commit()
-
-        q = db.session.query(Story).filter(Story.id == 1)
-        story = q.first()
-        if story is None:
-            example = Story()
-            example.text = 'Trial story of example admin user :)'
-            example.likes = 42
-            example.author_id = 1
-            print(example)
             db.session.add(example)
             db.session.commit()
 

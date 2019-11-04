@@ -1,0 +1,73 @@
+<html>
+<head>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+{% if current_user.is_authenticated %}
+
+    <!--Navigation bar-->
+    {% include 'nav.html' %}
+    <!--end of Navigation bar-->
+    
+    <div class="jumbotron">
+
+            <form action="/rollDice" method="GET" role="form">
+
+                <label for="validationTooltip01">How many dice you want to roll?</label>
+                <div class="form-group">
+                    <div class="btn-group" data-toggle="buttons">
+
+                        <label class="btn btn-secondary active">
+                            <input type="radio" name="dicenum" id="dicenum" autocomplete="off" value="4"
+                                   style="visibility:hidden;" checked> 4
+                        </label>
+
+
+                        <label class="btn btn-secondary">
+                            <input type="radio" name="dicenum" id="dicenum" autocomplete="off" value="5"
+                                   style="visibility:hidden;"> 5
+                        </label>
+
+
+                        <label class="btn btn-secondary">
+                            <input type="radio" name="dicenum" id="dicenum" autocomplete="off" value="6"
+                                   style="visibility:hidden;"> 6
+                        </label>
+
+                    </div>
+                </div>
+                <label for="validationTooltip02">Choose Dice Set</label>
+                <div class="form-group">
+                    <div class="btn-group" data-toggle="buttons">
+                        {% for set in diceset %}
+                            <label class="btn btn-light">
+                                <input type="radio" name="diceset" id="dicenum" autocomplete="off" value="{{ set }}"
+                                       style="visibility:hidden;" checked>
+                                {{ set }}
+                                <img src="static/img/{{ set }}.png" style="height: 2em;width: 2em;">
+                            </label>
+
+                        {% endfor %}
+
+                    </div>
+                </div>
+                <br>
+                <button type="submit" class="btn btn-success">Roll the dice</button>
+            </form>
+    </div>
+
+
+
+{% else %}
+    Hi Anonymous, <a href="/login">Log in</a>
+{% endif %}
+
+</div>
+
+
+</body>
+</html>

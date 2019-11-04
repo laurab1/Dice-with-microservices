@@ -1,19 +1,82 @@
-<h1>Storytellers</h1>
+<html>
 
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+            crossorigin="anonymous"></script>
+</head>
+
+<body>
 {% if current_user.is_authenticated %}
-  Hi {{ current_user.firstname }}! <a href="/logout">Logout</a>
+    <!--Navigation bar-->
+    {% include 'nav.html' %}
+    <!--end of Navigation bar-->
+    <div class="container-fluid">
 
-  
-    <h2>Your Stories</h2>
-    {% for story in stories%}
-      <div>
-        <li>
-          {{story.text}} -- Likes:{{story.likes}}
-        </li>
-      </div>
-    {% endfor %}
+    <div class="jumbotron">
 
+    Hi {{ current_user.firstname }}! <a href="/logout">Logout</a> <br />
+
+    {% if stories != []: %}
+        
+        {% if stats != {}: %}
+        You are an {{ "active" if stats['active'] else "inactive" }} user, since you {{ "don't" if not stats['active'] }} post a story in the last seven days
+            <h2>Your stats</h2>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                        Number of published stories: {{ stats['stories'].number_of_stories }}
+                    </li>
+                <li class="list-group-item">
+                    Number of likes received: {{ stats['stories'].total_likes }}
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"> Avg likes per stories: {{ stats['stories'].total_likes/stats['stories'].number_of_stories }} </li>
+                    </ul>
+                </li> 
+                <li class="list-group-item">
+                    Number of dislikes received: {{ stats['stories'].total_dislikes }}
+                </li>
+                <li class="list-group-item">
+                    Average of dice used: {{ stats['avg_dice'] }}
+                </li>
+                <li class="list-group-item">
+                    Number of stories : {{ stats['stories_frequency'] }}
+                </li>
+            </ul>
+        {% else: %}
+            <h2> No stats </h2>
+        {% endif %}
+    
+        <h2>Your Stories</h2>
+        {% for story in stories%}
+            <div>
+            <li>
+                <a href="/stories/{{ story.id }}"> {{ story.text }} </a>-- published in date {{ story.date }}
+                <ul>
+                <li>Likes:{{ story.likes }} Dislikes:{{ story.dislikes }}</li>
+                </ul>
+            </li>
+            </div>
+        {% endfor %}
+
+    {% else: %}
+        <h2> You haven't published stories yet </h2>
+    {% endif %}
+
+
+    </div>
+    </div>
 
 {% else %}
-  Hi Anonymous, <a href="/login">Log in</a>
+  Hi Anonymous, <a href="/login">Log in</a> or <a href="/signup">Sign Up</a>
 {% endif %}
+
+</body>
+</html>
