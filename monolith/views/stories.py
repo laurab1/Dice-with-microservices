@@ -12,6 +12,7 @@ from monolith.forms import StoryForm
 from monolith.task import add_reaction, remove_reaction
 from monolith.utility.diceutils import get_dice_sets_list
 from monolith.utility.validate_story import NotValidStoryError, _check_story
+from sqlalchemy import desc
 
 
 stories = Blueprint('stories', __name__)
@@ -36,6 +37,7 @@ def _rollDice():
         roll = dice.throw_dice()
         story = Story()
         story.text = ''
+        story.theme = diceset
         story.likes = 0
         story.dislikes = 0
         story.dice_set = roll
@@ -51,10 +53,16 @@ def _rollDice():
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
-    allstories = db.session.query(Story)
-    return render_template('stories.html', message=message, stories=allstories,
-                           like_it_url='http://127.0.0.1:5000/stories/',
-                           storyid=id, react=react)
+    stories = db.session.query(Story)
+    theme = request.args.get('theme')
+    if theme is not None:
+        delta = dt.datetime.now() - dt.timedelta(days=5)
+        stories = stories.filter(Story.date >= delta and 
+                                 Story.theme == theme)
+        stories = stories.order_by(desc(Story.date))
+    return render_template('stories.html', message=message, stories=stories,
+                        like_it_url='http://127.0.0.1:5000/stories/',
+                        storyid=id, react=react)
 
 
 @stories.route('/stories/random_story', methods=['GET'])
