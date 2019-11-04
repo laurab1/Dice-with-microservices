@@ -23,6 +23,7 @@ class NotValidStoryError(Exception):
     def __str__(self):
         return repr(self.value)
 
+
 class WrongWordError(Exception):
     def __init__(self, value):
         self.value = value
@@ -32,7 +33,7 @@ class WrongWordError(Exception):
 
 
 def get_synonyms(word):
- 
+
     url = _URL_WORDS_API+word+"/synonyms"
     response = requests.request("GET", url, headers=_HEADERS_WORDS_API)
 
@@ -41,30 +42,31 @@ def get_synonyms(word):
     else:
         raise WrongWordError("The word {} does not exist!".format(word))
 
+
 def _check_story(roll, story_text):
-    
+
     n_dices = len(roll)
     roll_lower = [w.lower() for w in roll]
 
     story_words = story_text.translate(str.maketrans(string.punctuation, ' ' * len(string.punctuation))).replace(' '*4, ' ').replace(' '*3, ' ').replace(' '*2, ' ').split()
     story_words = [w.lower() for w in story_words]
-        
+
     story_len = len(story_words)
     if story_len < n_dices:
         raise NotValidStoryError("the story is not valid")
-    
+
     n_dices_checked = 0
-    
+
     for w in roll_lower:
         if w in story_words:
             n_dices_checked += 1
-        
+
         else: #check in the synonyms
             try:
                 syn_words = get_synonyms(w)
                 found = False
                 idx = 0
-            
+
                 while idx < len(story_words) and not found:
                     sw = story_words[idx]
                     if sw in syn_words:
@@ -72,7 +74,7 @@ def _check_story(roll, story_text):
                         found = True
                     else:
                         idx += 1
-            
+
             except WrongWordError as e: #what if in the roll there is a word that does not exist?
                 print(e)
 

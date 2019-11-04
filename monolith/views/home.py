@@ -24,4 +24,4 @@ def index():
         if app.config['TESTING']:
             return jsonify(login='needed')
 
-    return render_template("index.html", stories=stories)
+    return render_template('index.html', stories=stories)
