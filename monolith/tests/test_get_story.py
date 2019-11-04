@@ -6,6 +6,7 @@ def test_get_story(client, database, templates):
     example.text = 'Trial story of example admin user :)'
     example.likes = 42
     example.author_id = 1
+    example.dice_set = ['dice1', 'dice2']
 
     database.session.add(example)
     database.session.commit()

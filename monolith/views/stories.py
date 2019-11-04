@@ -15,7 +15,6 @@ from monolith.utility.validate_story import NotValidStoryError, _check_story
 
 
 stories = Blueprint('stories', __name__)
-current_roll = None
 
 
 @stories.route('/newStory', methods=['GET'])
@@ -27,9 +26,6 @@ def _newstory():
 @stories.route('/rollDice', methods=['GET'])
 @login_required
 def _rollDice():
-    global current_roll
-
-    form = StoryForm()
     diceset = ('standard' if request.args.get('diceset') is None
                else request.args.get('diceset'))
     dicenum = (6 if request.args.get('dicenum') is None
@@ -38,51 +34,53 @@ def _rollDice():
     try:
         dice = DiceSet(diceset, dicenum)
         roll = dice.throw_dice()
-        current_roll = roll
+        story = Story()
+        story.text = ''
+        story.likes = 0
+        story.dislikes = 0
+        story.dice_set = roll
+        story.author_id = current_user.id
+        db.session.add(story)
+        db.session.commit()
     except Exception:
+        db.session.rollback()
         abort(400)
 
-    return render_template('new_story.html', dice=roll, form=form)
-
-
-@stories.route('/writeStory', methods=['POST'])
-@login_required
-def _writeStory():
-    global current_roll
-
-    form = StoryForm()
-    if form.validate_on_submit():
-        new_story = Story()
-        form.populate_obj(new_story)
-        new_story.author_id = current_user.id
-        new_story.likes = 0
-        new_story.dislikes = 0
-
-        # Saving the current roll in the database with '?' separator
-        new_story.dice_set = '?'.join(map(str, current_roll))
-
-        try:
-            _check_story(current_roll, new_story.text)
-        except NotValidStoryError:
-            return jsonify(error='Your story is not valid'), 400
-
-        db.session.add(new_story)
-
-        try:
-            db.session.commit()
-            return redirect('/stories')
-        except Exception:
-            return jsonify(error='Your story could not be posted.'), 400
-    return jsonify(error='Your story is too long or data is missing.'), 400
+    return redirect(f'/stories/{story.id}/edit')
 
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
-    allstories = db.session.query(Story)
-    return render_template('stories.html', message=message, stories=allstories,
-                           like_it_url='http://127.0.0.1:5000/stories/',
-                           storyid=id, react=react)
+    stories = []
+    #check for query parameters
+    if len(request.args) != 0:
+        from_date = request.args.get('from')
+        to_date = request.args.get('to')
 
+        #check if the query parameters from and to
+        if from_date is not None and to_date is not None:
+            from_dt = None
+            to_dt = None
+
+            #check if the values are valid
+            try:
+                from_dt = dt.datetime.strptime(from_date, '%Y-%m-%d')
+                to_dt = dt.datetime.strptime(to_date, '%Y-%m-%d')
+            except ValueError as _:
+                message = "INVALID date in query parameters: use yyyy-mm-dd"
+            else: #successful try!
+                #query the database with the given values
+                stories = db.session.query(Story).group_by(Story.date).having(Story.date >= from_dt).having(Story.date <= to_dt)
+               
+                if stories.count() == 0:
+                    message='no stories with the given dates'
+            
+        else:
+            message = 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd!'
+    else:    
+        stories = db.session.query(Story)
+    return render_template("stories.html", message=message, stories=stories,
+                           like_it_url="http://127.0.0.1:5000/stories/", storyid=id, react=react)
 
 @stories.route('/stories/random_story', methods=['GET'])
 def _get_random_recent_story(message=''):
@@ -163,7 +161,7 @@ def _get_story(storyid):
             if q.first() is not None and react != q.first().reaction_val:
                 # remvoe the old reaction if the new one has different value
                 if q.first().marked:
-                    remove_reaction(storyid, q.first().reaction_val)
+                    remove_reaction.delay(storyid, q.first().reaction_val)
                 db.session.delete(q.first())
                 db.session.commit()
             new_reaction = Reaction()
@@ -173,8 +171,9 @@ def _get_story(storyid):
             # new_like.liked_id = authorid
             db.session.add(new_reaction)
             db.session.commit()
+            db.session.refresh(new_reaction)
             message = 'Got it!'
-            add_reaction(new_reaction, storyid, react)
+            add_reaction.delay(current_user.id, storyid, react)
             # votes are registered asynchronously by celery tasks
         else:
             if react == 1:
@@ -183,3 +182,38 @@ def _get_story(storyid):
                 message = 'You\'ve already disliked this story!'
 
         return _stories(message, False, storyid, react)
+
+
+@stories.route('/stories/<storyid>/edit', methods=['GET', 'POST'])
+@login_required
+def _story_edit(storyid):
+    story = db.session.query(Story).get(storyid)
+    if story is None:
+        abort(404)
+    if story.author_id != current_user.id:
+        abort(401)
+    if not story.is_draft:
+        abort(403)
+
+    if request.method == 'POST':
+        print(request.form)
+        form = StoryForm()
+        if form.validate_on_submit():
+            form.populate_obj(story)
+            if not story.is_draft:
+                try:
+                    _check_story(story.dice_set, story.text)
+                except NotValidStoryError:
+                    return jsonify(error='Your story is not valid'), 400
+            db.session.commit()
+            return redirect(f'/stories/{storyid}')
+        return jsonify(error='Your story is too long or data is missing.'), 400
+
+    if request.method == 'GET':
+        form = StoryForm()
+        form.text.data = story.text
+        form.is_draft.data = story.is_draft
+        return render_template('edit_story.html', story_id=storyid,
+                               dice=story.dice_set, form=form)
+
+    abort(501)
