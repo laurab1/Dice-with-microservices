@@ -15,7 +15,6 @@ from monolith.utility.validate_story import NotValidStoryError, _check_story
 
 
 stories = Blueprint('stories', __name__)
-current_roll = None
 
 
 @stories.route('/newStory', methods=['GET'])
@@ -27,9 +26,6 @@ def _newstory():
 @stories.route('/rollDice', methods=['GET'])
 @login_required
 def _rollDice():
-    global current_roll
-
-    form = StoryForm()
     diceset = ('standard' if request.args.get('diceset') is None
                else request.args.get('diceset'))
     dicenum = (6 if request.args.get('dicenum') is None
@@ -38,42 +34,19 @@ def _rollDice():
     try:
         dice = DiceSet(diceset, dicenum)
         roll = dice.throw_dice()
-        current_roll = roll
+        story = Story()
+        story.text = ''
+        story.likes = 0
+        story.dislikes = 0
+        story.dice_set = roll
+        story.author_id = current_user.id
+        db.session.add(story)
+        db.session.commit()
     except Exception:
+        db.session.rollback()
         abort(400)
 
-    return render_template('new_story.html', dice=roll, form=form)
-
-
-@stories.route('/writeStory', methods=['POST'])
-@login_required
-def _writeStory():
-    global current_roll
-
-    form = StoryForm()
-    if form.validate_on_submit():
-        new_story = Story()
-        form.populate_obj(new_story)
-        new_story.author_id = current_user.id
-        new_story.likes = 0
-        new_story.dislikes = 0
-
-        # Saving the current roll in the database with '?' separator
-        new_story.dice_set = '?'.join(map(str, current_roll))
-
-        try:
-            _check_story(current_roll, new_story.text)
-        except NotValidStoryError:
-            return jsonify(error='Your story is not valid'), 400
-
-        db.session.add(new_story)
-
-        try:
-            db.session.commit()
-            return redirect('/stories')
-        except Exception:
-            return jsonify(error='Your story could not be posted.'), 400
-    return jsonify(error='Your story is too long or data is missing.'), 400
+    return redirect(f'/stories/{story.id}/edit')
 
 
 @stories.route('/stories', methods=['GET'])
@@ -183,3 +156,38 @@ def _get_story(storyid):
                 message = 'You\'ve already disliked this story!'
 
         return _stories(message, False, storyid, react)
+
+
+@stories.route('/stories/<storyid>/edit', methods=['GET', 'POST'])
+@login_required
+def _story_edit(storyid):
+    story = db.session.query(Story).get(storyid)
+    if story is None:
+        abort(404)
+    if story.author_id != current_user.id:
+        abort(401)
+    if not story.is_draft:
+        abort(403)
+
+    if request.method == 'POST':
+        print(request.form)
+        form = StoryForm()
+        if form.validate_on_submit():
+            form.populate_obj(story)
+            if not story.is_draft:
+                try:
+                    _check_story(story.dice_set, story.text)
+                except NotValidStoryError:
+                    return jsonify(error='Your story is not valid'), 400
+            db.session.commit()
+            return redirect(f'/stories/{storyid}')
+        return jsonify(error='Your story is too long or data is missing.'), 400
+
+    if request.method == 'GET':
+        form = StoryForm()
+        form.text.data = story.text
+        form.is_draft.data = story.is_draft
+        return render_template('edit_story.html', story_id=storyid,
+                               dice=story.dice_set, form=form)
+
+    abort(501)

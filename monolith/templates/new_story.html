@@ -39,8 +39,7 @@
 
     <div class="jumbotron">
 
-        {% if diceset is defined %}
-            <form action="/rollDice" method="get" role="form">
+            <form action="/rollDice" method="GET" role="form">
 
                 <label for="validationTooltip01">How many dice you want to roll?</label>
                 <div class="form-group">
@@ -83,36 +82,6 @@
                 <br>
                 <button type="submit" class="btn btn-success">Roll the dice</button>
             </form>
-        {% else %}
-            <form action="/writeStory" method="post" role="form">
-                {{ form.hidden_tag() }}
-                <label for="validationTooltip01">Current dice values</label>
-                <div class="row">
-                    {% for die in dice %}
-                        <div class="col">
-                            <div class="card card-block d-flex text-white bg-secondary mb-3"
-                                 style="width: 8rem; height: 8rem;">
-                                <div class="card-body align-items-center d-flex justify-content-center">
-                                    <h5 class="card-title ">{{ die }}</h5>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-                <br>
-                {{ form['text'].label }}
-                <br>
-                {{ form['text']() }}
-                {% for e in form['text'].errors %}
-                 <p class="help-block">{{ e }}</p>
-                {% endfor %}
-                <br>
-
-                <button type="submit" class="btn btn-success">Submit Story</button>
-
-            </form>
-        {% endif %}
-
     </div>
 
 
