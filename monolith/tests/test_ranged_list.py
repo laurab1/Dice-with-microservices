@@ -58,12 +58,52 @@ def test_ranged_stories(client, templates, init_database):
     message = templates[-1]['message']
     assert message == 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd!'
 
-    #valid query params, invalid values
+    #valid query params, invalid values (1)
+    reply = client.get('/stories?from=2018-12-1&to=2019-x-1')
+    assert reply.status_code == 200
+
+    message = templates[-1]['message']
+    assert message == 'INVALID date in query parameters: use yyyy-mm-dd'
+
+    #valid query params, invalid values (2)
+    reply = client.get('/stories?from=x-12-1&to=2019-10-1')
+    assert reply.status_code == 200
+
+    message = templates[-1]['message']
+    assert message == 'INVALID date in query parameters: use yyyy-mm-dd'
+
+    #valid query params, invalid values (3)
+    reply = client.get('/stories?from=x-12-1&to=2019-10-x')
+    assert reply.status_code == 200
+
+    message = templates[-1]['message']
+    assert message == 'INVALID date in query parameters: use yyyy-mm-dd'
 
     #found something in exact range
     reply = client.get('/stories?from=2018-12-1&to=2019-1-1')
     assert reply.status_code == 200
 
+    message = templates[-1]['message']
     stories = templates[-1]['stories']
+    assert message == ''
     for story in stories:
         assert story.id == 1 or story.id == 2 or story.id == 5
+    
+    #found something in "not exact" range
+    reply = client.get('/stories?from=2017-5-1&to=2018-1-1')
+    assert reply.status_code == 200
+
+    message = templates[-1]['message']
+    stories = templates[-1]['stories']
+    assert message == ''
+    for story in stories:
+        assert story.id == 4
+
+    #nothing found
+    reply = client.get('/stories?from=2015-12-1&to=2017-1-1')
+    assert reply.status_code == 200
+
+    message = templates[-1]['message']
+    stories = templates[-1]['stories']
+    assert message == 'no stories with the given dates'
+    assert stories.count() == 0

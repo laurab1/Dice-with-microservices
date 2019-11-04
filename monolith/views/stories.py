@@ -101,8 +101,8 @@ def _stories(message='', marked=True, id=0, react=0):
             else: #successful try!
                 #query the database with the given values
                 stories = db.session.query(Story).group_by(Story.date).having(Story.date >= from_dt).having(Story.date <= to_dt)
-
-                if stories.first() is None:
+               
+                if stories.count() == 0:
                     message='no stories with the given dates'
             
         else:
