@@ -1,121 +1,240 @@
-from unittest import TestCase
-from monolith.forms import LoginForm, UserForm
-from flask import request
-from flask_login import current_user
+from monolith.database import Story
 import json
-import unittest
 
-from monolith.app import create_app
-from monolith.database import db, User, Story
 
-class StoriesUnittest(TestCase):
-    def setUp(self):
-        self.app = create_app(test=True)
-        self.context = self.app.app_context()
-        self.app = self.app.test_client()
+def test_new_story(client, auth, database, templates):
+    auth.login('Admin', 'admin')
 
-    def tearDown(self):
-        with self.context:
-            db.drop_all()
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    new_id = templates[-1]['story_id']
+    story = database.session.query(Story).get(new_id)
+    assert story.text == ''
+    assert story.author_id == 1
+    assert story.is_draft
+    assert story.likes == 0
+    assert story.dislikes == 0
 
-    def test_write_new_story(self):
-        self.app.post('/login', data={'usrn_eml': 'Admin', 'password': 'admin'})
 
-        reply = self.app.post('/writeStory', data={'text': 'test story'})
+def test_edit_story(client, auth, database, templates):
+    auth.login('Admin', 'admin')
 
-        self.assertEqual(reply.status_code, 200)
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
 
-        with self.context:
-            stories = db.session.query(Story).order_by(Story.date.desc())
-            s = stories.first()
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
 
-        self.assertEqual(s.text, 'test story')
-        self.assertEqual(s.author_id, 1)
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
 
-        reply = self.app.post('/writeStory', data={})
+    story = database.session.query(Story).order_by(Story.date.desc()).first()
+    assert story.text == story_text
+    assert story.author_id == 1
 
-        self.assertEqual(reply.status_code, 400)
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+    reply = client.post(f'/stories/{new_id}/edit', data={})
+    assert reply.status_code == 400
 
-    def test_stories(self):
-        reply = self.app.get('/stories')
-        self.assertEqual(reply.status_code, 200)
 
-        with self.context:
-            query = db.session.query(Story).filter_by(deleted=False)
-            queried = query.all()
+def test_edit_non_draft_story(client, auth, database, templates):
+    auth.login('Admin', 'admin')
 
-        body = json.loads(str(reply.data, 'UTF8'))
-        numOfStories = len(body)
-        self.assertEqual(numOfStories, query.count())
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    new_id = templates[-1]['story_id']
+    roll = templates[-1]['dice']
 
-        for i in range(0, len(body)):
-            self.assertEqual(body[i]['id'], queried[i].id)
-            self.assertEqual(body[i]['text'], queried[i].text)
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
 
-        self.app.post('/login', data={'usrn_eml': 'Admin', 'password': 'admin'})
+    reply = client.post(f'/stories/{new_id}/edit',
+                        data={'text': story_text})
+    assert reply.status_code == 302
+    story = database.session.query(Story).get(new_id)
+    assert not story.is_draft
 
-        reply = self.app.post('/writeStory', data={'text': 'test story'})
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 403
 
-        self.assertEqual(reply.status_code, 200)
 
-        reply = self.app.get('/stories')
-        self.assertEqual(reply.status_code, 200)
-        body = json.loads(str(reply.data, 'UTF8'))
+def test_edit_not_author_story(client, auth, database, templates):
+    auth.login('Admin', 'admin')
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    new_id = templates[-1]['story_id']
+    auth.logout()
 
-        with self.context:
-            query = db.session.query(Story).filter_by(deleted=False)
-            queried = query.all()
+    auth.login('test1', 'test1123')
+    reply = client.post(f'/stories/{new_id}/edit',
+                        data={'text': ''})
+    assert reply.status_code == 401
 
-        self.assertEqual(numOfStories+1, query.count())
 
-        for i in range(0, numOfStories+1):
-            self.assertEqual(body[i]['id'], queried[i].id)
-            self.assertEqual(body[i]['text'], queried[i].text)
-            if body[i]['text'] == 'test story':
-                toBeDeleted = str(body[i]['id'])
+def test_edit_non_existent_story(client, auth, database):
+    auth.login('Admin', 'admin')
+    reply = client.get('/stories/0/edit')
+    assert reply.status_code == 404
 
-        reply = self.app.delete('/stories/' + toBeDeleted)
-        self.assertEqual(reply.status_code, 200)
 
-        reply = self.app.delete('/stories/' + toBeDeleted)
-        self.assertEqual(reply.status_code, 400)
+def test_edit_not_valid_story(client, auth, database, templates):
+    auth.login('Admin', 'admin')
 
-        reply = self.app.delete('/stories/' + toBeDeleted)
-        self.assertEqual(reply.status_code, 400)
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
 
-        with self.context:
-            deletedStory = db.session.query(Story).get(toBeDeleted)
+    story = ''
+    for i in range(1, len(roll)):
+        story = story + roll[i] + ' '
 
-        self.assertEqual(deletedStory.deleted, True)
+    reply = client.post(f'/stories/{new_id}/edit',
+                        data={'text': story})
+    database.session.commit()
+    assert reply.status_code == 400
 
-        reply = self.app.get('/logout')
-        self.assertEqual(reply.status_code, 302)
 
-        reply = self.app.post('/signup', data={'email': 'prova@prova.com',
-                                          'username': 'prova',
-                                          'password': 'prova123'})
-        self.assertEqual(reply.status_code, 302)
+def test_edit_draft_valid_story(client, auth, database, templates):
+    auth.login('Admin', 'admin')
 
-        reply = self.app.post('/login', data={'usrn_eml': 'prova@prova.com',
-                                          'password': 'prova123'})
-        self.assertEqual(reply.status_code, 302)
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    new_id = templates[-1]['story_id']
 
-        reply = self.app.post('/writeStory', data={'text': 'prova'})
+    reply = client.post(f'/stories/{new_id}/edit',
+                        data={'text': 'blob', 'is_draft': 'y'})
+    database.session.commit()
+    assert reply.status_code == 302
 
-        reply = self.app.get('/logout')
-        self.assertEqual(reply.status_code, 302)
 
-        self.app.post('/login', data={'usrn_eml': 'Admin', 'password': 'admin'})
-        self.assertEqual(reply.status_code, 302)
+def test_edit_get(client, auth, database, templates):
+    auth.login('Admin', 'admin')
 
-        with self.context:
-            notMyStory = db.session.query(Story).filter_by(author_id=2).first()
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
 
-        reply = self.app.delete('/stories/' + str(notMyStory.id))
-        self.assertEqual(reply.status_code, 403)
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
 
-        reply = self.app.delete('/stories/999')
-        self.assertEqual(reply.status_code, 404)
+    reply = client.get(f'/stories/{new_id}/edit')
+    assert reply.status_code == 200
+    template_capture = templates[-1]
+    assert template_capture['story_id'] == new_id
+    assert template_capture['dice'] == roll
 
-if __name__ == '__main__':
-    unittest.main()
+def test_delete_story(client, auth, database, templates):
+    auth.login('Admin', 'admin')
+
+    reply = client.delete('/stories/0') # delete non-existing story
+    assert reply.status_code == 404
+
+    # new story
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    #delete the newly created story
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 200
+    deletedStory = database.session.query(Story).get(new_id)
+    assert deletedStory.deleted == True
+
+    #delete already deleted story
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 400
+
+    #delete already deleted story again
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 400
+
+    auth.logout()
+
+    auth.login('test1', 'test1123')
+    # new story by user test1
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+    auth.logout()
+
+    auth.login('Admin', 'admin')
+
+    #delete story of another user
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 403
+
+
+
+def test_see_all_stories(client, auth, database, templates):
+    reply = client.get('/stories')
+    assert reply.status_code == 200
+    body = json.loads(str(reply.data, 'UTF8'))
+    assert len(body) == 0 # no loaded stories
+
+    auth.login('Admin', 'admin')
+
+    # add 2 stories
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    #check newly added stories
+    reply = client.get('/stories')
+    assert reply.status_code == 200
+    body = json.loads(str(reply.data, 'UTF8'))
+    assert len(body) == 2
+
+    query = database.session.query(Story).filter_by(deleted=False)
+    queried = query.all()
+
+    assert len(body) == query.count()
+
+    for i in range(0, len(body)):
+        assert body[i]['id'] == queried[i].id
+        assert body[i]['text'] == queried[i].text

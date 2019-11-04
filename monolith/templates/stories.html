@@ -30,7 +30,7 @@
                 <a class="nav-link" href="/newStory">New Story</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">My Wall <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="/">My Wall <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/followed">Followed users</a>
@@ -46,19 +46,70 @@
 <h1>Story List</h1>
 <h5>{{ message }}</h5>
 <ul>
-    {% for story in stories: %}
-        <li>
-            "{{ story.text }}" Likes: {{ story.likes }} ({{ story.date }})
-            {% if current_user.is_authenticated %}
-                <a href="{{ like_it_url }}{{ story.author.id }}/{{ story.id }}">Like it!</a>
-                {% if story.author.id != current_user.id %}
-                  <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+    {% if marked == false %}
+        {% for story in stories: %}
+            {% if story.id == storyid %}
+                {% if react == 1 %}
+                    <li>
+                        "{{ story.text }}" Likes: {{ story.likes + 1 }} Dislikes: {{ story.dislikes }} ({{ story.date }})
+                        {% if current_user.is_authenticated %}
+                            <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
+          	        	    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
+                                    {% if story.author.id != current_user.id %}
+                                         <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+                                    {% endif %}
+                        {% endif %}
+                    </li>
                 {% else %}
-                  <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>
+                    <li>
+                        "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes + 1 }} ({{ story.date }})
+                        {% if current_user.is_authenticated %}
+                            <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
+          	        	    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
+                                    {% if story.author.id != current_user.id %}
+                                         <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+                                    {% endif %}
+                        {% endif %}
+                        {% if story.author.id == current_user.id %}
+                          <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>
+                        {% endif %}
+                    </li>
                 {% endif %}
+            {% else %}
+                <li>
+                    "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})
+                    {% if current_user.is_authenticated %}
+                        <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
+          	    	    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
+
+                            {% if story.author.id != current_user.id %}
+                                 <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+                            {% endif %}
+                            {% if story.author.id == current_user.id %}
+                              <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>
+                            {% endif %}
+                    {% endif %}
+                </li>
             {% endif %}
-        </li>
-    {% endfor %}
+        {% endfor %}
+    {% else %}
+        {% for story in stories: %}
+            <li>
+                "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})
+                {% if current_user.is_authenticated %}
+                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
+          		    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
+
+                            {% if story.author.id != current_user.id %}
+                                 <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
+                            {% endif %}
+                            {% if story.author.id == current_user.id %}
+                              <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>
+                            {% endif %}
+                {% endif %}
+            </li>
+        {% endfor %}
+    {% endif %}
 </ul>
 
   <script>
@@ -82,5 +133,6 @@
         });
     }
   </script>
+
 </body>
 </html>
