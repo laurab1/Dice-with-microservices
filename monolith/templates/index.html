@@ -23,27 +23,31 @@
 
     <div class="jumbotron">
 
-    Hi {{ current_user.firstname }}! <a href="/logout">Logout</a>
+    Hi {{ current_user.firstname }}! <a href="/logout">Logout</a> <br />
 
     {% if stories != []: %}
         
         {% if stats != {}: %}
+        You are an {{ "active" if stats['active'] else "inactive" }} user, since you {{ "don't" if not stats['active'] }} post a story in the last seven days
             <h2>Your stats</h2>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item">
-                        Number of stories published: {{ stats['likes'].number_of_stories }}
+                        Number of published stories: {{ stats['stories'].number_of_stories }}
                     </li>
                 <li class="list-group-item">
-                    Number of likes received: {{ stats['likes'].total }}
+                    Number of likes received: {{ stats['stories'].total_likes }}
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item"> Avg likes per stories: {{ stats['likes'].total/stats['likes'].number_of_stories }} </li>
+                        <li class="list-group-item"> Avg likes per stories: {{ stats['stories'].total_likes/stats['stories'].number_of_stories }} </li>
                     </ul>
                 </li> 
                 <li class="list-group-item">
-                    Number of dislikes received: {{ stats['likes'].total_dislikes }}
+                    Number of dislikes received: {{ stats['stories'].total_dislikes }}
                 </li>
                 <li class="list-group-item">
                     Average of dice used: {{ stats['avg_dice'] }}
+                </li>
+                <li class="list-group-item">
+                    Number of stories : {{ stats['stories_frequency'] }}
                 </li>
             </ul>
         {% else: %}
