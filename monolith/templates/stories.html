@@ -74,7 +74,12 @@
     }
 
     function deleteStory(story_id) {
-      fetch('/stories/' + story_id, { method: 'DELETE' });
+      fetch('/stories/' + story_id, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+          alert(data.message)
+          window.location.replace('/stories');
+        });
     }
   </script>
 </body>

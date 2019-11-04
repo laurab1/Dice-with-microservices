@@ -58,7 +58,7 @@ def _deleteStory(storyid):
         abort(404) #story not found
     else:
         if story.deleted == True:
-            return jsonify({'Error': 'This story was already deleted.'}), 400
+            return jsonify(error='This story was already deleted'), 400
         else:
             message = ''
             if story.author_id != current_user.id:
@@ -66,10 +66,10 @@ def _deleteStory(storyid):
             story.deleted = True
             try:
                 db.session.commit()
-                message = 'The story was succesfully deleted'
+                return jsonify(message='The story was succesfully deleted')
             except Exception as e:
-                message = 'Your story could not be deleted'
-            return _stories(message)
+                return jsonify(message='Your story could not be deleted'), 500
+
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message=''):
