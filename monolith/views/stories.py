@@ -164,7 +164,7 @@ def _get_story(storyid):
             if q.first() is not None and react != q.first().reaction_val:
                 # remvoe the old reaction if the new one has different value
                 if q.first().marked:
-                    remove_reaction.delay(storyid, q.first().reaction_val)
+                    remove_reaction(storyid, q.first().reaction_val)
                 db.session.delete(q.first())
                 db.session.commit()
             new_reaction = Reaction()
@@ -174,9 +174,8 @@ def _get_story(storyid):
             # new_like.liked_id = authorid
             db.session.add(new_reaction)
             db.session.commit()
-            db.session.refresh(new_reaction)
             message = 'Got it!'
-            add_reaction.delay(current_user.id, storyid, react)
+            add_reaction(new_reaction, storyid, react)
             # votes are registered asynchronously by celery tasks
         else:
             if react == 1:

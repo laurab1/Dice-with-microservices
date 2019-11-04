@@ -1,28 +1,48 @@
-from flask import Blueprint, redirect, render_template, request, jsonify
+from flask import Blueprint, abort
+from flask import jsonify, redirect, render_template, request
 from flask import current_app as app
-from flask_login import (current_user, login_user, login_required)
-from monolith.database import db, User
-from monolith.auth import admin_required
-from monolith.forms import UserForm
-from sqlalchemy.exc import IntegrityError
-from os import urandom
 
+from flask_login import current_user, login_required, login_user
+
+from monolith.database import Story, User, db
+from monolith.forms import UserForm
+
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
 users = Blueprint('users', __name__)
 
 
 @users.route('/users')
+@login_required
 def users_():
-    def aux(*args, **kw):
-        users = db.session.query(User)
-        return render_template("users.html", users=users)
-    return admin_required(aux)()
+    res = db.session.query(User.username, Story.text, func.max(Story.date)) \
+            .outerjoin(Story).group_by(User.id).all()
+    return render_template('users.html', result=res)
+
+
+@users.route('/user/<username>')
+@login_required
+def get_user(username):
+    us = None
+    us = db.session.query(User).filter(User.username == username)
+    us = us.first()
+    if us is not None:
+        stories = db.session.query(Story).filter(Story.author_id == us.id).all()
+
+    else:   # User does not exist, failure with exit 404.
+        abort(404)
+
+    if app.config['TESTING']:
+        return jsonify({'user': username,
+                        'stories': [s.toJSON() for s in stories]})
+    return render_template("get_user.html", user=username, stories=stories)
 
 
 @users.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = UserForm()
-
+    status = 200
     if form.validate_on_submit():
         new_user = User()
         form.populate_obj(new_user)
@@ -34,29 +54,35 @@ def signup():
             login_user(new_user)
             return redirect('/')
         except IntegrityError as e:
+            db.session.rollback()
+            status = 409
             if 'user.username' in str(e):
-                return jsonify({'Error': 'This username already exists.'})
+                err = 'This username already exists.'
             elif 'user.email' in str(e):
-                return jsonify({'Error': 'This email is already used.'})
+                err = 'This email is already used.'
 
-    return render_template('signup.html', form=form)
+            form.email.errors.append(err)
+
+    return render_template('signup.html', form=form), status
 
 
 @users.route('/users/<user_id>/follow', methods=['DELETE', 'POST'])
 @login_required
 def follow(user_id):
-    """POST requests add the user with primary key `user_id` to the list of
+    """
+    POST requests add the user with primary key `user_id` to the list of
     user followed by the currenly logged user. If it is already in the list
     returns successfully without updating the database.
     DELETE requests remove the user from the list and if it is not in the list
     returns successfully without updating the database.
     User must be logged to access this endpoint.
     All responses are in JSON format and are meant to be invokated within the
-    the frontend (eg. AJAX or fetch), not by url access."""
+    the frontend (eg. AJAX or fetch), not by url access.
+    """
 
     followee = User.query.get(user_id)
     if followee is None:
-        message = 'User with id {} does not exists'.format(user_id)
+        message = 'User with id {} does not exist'.format(user_id)
         return (jsonify(error=message), 404)
 
     if followee == current_user:
@@ -80,15 +106,13 @@ def follow(user_id):
 
 def _get_followed_dict(user_id):
     me = User.query.get(user_id)
-    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id} for x in me.follows]
-    return users
+    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id}
+             for x in me.follows]
+    return {'users': users}
 
 
 @users.route('/followed', methods=['GET'])
 @login_required
 def get_followed():
-    users = _get_followed_dict(current_user.id)
-    if app.config['TESTING']:
-        return jsonify({'users': users})
-    else:
-        return render_template('followed.html', users=users)
+    template_dict = _get_followed_dict(current_user.id)
+    return render_template('followed.html', **template_dict)

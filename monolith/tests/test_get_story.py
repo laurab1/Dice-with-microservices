@@ -1,45 +1,33 @@
-import unittest
-import json
-from flask import request, jsonify
+from monolith.database import Story
 
-from monolith.database import db, User, Story
-from monolith.views.stories import _get_story
-from monolith.app import create_app
 
-class TestGetStory(unittest.TestCase):
-    def setUp(self):
-        self.app = create_app(test=True)
-        self.context = self.app.app_context()
-        self.app = self.app.test_client()
+def test_get_story(client, database, templates):
+    example = Story()
+    example.text = 'Trial story of example admin user :)'
+    example.likes = 42
+    example.author_id = 1
+    example.dice_set = ['dice1', 'dice2']
 
-    def tearDown(self):
-        with self.context:
-            db.drop_all()
-    
-    def test_get_story(self):
-        #story found
-        reply = self.app.get('/stories/1')
-        body = json.loads(str(reply.data, 'utf8'))
-        
-        self.assertEqual(body['story'], '1')
-        self.assertEqual(body['message'], '')
-        self.assertEqual(reply.status_code, 200)
-        #OLD ASSERTION self.assertEqual(data, '<html>\n  <body>\n    <h1>Story List</h1>\n    <h5></h5>\n    <ul>\n      \n      <li>\n      \"Trial story of example admin user :)\"    Likes: 42 (2019-10-27 21:09:18.895015)\n      \n      </li>\n      \n    </ul>\n  </body>\n</html>')
+    database.session.add(example)
+    database.session.commit()
 
-        #story not found
-        reply = self.app.get('/stories/0')
-        body = json.loads(str(reply.data, 'utf8'))
-        
-        self.assertEqual(body['story'], 'None')
-        self.assertEqual(body['message'], 'story not found!')
-        self.assertEqual(reply.status_code, 200)
-        #OLD ASSERTION self.assertEqual(data, '<html>\n  <body>\n    <h1>Story List</h1>\n    <h5>story not found!</h5>\n    <ul>\n      \n    </ul>\n  </body>\n</html>')
+    client.post('/login', data={'usrn_eml': 'Admin', 'password': 'admin'})
 
-        #invalid input
-        reply = self.app.get('stories/ciao')
-        body = json.loads(str(reply.data, 'utf8'))
-        
-        self.assertEqual(body['story'], 'None')
-        self.assertEqual(body['message'], 'story not found!')
-        self.assertEqual(reply.status_code, 200)
-        #OLD ASSERTION self.assertEqual(data, '<html>\n  <body>\n    <h1>Story List</h1>\n    <h5>story not found!</h5>\n    <ul>\n      \n    </ul>\n  </body>\n</html>')
+    # story found
+    reply = client.get('/stories/1')
+    template_capture = templates[-1]
+    assert reply.status_code == 200
+    assert template_capture['stories'].first().id == 1
+    # assert template_capture['message'] == ''
+
+    # story not found
+    reply = client.get('/stories/0')
+    template_capture = templates[-1]
+    assert template_capture['message'] == 'story not found!'
+    assert reply.status_code == 200
+
+    # invalid input
+    reply = client.get('stories/ciao')
+    template_capture = templates[-1]
+    assert template_capture['message'] == 'story not found!'
+    assert reply.status_code == 200

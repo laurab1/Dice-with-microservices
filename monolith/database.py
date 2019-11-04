@@ -110,6 +110,7 @@ class Story(db.Model):
 
 class Reaction(db.Model):
     __tablename__ = 'reaction'
+
     reactor_id = db.Column(db.Integer, db.ForeignKey('user.id'),
                            primary_key=True)
     reactor = db.relationship('User', foreign_keys='Reaction.reactor_id')

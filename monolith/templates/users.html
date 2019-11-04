@@ -1,16 +1,22 @@
 {% extends "bootstrap/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+
 {% block title %}
 Users
 {% endblock %}
+
 {% block content %}
 {{super()}}
 <div>
     <h1>User List</h1>
     <ul>
-      {% for user in users: %}
+      {% for res in result: %}
       <li>
-      {{user.username}}
+      {% if res[1]: %}
+        {{res[0]}}: {{res[1]}} -- {{res[2]}}
+      {% else: %}
+        {{res[0]}}      
+      {% endif %}
       </li>
       {% endfor %}
     </ul>
