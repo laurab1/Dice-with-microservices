@@ -30,7 +30,7 @@ def index():
             stats['stories'] = stories_stats.all()[0]
 
             # Stats related to dice
-            n_dice = [len(story.dice_set.split('?')) for story in stories]
+            n_dice = [len(story.dice_set) for story in stories]
             avg_dice = round(sum(n_dice) / len(n_dice), 2)
 
             stats['avg_dice'] = avg_dice

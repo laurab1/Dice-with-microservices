@@ -55,7 +55,7 @@ def test_statistics(client, database):
     example.likes = 0
     example.dislikes = 0
     example.author_id = 1
-    example.dice_set = 'face1?face2?face3?face4'
+    example.dice_set = ["face1", "face2", "face3", "face4"]
     database.session.add(example)
     database.session.commit()
 
