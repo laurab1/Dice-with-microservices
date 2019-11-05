@@ -1,5 +1,8 @@
+from monolith.database import Reaction, Story
+
+
 def test_viewStory(client, auth, templates):
-    auth.login('Admin', 'admin')
+    auth.login()
 
     # Create new story
     reply = client.get('/roll_dice', follow_redirects=True)
@@ -23,32 +26,153 @@ def test_viewStory(client, auth, templates):
     assert reply.status_code == 404
 
 
-def test_like(client, auth, templates):
-    auth.login('Admin', 'admin')
+def test_like(client, auth, database, templates):
+    auth.login()
 
-    # first like
+    # Invalid story
+    reply = client.post('/stories/1/react', data={'like': 'Like it!'})
+    assert reply.status_code == 404
+
+    reply = client.get('/roll_dice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    # First like
     reply = client.post('/stories/1/react', data={'like': 'Like it!'})
     assert reply.status_code == 200
-    # template_context = templates[-1]
-    # assert template_context['message'] == 'Got it!'
+    r = database.session.query(Reaction) \
+                .filter_by(reactor_id=1, story_id=new_id).one()
+    s = database.session.query(Story).get(new_id)
+    assert r is not None
+    assert r.reaction_val == 1
+    assert s.likes == 1 and s.dislikes == 0
 
     # duplicated like
     reply = client.post('/stories/1/react', data={'like': 'Like it!'})
     assert reply.status_code == 400
-    # template_context = templates[-1]
-    # assert template_context['message'] == 'You\'ve already liked this story!'
+    database.session.refresh(r)
+    database.session.refresh(s)
+    assert r is not None
+    assert r.reaction_val == 1
+    assert s.likes == 1 and s.dislikes == 0
 
+    auth.logout()
+    auth.login('test1', 'test1123')
 
-def test_dislike(client, auth, templates):
-    auth.login('Admin', 'admin')
-
-    # same as likes: this also tests reaction changes
-    reply = client.post('/stories/1/react', data={'dislike': 'Disike it!'})
+    # Second like
+    reply = client.post('/stories/1/react', data={'like': 'Like it!'})
     assert reply.status_code == 200
-    # template_context = templates[-1]
-    # assert template_context['message'] == 'Got it!'
+    r = database.session.query(Reaction) \
+                .filter_by(reactor_id=2, story_id=new_id).one()
+    s = database.session.query(Story).get(new_id)
+    assert r is not None
+    assert r.reaction_val == 1
+    assert s.likes == 2 and s.dislikes == 0
 
+
+def test_dislike(client, auth, database, templates):
+    auth.login()
+
+    # Invalid story
+    reply = client.post('/stories/1/react', data={'dislike': 'Dislike it!'})
+    assert reply.status_code == 404
+
+    reply = client.get('/roll_dice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    # First like
+    reply = client.post('/stories/1/react', data={'dislike': 'Dislik it!'})
+    assert reply.status_code == 200
+    r = database.session.query(Reaction) \
+                .filter_by(reactor_id=1, story_id=new_id).one()
+    s = database.session.query(Story).get(new_id)
+    assert r is not None
+    assert r.reaction_val == -1
+    assert s.likes == 0 and s.dislikes == 1
+
+    # duplicated like
     reply = client.post('/stories/1/react', data={'dislike': 'Dislike it!'})
     assert reply.status_code == 400
-    # template_context = templates[-1]
-    # assert template_context['message'] == 'You\'ve already disliked this story!'
+    database.session.refresh(r)
+    database.session.refresh(s)
+    assert r is not None
+    assert r.reaction_val == -1
+    assert s.likes == 0 and s.dislikes == 1
+
+    auth.logout()
+    auth.login('test1', 'test1123')
+    # Second like
+    reply = client.post('/stories/1/react', data={'dislike': 'Dislike it!'})
+    assert reply.status_code == 200
+    r = database.session.query(Reaction) \
+                .filter_by(reactor_id=2, story_id=new_id).one()
+    s = database.session.query(Story).get(new_id)
+    assert r is not None
+    assert r.reaction_val == -1
+    assert s.likes == 0 and s.dislikes == 2
+
+
+def test_reaction_change(client, auth, database, templates):
+    auth.login()
+
+    reply = client.get('/roll_dice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    # First like
+    reply = client.post('/stories/1/react', data={'like': 'Like it!'})
+    assert reply.status_code == 200
+    r = database.session.query(Reaction) \
+                .filter_by(reactor_id=1, story_id=new_id).one()
+    s = database.session.query(Story).get(new_id)
+    assert r is not None
+    assert r.reaction_val == 1
+    assert s.likes == 1 and s.dislikes == 0
+
+    auth.logout()
+    auth.login()
+
+    # Change with dislike
+    reply = client.post('/stories/1/react', data={'dislike': 'Dislike it!'})
+    assert reply.status_code == 200
+    r = database.session.query(Reaction) \
+                .filter_by(reactor_id=1, story_id=new_id).one()
+    s = database.session.query(Story).get(new_id)
+    assert r is not None
+    assert r.reaction_val == -1
+    assert s.likes == 0 and s.dislikes == 1
+
+    # Change with like
+    reply = client.post('/stories/1/react', data={'like': 'Like it!'})
+    assert reply.status_code == 200
+    r = database.session.query(Reaction) \
+                .filter_by(reactor_id=1, story_id=new_id).one()
+    s = database.session.query(Story).get(new_id)
+    assert r is not None
+    assert r.reaction_val == 1
+    assert s.likes == 1 and s.dislikes == 0

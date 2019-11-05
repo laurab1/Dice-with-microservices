@@ -66,34 +66,36 @@ def test_all_stories(client, templates, init_database):
 
 
 def test_ranged_stories(client, templates, init_database):
-    #invalid query params
+    # invalid query params
     reply = client.get('/stories?test=ciao')
     assert reply.status_code == 200
 
     message = templates[-1]['message']
-    assert message == 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd or a dice set theme as theme=\'diceset\'!'
-    #valid query params, invalid values (1)
+    assert message == 'WRONG QUERY parameters: you have to specify the date ' \
+        'range as from=yyyy-mm-dd&to=yyyy-mm-dd or a dice set theme as ' \
+        'theme=\'diceset\'!'
+    # valid query params, invalid values (1)
     reply = client.get('/stories?from=2018-12-1&to=2019-x-1')
     assert reply.status_code == 200
 
     message = templates[-1]['message']
     assert message == 'INVALID date in query parameters: use yyyy-mm-dd'
 
-    #valid query params, invalid values (2)
+    # valid query params, invalid values (2)
     reply = client.get('/stories?from=x-12-1&to=2019-10-1')
     assert reply.status_code == 200
 
     message = templates[-1]['message']
     assert message == 'INVALID date in query parameters: use yyyy-mm-dd'
 
-    #valid query params, invalid values (3)
+    # valid query params, invalid values (3)
     reply = client.get('/stories?from=x-12-1&to=2019-10-x')
     assert reply.status_code == 200
 
     message = templates[-1]['message']
     assert message == 'INVALID date in query parameters: use yyyy-mm-dd'
 
-    #found something in exact range
+    # found something in exact range
     reply = client.get('/stories?from=2018-12-1&to=2019-1-1')
     assert reply.status_code == 200
 
@@ -103,7 +105,7 @@ def test_ranged_stories(client, templates, init_database):
     for story in stories:
         assert story.id == 1 or story.id == 2 or story.id == 5
 
-    #found something in "not exact" range
+    # found something in "not exact" range
     reply = client.get('/stories?from=2017-5-1&to=2018-1-1')
     assert reply.status_code == 200
 
@@ -113,7 +115,7 @@ def test_ranged_stories(client, templates, init_database):
     for story in stories:
         assert story.id == 4
 
-    #nothing found
+    # nothing found
     reply = client.get('/stories?from=2015-12-1&to=2017-1-1')
     assert reply.status_code == 200
 

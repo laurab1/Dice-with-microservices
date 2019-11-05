@@ -1,5 +1,4 @@
 from flask import Blueprint, abort
-from flask import current_app as app
 from flask import jsonify, redirect, render_template, request
 
 from flask_login import current_user, login_required, login_user
@@ -29,9 +28,6 @@ def get_user(user_id):
         abort(404)
 
     stories = db.session.query(Story).filter(Story.author_id == us.id).all()
-    if app.config['TESTING']:
-        return jsonify({'user_id': user_id,
-                        'stories': [s.toJSON() for s in stories]})
     return render_template('get_user.html', user=us.username, stories=stories)
 
 
@@ -96,8 +92,6 @@ def follow(user_id):
         except ValueError:
             pass
         return jsonify(message='User unfollowed')
-
-    abort(405)
 
 
 def _get_followed_dict(user_id):

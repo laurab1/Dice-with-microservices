@@ -14,6 +14,8 @@ home = Blueprint('home', __name__)
 @home.route('/')
 def index():
     stats = {}
+    message = ''
+
     if current_user is not None and hasattr(current_user, 'id'):
         stories = Story.query.filter_by(author_id=current_user.id) \
                              .order_by(Story.date.desc()).all()
@@ -48,15 +50,8 @@ def index():
             # (i.e. He posts at least one story in the last seven days)
             delta = dt.datetime.now() - dt.timedelta(days=7)
             stats['active'] = True if delta < stories[0].date else False
-
-        if app.config['TESTING']:
-            return jsonify(
-                {'stories': [s.toJSON() for s in stories],
-                 'stats': stats
-                 })
     else:
         stories = None
-        if app.config['TESTING']:
-            return jsonify(login='needed')
+        message = 'login needed'
 
-    return render_template('index.html', stories=stories, stats=stats)
+    return render_template('index.html', stories=stories, stats=stats, message=message)

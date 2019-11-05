@@ -89,9 +89,8 @@ def test_get_random_recent_story_2(client, database, templates):
     assert id == 1 or id == 3
     assert template_context['message'] == ''
 
+
 # no recent story, get a random one
-
-
 def test_get_random_story(client, database, templates):
     example = Story()
     example.text = 'very not recent story (months/years ago)'

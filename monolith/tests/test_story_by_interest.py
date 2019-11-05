@@ -4,7 +4,7 @@ from monolith.database import Story
 
 
 def test_get_by_interest(client, auth, database, templates):
-    auth.login('Admin', 'admin')
+    auth.login()
 
     example1 = Story()
     example1.theme = 'halloween'
