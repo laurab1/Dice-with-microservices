@@ -12,6 +12,7 @@ from monolith.forms import StoryForm
 from monolith.task import add_reaction, remove_reaction
 from monolith.utility.diceutils import get_dice_sets_list
 from monolith.utility.validate_story import NotValidStoryError, _check_story
+from sqlalchemy import desc
 
 
 stories = Blueprint('stories', __name__)
@@ -36,6 +37,7 @@ def _rollDice():
         roll = dice.throw_dice()
         story = Story()
         story.text = ''
+        story.theme = diceset
         story.likes = 0
         story.dislikes = 0
         story.dice_set = roll
@@ -59,24 +61,23 @@ def _deleteStory(storyid):
         if story.deleted == True:
             return jsonify(error='This story was already deleted'), 400
         else:
-            message = ''
             if story.author_id != current_user.id:
                 abort(403) #unauthorized request
             story.deleted = True
             try:
                 db.session.commit()
                 return jsonify(message='The story was succesfully deleted')
-            except Exception as e:
+            except:
                 return jsonify(message='Your story could not be deleted'), 500
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
-    stories = []
+    stories = db.session.query(Story).filter_by(deleted=False)
     #check for query parameters
     if len(request.args) != 0:
         from_date = request.args.get('from')
         to_date = request.args.get('to')
-
+        theme = request.args.get('theme')
         #check if the query parameters from and to
         if from_date is not None and to_date is not None:
             from_dt = None
@@ -86,19 +87,23 @@ def _stories(message='', marked=True, id=0, react=0):
             try:
                 from_dt = dt.datetime.strptime(from_date, '%Y-%m-%d')
                 to_dt = dt.datetime.strptime(to_date, '%Y-%m-%d')
-            except ValueError as _:
+            except ValueError:
                 message = "INVALID date in query parameters: use yyyy-mm-dd"
             else: #successful try!
                 #query the database with the given values
-                stories = db.session.query(Story).group_by(Story.date).having(Story.date >= from_dt).having(Story.date <= to_dt).filter_by(deleted=False)
+                stories = stories.group_by(Story.date).having(Story.date >= from_dt).having(Story.date <= to_dt).filter_by(deleted=False)
 
                 if stories.count() == 0:
                     message='no stories with the given dates'
-
+        
+        elif theme is not None:
+            t_delta = dt.datetime.now() - dt.timedelta(days=5)
+            stories = stories.filter(Story.date >= t_delta)
+            stories = stories.filter(Story.theme == theme)
         else:
-            message = 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd!'
-    else:
-        stories = db.session.query(Story).filter_by(deleted=False)
+            message = 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd or a dice set theme as theme=\'diceset\'!'
+
+    stories = stories.order_by(desc(Story.date))
     return render_template("stories.html", message=message, stories=stories,
                            like_it_url="http://127.0.0.1:5000/stories/", storyid=id, react=react)
 

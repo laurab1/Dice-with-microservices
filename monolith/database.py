@@ -77,6 +77,7 @@ class Story(db.Model):
     # will store the number of dislikes
     dislikes = db.Column(db.Integer)
 
+    theme = db.Column(db.Text(64))
     _dice_set = db.Column(db.Text(100))
 
     deleted = db.Column(db.Boolean, default=False)
@@ -91,7 +92,7 @@ class Story(db.Model):
     @hybrid_property
     def dice_set(self):
         return json.loads(self._dice_set)
-
+    
     @dice_set.setter
     def dice_set(self, dice_set):
         self._dice_set = json.dumps(dice_set)

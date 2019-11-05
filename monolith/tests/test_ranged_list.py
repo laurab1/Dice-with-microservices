@@ -56,8 +56,7 @@ def test_ranged_stories(client, templates, init_database):
     assert reply.status_code == 200
 
     message = templates[-1]['message']
-    assert message == 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd!'
-
+    assert message == 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd or a dice set theme as theme=\'diceset\'!'
     #valid query params, invalid values (1)
     reply = client.get('/stories?from=2018-12-1&to=2019-x-1')
     assert reply.status_code == 200
