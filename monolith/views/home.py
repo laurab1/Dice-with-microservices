@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, jsonify
 from flask import current_app as app
 import datetime as dt
 
+from flask_login import login_required
+
 from monolith.auth import current_user
 from monolith.database import Story, db
 
@@ -9,6 +11,7 @@ from monolith.database import Story, db
 home = Blueprint('home', __name__)
 
 @home.route('/')
+@login_required
 def index():
     stats = {}
     if current_user is not None and hasattr(current_user, 'id'):

@@ -1,0 +1,14 @@
+.story-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.full-page{
+    height: 95vh;
+    overflow-y: auto;
+}
+
+.navbar {
+    margin-bottom: 0px;
+}

@@ -36,6 +36,7 @@ def create_app(test=False, database='sqlite:///storytellers.db',
 
     db.init_app(app)
     login_manager.init_app(app)
+    login_manager.login_view = '/login'
     db.create_all(app=app)
 
     # Required to avoid circular dependencies
