@@ -80,6 +80,7 @@ class Story(db.Model):
     theme = db.Column(db.Text(64))
     _dice_set = db.Column(db.Text(100))
 
+    deleted = db.Column(db.Boolean, default=False)
     # define foreign key
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', foreign_keys='Story.author_id')
@@ -110,7 +111,6 @@ class Story(db.Model):
 
 class Reaction(db.Model):
     __tablename__ = 'reaction'
-
     reactor_id = db.Column(db.Integer, db.ForeignKey('user.id'),
                            primary_key=True)
     reactor = db.relationship('User', foreign_keys='Reaction.reactor_id')
