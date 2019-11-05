@@ -7,7 +7,7 @@ from flask import jsonify, redirect, render_template, request
 from flask_login import current_user, login_required
 
 from monolith.classes.DiceSet import DiceSet
-from monolith.database import Reaction, Story, db
+from monolith.database import Reaction, Story, User, db
 from monolith.forms import StoryForm
 from monolith.task import add_reaction, remove_reaction
 from monolith.utility.diceutils import get_dice_sets_list
@@ -141,7 +141,7 @@ def _get_random_recent_story(message=''):
 def _get_story(storyid):
     q = Reaction.query.filter_by(reactor_id=current_user.id,
                                  story_id=storyid).one_or_none()
-    s = Story.query.filter_by(id=storyid).first()
+    s = Story.query.get(storyid)
 
     if s is None:
         abort(404)
@@ -157,6 +157,11 @@ def _get_story(storyid):
 @stories.route('/stories/<storyid>/react', methods=['POST'])
 @login_required
 def _post_story_react(storyid):
+    s = Story.query.get(storyid)
+
+    if s is None:
+        abort(404)
+
     q = Reaction.query.filter_by(reactor_id=current_user.id,
                                  story_id=storyid).one_or_none()
 
@@ -166,6 +171,7 @@ def _post_story_react(storyid):
         if q is not None and react != q.reaction_val:
             # remove the old reaction if the new one has different value
             if q.marked:
+                print(current_user.id)
                 remove_reaction.delay(storyid, q.reaction_val)
                 removed = True
             db.session.delete(q)

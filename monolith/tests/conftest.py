@@ -89,8 +89,21 @@ class AuthActions:
         self._app = app
         self._client = client
 
+    def signup(self, email, username, password, firstname=None,
+               lastname=None, dateofbirth=None):
+        signup_data = {'email': email,
+                       'username': username,
+                       'password': password}
+        if firstname is not None:
+            signup_data.update({'firstname': firstname})
+        if lastname is not None:
+            signup_data.update({'lastname': lastname})
+        if dateofbirth is not None:
+            signup_data.update({'dateofbirth': dateofbirth})
+        return self._client.post('/signup', data=signup_data)
+
     def login(self, username='Admin', password='admin'):
-        """Sends a login request."""
+        """Sends a login request. By default logs in as admin."""
         return self._client.post('/login', data={
             'usrn_eml': username, 'password': password})
 
