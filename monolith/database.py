@@ -77,6 +77,7 @@ class Story(db.Model):
     # will store the number of dislikes
     dislikes = db.Column(db.Integer)
 
+    theme = db.Column(db.Text(64))
     _dice_set = db.Column(db.Text(100))
 
     deleted = db.Column(db.Boolean, default=False)

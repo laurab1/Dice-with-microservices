@@ -34,6 +34,7 @@ def _rollDice():
         roll = dice.throw_dice()
         story = Story()
         story.text = ''
+        story.theme = diceset
         story.likes = 0
         story.dislikes = 0
         story.dice_set = roll
@@ -50,12 +51,13 @@ def _rollDice():
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
-    stories = []
+    stories = Story.query.filter_by(deleted=False, is_draft=False)
+    stories = stories.order_by(Story.date.desc())
     # check for query parameters
     if len(request.args) != 0:
         from_date = request.args.get('from')
         to_date = request.args.get('to')
-
+        theme = request.args.get('theme')
         # check if the query parameters from and to
         if from_date is not None and to_date is not None:
             from_dt = None
@@ -66,20 +68,22 @@ def _stories(message='', marked=True, id=0, react=0):
                 from_dt = dt.datetime.strptime(from_date, '%Y-%m-%d')
                 to_dt = dt.datetime.strptime(to_date, '%Y-%m-%d')
             except ValueError:
-                message = "INVALID date in query parameters: use yyyy-mm-dd"
+                message = 'INVALID date in query parameters: use yyyy-mm-dd'
             else:  # successful try!
                 # query the database with the given values
-                stories = Story.query.group_by(Story.date) \
-                               .having(Story.date >= from_dt) \
-                               .having(Story.date <= to_dt) \
-                               .filter_by(deleted=False, is_draft=False)
+                stories = stories.group_by(Story.date) \
+                                 .having(Story.date >= from_dt) \
+                                 .having(Story.date <= to_dt)
                 if stories.count() == 0:
                     message = 'no stories with the given dates'
+        elif theme is not None:
+            t_delta = dt.datetime.now() - dt.timedelta(days=5)
+            stories = stories.filter(Story.date >= t_delta)
+            stories = stories.filter(Story.theme == theme)
         else:
             message = 'WRONG QUERY parameters: you have to specify the date ' \
-                      'range as from=yyyy-mm-dd&to=yyyy-mm-dd!'
-    else:
-        stories = Story.query.filter_by(deleted=False, is_draft=False)
+                      'range as from=yyyy-mm-dd&to=yyyy-mm-dd or a dice set ' \
+                      'theme as theme=\'diceset\'!'
 
     return render_template('stories.html', message=message, stories=stories,
                            like_it_url='http://127.0.0.1:5000/stories/',
