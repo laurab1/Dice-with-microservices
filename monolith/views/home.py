@@ -17,7 +17,8 @@ def index():
     message = ''
 
     if current_user is not None and hasattr(current_user, 'id'):
-        stories = Story.query.filter_by(author_id=current_user.id) \
+        stories = Story.query.filter_by(author_id=current_user.id,
+                                        deleted=False) \
                              .order_by(Story.date.desc()).all()
 
         # If I have at least one story, I can start collecting statistics
@@ -54,4 +55,5 @@ def index():
         stories = None
         message = 'login needed'
 
-    return render_template('index.html', stories=stories, stats=stats, message=message)
+    return render_template('index.html', stories=stories, stats=stats,
+                           message=message)
