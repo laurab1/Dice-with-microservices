@@ -33,9 +33,6 @@ def get_user(username):
     else:   # User does not exist, failure with exit 404.
         abort(404)
 
-    if app.config['TESTING']:
-        return jsonify({'user': username,
-                        'stories': [s.toJSON() for s in stories]})
     return render_template("get_user.html", user=username, stories=stories)
 
 
