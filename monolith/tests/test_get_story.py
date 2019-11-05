@@ -1,7 +1,7 @@
 from monolith.database import Story
 
 
-def test_get_story(client, database, templates):
+def test_get_story(client, auth, database, templates):
     example = Story()
     example.text = 'Trial story of example admin user :)'
     example.likes = 42
@@ -11,7 +11,7 @@ def test_get_story(client, database, templates):
     database.session.add(example)
     database.session.commit()
 
-    client.post('/login', data={'usrn_eml': 'Admin', 'password': 'admin'})
+    auth.login()
 
     # story found
     reply = client.get('/stories/1')

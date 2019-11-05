@@ -93,8 +93,6 @@ def follow(user_id):
             pass
         return jsonify(message='User unfollowed')
 
-    abort(405)
-
 
 def _get_followed_dict(user_id):
     me = User.query.get(user_id)

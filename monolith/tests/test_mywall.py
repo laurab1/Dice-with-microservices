@@ -8,7 +8,7 @@ def test_check_mywall(client, auth, database, templates):
     assert reply.status_code == 200
     assert message == 'login needed'
 
-    auth.login('Admin', 'admin')
+    auth.login()
 
     reply = client.get('/')
     stories = templates[-1]['stories']
@@ -16,7 +16,8 @@ def test_check_mywall(client, auth, database, templates):
     assert stories == []
 
     example = Story()
-    example.text = 'Trial story of example admin user :)' #gets story_id=1 as user_id or as the first?
+    # gets story_id=1 as user_id or as the first?
+    example.text = 'Trial story of example admin user :)'
     example.likes = 42
     example.dislikes = 0
     example.author_id = 1
@@ -31,7 +32,8 @@ def test_check_mywall(client, auth, database, templates):
     assert stories[0].id == example.id
 
     example2 = Story()
-    example2.text = 'New story of example admin user :)' #gets story_id=1 as user_id or as the first?
+    # gets story_id=1 as user_id or as the first?
+    example2.text = 'New story of example admin user :)'
     example2.likes = 42
     example2.dislikes = 0
     example2.author_id = 1
@@ -45,17 +47,17 @@ def test_check_mywall(client, auth, database, templates):
     assert reply.status_code == 200
     assert len(stories) == 2
     for story in stories:
-        assert story.id  == example.id or story.id == example2.id
+        assert story.id == example.id or story.id == example2.id
 
 
-def test_statistics(client, database, templates):
-    client.post('/login', data={'usrn_eml': 'Admin',
-                                'password': 'admin'})
+def test_statistics(client, auth, database, templates):
+    auth.login()
 
     reply = client.get('/')
 
     assert reply.status_code == 200
-    # As soon as I create a new user I shouldn't have stats since I have no stories
+    # As soon as I create a new user I shouldn't have stats
+    # since I have no stories
     stats = templates[-1]['stats']
     assert stats == {}
 
@@ -74,7 +76,9 @@ def test_statistics(client, database, templates):
     # List index 0 refers to number of stories,
     # index 1 refers to the number of likes,
     # index 2 to the number of dislikes
-    assert stats['stories'][0] == 1 and stats['stories'][1] == 0 and stats['stories'][2] == 0
+    assert stats['stories'][0] == 1 \
+        and stats['stories'][1] == 0 \
+        and stats['stories'][2] == 0
 
     # I threw one set of four dice only once
     assert stats['avg_dice'] == 4
@@ -84,6 +88,3 @@ def test_statistics(client, database, templates):
 
     # Active user, it has been published at least one story in the last 7 days
     assert stats['active']
-
-
-

@@ -1,9 +1,8 @@
 from monolith.database import Story
 
 
-def test_getuser(client, database, templates):
-    reply = client.post('/login', data={'usrn_eml': 'Admin',
-                                        'password': 'admin'})
+def test_getuser(client, auth, database, templates):
+    reply = auth.login()
     assert reply.status_code == 302
 
     reply = client.get('/users/2')
@@ -30,9 +29,8 @@ def test_getuser(client, database, templates):
     assert stories[0].id == example.id
 
 
-def test_getuser_fail(client, database):
-    reply = client.post('/login', data={'usrn_eml': 'Admin',
-                                        'password': 'admin'})
+def test_getuser_fail(client, auth, database):
+    reply = auth.login()
     assert reply.status_code == 302
 
     reply = client.get('/users/utenteNonEsistente')
