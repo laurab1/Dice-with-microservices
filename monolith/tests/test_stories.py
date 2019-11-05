@@ -1,5 +1,5 @@
 from monolith.database import Story
-import json
+from sqlalchemy import desc
 
 
 def test_new_story(client, auth, database, templates):
@@ -188,3 +188,83 @@ def test_delete_story(client, auth, database, templates):
     #delete story of another user
     reply = client.delete(f'/stories/{new_id}')
     assert reply.status_code == 403
+
+def test_see_all_stories(client, auth, database, templates):
+    reply = client.get('/stories')
+    assert reply.status_code == 200
+    stories = templates[-1]['stories']
+    assert stories.count() == 0 # no loaded stories
+
+    auth.login('Admin', 'admin')
+
+    # add 2 stories
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    reply = client.get('/rollDice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    #check newly added stories
+    reply = client.get('/stories')
+    assert reply.status_code == 200
+    stories = templates[-1]['stories']
+    assert stories.count() == 2
+
+    #check that queried and rendered items are the same
+    query = database.session.query(Story).filter_by(deleted=False).order_by(desc(Story.date))
+
+    assert stories.count() == query.count()
+
+    for i in range(stories.count()):
+        assert query[i].id == stories[i].id
+        assert query[i].text == stories[i].text
+
+    # remove a story
+    reply = client.delete(f'/stories/{stories[0].id}')
+    assert reply.status_code == 200
+
+    #check stories after deletion
+    reply = client.get('/stories')
+    assert reply.status_code == 200
+    stories = templates[-1]['stories']
+    assert stories.count() == 1
+
+    query = database.session.query(Story).filter_by(deleted=False).order_by(desc(Story.date))
+
+    assert stories.count() == query.count()
+
+    for i in range(stories.count()):
+        assert query[i].id == stories[i].id
+        assert query[i].text == stories[i].text
+
+    #delete remaining story
+    reply = client.delete(f'/stories/{stories[0].id}')
+    assert reply.status_code == 200
+
+    #check there are no more stories
+    reply = client.get('/stories')
+    assert reply.status_code == 200
+    stories = templates[-1]['stories']
+    assert stories.count() == 0
+
+    query = database.session.query(Story).filter_by(deleted=False).order_by(desc(Story.date))
+
+    assert stories.count() == query.count()
