@@ -1,13 +1,17 @@
-from monolith.database import Story
 import datetime as dt
 
-def test_get_by_interest(client, database, templates):
-    client.post('/login', data={'usrn_eml': 'Admin', 'password': 'admin'})
+from monolith.database import Story
+
+
+def test_get_by_interest(client, auth, database, templates):
+    auth.login('Admin', 'admin')
 
     example1 = Story()
     example1.theme = 'halloween'
     example1.text = 'Halloween story of test1 user :)'
     example1.author_id = 2
+    example1.is_draft = False
+    example1.deleted = False
     database.session.add(example1)
     database.session.commit()
 
@@ -15,6 +19,8 @@ def test_get_by_interest(client, database, templates):
     example2.theme = 'xmas'
     example2.text = 'Xmas story of test2 user :)'
     example2.author_id = 3
+    example2.is_draft = False
+    example2.deleted = False
     database.session.add(example2)
     database.session.commit()
 
@@ -23,6 +29,8 @@ def test_get_by_interest(client, database, templates):
     example3.theme = 'Old xmas story of test3 user :)'
     example3.date = dt.datetime.now() - dt.timedelta(days=6)
     example3.author_id = 4
+    example3.is_draft = False
+    example3.deleted = False
     database.session.add(example3)
     database.session.commit()
 

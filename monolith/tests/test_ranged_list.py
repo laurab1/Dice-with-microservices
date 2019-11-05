@@ -1,6 +1,9 @@
-import pytest
 import datetime as dt
-from monolith.database import Story, db
+
+from monolith.database import Story
+
+import pytest
+
 
 @pytest.fixture
 def init_database(database):
@@ -9,6 +12,8 @@ def init_database(database):
     example.likes = 42
     example.author_id = 1
     example.date = dt.datetime(year=2018, month=12, day=1)
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -16,6 +21,8 @@ def init_database(database):
     example.likes = 42
     example.author_id = 1
     example.date = dt.datetime(year=2019, month=1, day=1)
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -23,6 +30,8 @@ def init_database(database):
     example.likes = 42
     example.author_id = 1
     example.date = dt.datetime(year=2019, month=3, day=12)
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -30,6 +39,8 @@ def init_database(database):
     example.likes = 42
     example.author_id = 1
     example.date = dt.datetime(year=2017, month=10, day=1)
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -37,9 +48,12 @@ def init_database(database):
     example.likes = 42
     example.author_id = 1
     example.date = dt.datetime(year=2018, month=12, day=7)
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
-    
+
     database.session.commit()
+
 
 def test_all_stories(client, templates, init_database):
     reply = client.get('/stories')
@@ -49,6 +63,7 @@ def test_all_stories(client, templates, init_database):
     message = templates[-1]['message']
     assert stories.count() == 5
     assert message == ''
+
 
 def test_ranged_stories(client, templates, init_database):
     #invalid query params
@@ -87,7 +102,7 @@ def test_ranged_stories(client, templates, init_database):
     assert message == ''
     for story in stories:
         assert story.id == 1 or story.id == 2 or story.id == 5
-    
+
     #found something in "not exact" range
     reply = client.get('/stories?from=2017-5-1&to=2018-1-1')
     assert reply.status_code == 200

@@ -9,6 +9,8 @@ def test_get_random_recent_story_1(client, database, templates):
     example.text = 'recent story'
     example.likes = 0
     example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -16,6 +18,8 @@ def test_get_random_recent_story_1(client, database, templates):
     example.likes = 0
     example.author_id = 1
     example.date = dt.datetime(2019, 9, 5)
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -23,6 +27,8 @@ def test_get_random_recent_story_1(client, database, templates):
     example.date = dt.datetime.now() - dt.timedelta(days=1)
     example.likes = 0
     example.author_id = 2
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     database.session.commit()
@@ -42,6 +48,8 @@ def test_get_random_recent_story_2(client, database, templates):
     example.text = 'recent story 1'
     example.likes = 0
     example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -49,12 +57,16 @@ def test_get_random_recent_story_2(client, database, templates):
     example.likes = 0
     example.author_id = 1
     example.date = dt.datetime(2019, 9, 5)
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
     example.text = 'recent story 2'
     example.likes = 0
     example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -62,6 +74,8 @@ def test_get_random_recent_story_2(client, database, templates):
     example.date = dt.datetime.now() - dt.timedelta(days=1)
     example.likes = 0
     example.author_id = 2
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     database.session.commit()
@@ -84,6 +98,8 @@ def test_get_random_story(client, database, templates):
     example.likes = 0
     example.author_id = 1
     example.date = dt.datetime(2019, 9, 5)
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -91,6 +107,26 @@ def test_get_random_story(client, database, templates):
     example.date = dt.datetime.now() - dt.timedelta(days=1)
     example.likes = 0
     example.author_id = 2
+    example.is_draft = False
+    example.deleted = False
+    database.session.add(example)
+
+    example = Story()
+    example.text = 'drafted story'
+    example.date = dt.datetime.now() - dt.timedelta(days=1)
+    example.likes = 0
+    example.author_id = 1
+    example.is_draft = True
+    example.deleted = False
+    database.session.add(example)
+
+    example = Story()
+    example.text = 'deleted story'
+    example.date = dt.datetime.now() - dt.timedelta(days=1)
+    example.likes = 0
+    example.author_id = 1
+    example.is_draft = False
+    example.deleted = True
     database.session.add(example)
 
     database.session.commit()

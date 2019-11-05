@@ -58,7 +58,11 @@
         {% for story in stories%}
             <div>
             <li>
+                {% if story.is_draft %}
+                <a href="/stories/{{ story.id }}"> {{ story.text }} </a>-- drafted in date {{ story.date }} <a href="/stories/{{ story.id }}/edit">Edit!</a>
+                {% else %}
                 <a href="/stories/{{ story.id }}"> {{ story.text }} </a>-- published in date {{ story.date }}
+                {% endif %}
                 <ul>
                 <li>Likes:{{ story.likes }} Dislikes:{{ story.dislikes }}</li>
                 </ul>
