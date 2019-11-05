@@ -47,13 +47,13 @@
         <label for="validationTooltip01">Current dice values</label>
         <div class="row">
           {% for die in dice %}
-            <div class="col">
-              <div class="card card-block d-flex text-white bg-secondary mb-3" style="width: 8rem; height: 8rem;">
-                <div class="card-body align-items-center d-flex justify-content-center">
-                  <h5 class="card-title ">{{ die }}</h5>
-                </div>
+          <div class="col">
+            <div class="card card-block d-flex text-white bg-secondary mb-3" style="width: 8rem; height: 8rem;">
+              <div class="card-body align-items-center d-flex justify-content-center">
+                <h5 class="card-title ">{{ die }}</h5>
               </div>
             </div>
+          </div>
           {% endfor %}
         </div>
         <br>
@@ -66,7 +66,7 @@
         {{ form['is_draft']() }}
 
         {% for e in form['text'].errors %}
-          <p class="help-block">{{ e }}</p>
+        <p class="help-block">{{ e }}</p>
         {% endfor %}
         <br>
 
@@ -79,7 +79,7 @@
 
 
     {% else %}
-      Hi Anonymous, <a href="/login">Log in</a>
+    Hi Anonymous, <a href="/login">Log in</a>
     {% endif %}
 
   </div>
