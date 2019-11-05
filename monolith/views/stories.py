@@ -226,6 +226,8 @@ def _story_edit(storyid):
         abort(401)
     if not story.is_draft:
         abort(403)
+    if story.deleted:
+        abort(404)
 
     form = StoryForm()
     if form.validate_on_submit():

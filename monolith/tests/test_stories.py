@@ -92,6 +92,20 @@ def test_edit_non_existent_story(client, auth, database):
     assert reply.status_code == 404
 
 
+def test_edit_deleted_story(client, auth, database, templates):
+    auth.login()
+
+    reply = client.get('/roll_dice', follow_redirects=True)
+    assert reply.status_code == 200
+    new_id = templates[-1]['story_id']
+
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 200
+
+    reply = client.get(f'/stories/{new_id}/edit')
+    assert reply.status_code == 404
+
+
 def test_edit_not_valid_story(client, auth, database, templates):
     auth.login()
 
@@ -147,7 +161,7 @@ def test_edit_get(client, auth, database, templates):
 def test_delete_story(client, auth, database, templates):
     auth.login()
 
-    reply = client.delete('/stories/0') # delete non-existing story
+    reply = client.delete('/stories/0')  # delete non-existing story
     assert reply.status_code == 404
 
     # new story
