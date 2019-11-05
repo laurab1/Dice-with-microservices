@@ -1,6 +1,5 @@
 from flask import Blueprint, abort
 from flask import jsonify, redirect, render_template, request
-from flask import current_app as app
 
 from flask_login import current_user, login_required, login_user
 
@@ -21,22 +20,15 @@ def users_():
     return render_template('users.html', result=res)
 
 
-@users.route('/user/<username>')
+@users.route('/users/<user_id>')
 @login_required
-def get_user(username):
-    us = None
-    us = db.session.query(User).filter(User.username == username)
-    us = us.first()
-    if us is not None:
-        stories = db.session.query(Story).filter(Story.author_id == us.id).all()
-
-    else:   # User does not exist, failure with exit 404.
+def get_user(user_id):
+    us = db.session.query(User).get(user_id)
+    if us is None:
         abort(404)
 
-    if app.config['TESTING']:
-        return jsonify({'user': username,
-                        'stories': [s.toJSON() for s in stories]})
-    return render_template("get_user.html", user=username, stories=stories)
+    stories = db.session.query(Story).filter(Story.author_id == us.id).all()
+    return render_template('get_user.html', user=us.username, stories=stories)
 
 
 @users.route('/signup', methods=['GET', 'POST'])
@@ -100,8 +92,6 @@ def follow(user_id):
         except ValueError:
             pass
         return jsonify(message='User unfollowed')
-
-    abort(405)
 
 
 def _get_followed_dict(user_id):
