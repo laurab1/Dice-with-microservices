@@ -11,97 +11,65 @@
 
 <!--end of Navigation bar-->
 <div class="container-fluid">
-    <div class="jumbotron full-page">
-        <h1>Story List</h1>
+    <div class="jumbotron bg-white">
         <h5>{{ message }}</h5>
 
         <ul class="list-group">
-            {% if marked == false %}
-                {% for story in stories: %}
-                    {% if story.id == storyid %}
-                        {% if react == 1 %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                "{{ story.text }}" Likes: {{ story.likes + 1 }} Dislikes: {{ story.dislikes }}
-                                ({{ story.date }})
-                                {% if current_user.is_authenticated %}
-                                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
-                                    <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>
-                                    {% if story.author.id != current_user.id %}
-                                        <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
-                                    {% endif %}
-                                {% endif %}
-                            </li>
-                        {% else %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes + 1 }}
-                                ({{ story.date }})
-                                {% if current_user.is_authenticated %}
-                                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
-                                    <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>
-                                    {% if story.author.id != current_user.id %}
-                                        <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
-                                    {% endif %}
-                                {% endif %}
-                                {% if story.author.id == current_user.id %}
-                                    <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>
-                                {% endif %}
-                            </li>
-                        {% endif %}
-                    {% else %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})
-                            {% if current_user.is_authenticated %}
-                                <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
-                                <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>
 
-                                {% if story.author.id != current_user.id %}
-                                    <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
-                                {% endif %}
-                                {% if story.author.id == current_user.id %}
-                                    <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>
-                                {% endif %}
-                            {% endif %}
-                        </li>
-                    {% endif %}
-                {% endfor %}
-            {% else %}
-                {% for story in stories: %}
-                    <li class="list-group-item d-flex">
-                        <div class="container">
-                            <div class="row">
-                                <div class="col-sm-3">
-                                    <img class="card-img-top" src="..." alt="Card image cap">
-                                </div>
-                                <div class="col-sm-9">
-                                    <p><h5 class="story-text"> {{ story.text }} </h5> <br> ({{ story.date }})</p >
-
-                                    <i class="fas fa-thumbs-up"></i> <span
-                                        class="badge badge-seconary badge-pill"> {{ story.likes }} </span> <i
-                                        class="fas fa-thumbs-down"></i> <span
-                                        class="badge badge-seconary badge-pill"> {{ story.dislikes }}</span>
-
-                                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
-
-                                        <a class="btn btn-primary" href="{{ like_it_url }}{{ story.id }}">Read this
-                                            story</a>
-
-                                        {% if story.author.id != current_user.id %}
-                                            <a href="#" class="btn btn-secondary"
-                                               onclick="follow({{ story.author.id }})">Follow author</a>
-                                        {% endif %}
-                                        {% if story.author.id == current_user.id %}
-                                            <a href="#" class="btn btn-danger" onclick="deleteStory({{ story.id }})">Delete</a>
-                                        {% endif %}
-
-
-                                </div>
-
-                            </div>
-
-                        </div>
-                    </li>
-                {% endfor %}
-            {% endif %}
+            {#  ---------- PORTION OF CODE THAT SEEMS REDUNDANT -------- WAITING FOR MORE TESTS BEFORE DELETING IT PERMANENTLY  #}
+            {#            {% if marked == false %}#}
+            {#                {% for story in stories: %}#}
+            {#                    {% if story.id == storyid %}#}
+            {#                        {% if react == 1 %}#}
+            {#                            <li class="list-group-item d-flex justify-content-between align-items-center">#}
+            {#                                "{{ story.text }}" Likes: {{ story.likes + 1 }} Dislikes: {{ story.dislikes }}#}
+            {#                                ({{ story.date }})#}
+            {#                                {% if current_user.is_authenticated %}#}
+            {#                                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->#}
+            {#                                    <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>#}
+            {#                                    {% if story.author.id != current_user.id %}#}
+            {#                                        <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>#}
+            {#                                    {% endif %}#}
+            {#                                {% endif %}#}
+            {#                            </li>#}
+            {#                        {% else %}#}
+            {#                            <li class="list-group-item d-flex justify-content-between align-items-center">#}
+            {#                                "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes + 1 }}#}
+            {#                                ({{ story.date }})#}
+            {#                                {% if current_user.is_authenticated %}#}
+            {#                                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->#}
+            {#                                    <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>#}
+            {#                                    {% if story.author.id != current_user.id %}#}
+            {#                                        <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>#}
+            {#                                    {% endif %}#}
+            {#                                {% endif %}#}
+            {#                                {% if story.author.id == current_user.id %}#}
+            {#                                    <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>#}
+            {#                                {% endif %}#}
+            {#                            </li>#}
+            {#                        {% endif %}#}
+            {#                    {% else %}#}
+            {#                        <li class="list-group-item d-flex justify-content-between align-items-center">#}
+            {#                            "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})#}
+            {#                            {% if current_user.is_authenticated %}#}
+            {#                                <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->#}
+            {#                                <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>#}
+            {##}
+            {#                                {% if story.author.id != current_user.id %}#}
+            {#                                    <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>#}
+            {#                                {% endif %}#}
+            {#                                {% if story.author.id == current_user.id %}#}
+            {#                                    <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>#}
+            {#                                {% endif %}#}
+            {#                            {% endif %}#}
+            {#                        </li>#}
+            {#                    {% endif %}#}
+            {#                {% endfor %}#}
+            {#            {% else %}#}
+            {% for story in stories: %}
+                {% include 'html_components/story_template.html' %}
+            {% endfor %}
+            {#            {% endif %}#}
         </ul>
 
     </div>
