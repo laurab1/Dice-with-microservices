@@ -92,7 +92,7 @@ class Story(db.Model):
     @hybrid_property
     def dice_set(self):
         return json.loads(self._dice_set)
-    
+
     @dice_set.setter
     def dice_set(self, dice_set):
         self._dice_set = json.dumps(dice_set)

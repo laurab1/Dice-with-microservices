@@ -17,17 +17,13 @@ def test_get_story(client, database, templates):
     reply = client.get('/stories/1')
     template_capture = templates[-1]
     assert reply.status_code == 200
-    assert template_capture['stories'].first().id == 1
+    assert template_capture['story'].id == 1
     # assert template_capture['message'] == ''
 
     # story not found
     reply = client.get('/stories/0')
-    template_capture = templates[-1]
-    assert template_capture['message'] == 'story not found!'
-    assert reply.status_code == 200
+    assert reply.status_code == 404
 
     # invalid input
     reply = client.get('stories/ciao')
-    template_capture = templates[-1]
-    assert template_capture['message'] == 'story not found!'
-    assert reply.status_code == 200
+    assert reply.status_code == 404
