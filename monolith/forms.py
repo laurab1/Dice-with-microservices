@@ -20,7 +20,7 @@ class UserForm(FlaskForm):
                        id='email',
                        validators=[DataRequired(), Email()])
     user_regexp = Regexp(
-        '^\w+$',
+        r'^\w+$',
         message='Username must contain only letters, numbers or underscore.')
     user_length = Length(
         min=5, max=25, message='Username must be betwen 5 and 25 characters')

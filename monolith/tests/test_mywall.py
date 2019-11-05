@@ -1,14 +1,14 @@
-#tests myWall functionality
-from monolith.database import db, User, Reaction, Story
+# tests myWall functionality
+from monolith.database import Story
 
-def test_check_mywall(client, database, templates):
+
+def test_check_mywall(client, auth, database, templates):
     reply = client.get('/')
     message = templates[-1]['message']
     assert reply.status_code == 200
     assert message == 'login needed'
 
-    client.post('/login', data={'usrn_eml': 'Admin',
-                                'password': 'admin'})
+    auth.login('Admin', 'admin')
 
     reply = client.get('/')
     stories = templates[-1]['stories']
@@ -51,7 +51,7 @@ def test_check_mywall(client, database, templates):
 def test_statistics(client, database, templates):
     client.post('/login', data={'usrn_eml': 'Admin',
                                 'password': 'admin'})
-    
+
     reply = client.get('/')
 
     assert reply.status_code == 200
@@ -83,7 +83,7 @@ def test_statistics(client, database, templates):
     assert stats['stories_frequency'] == 1
 
     # Active user, it has been published at least one story in the last 7 days
-    assert stats['active'] 
+    assert stats['active']
 
 
 
