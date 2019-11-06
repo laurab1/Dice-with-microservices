@@ -27,3 +27,20 @@ def test_get_story(client, auth, database, templates):
     # invalid input
     reply = client.get('stories/ciao')
     assert reply.status_code == 404
+
+    #deleted story
+    reply = client.delete('/stories/1')
+    assert reply.status_code == 200
+    reply = client.get('stories/1')
+    assert reply.status_code == 410
+
+def test_unauthorized_draft(client, auth, database, templates):
+    auth.login()
+    reply = client.get('/roll_dice', follow_redirects=True)
+    assert reply.status_code == 200
+    new_id = templates[-1]['story_id']
+    auth.logout()
+
+    auth.login('test1', 'test1123')
+    reply = client.get(f'/stories/{new_id}')
+    assert reply.status_code == 403
