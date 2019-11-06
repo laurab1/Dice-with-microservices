@@ -21,8 +21,11 @@ def users_():
     Returns:
         200 -> read above
     '''
-    res = db.session.query(User.username, Story.text, func.max(Story.date)) \
-            .outerjoin(Story).group_by(User.id).all()
+    last_story = db.session.query(Story.author_id, Story.text, func.max(Story.date).label('date')) \
+                .group_by(Story.author_id).having(Story.is_draft == False).having(Story.deleted == False) \
+                .subquery()
+    res = db.session.query(User.username, last_story.c.text, last_story.c.date) \
+            .outerjoin(last_story, User.id == last_story.c.author_id).order_by(User.id.asc()).all()
     return render_template('users.html', result=res)
 
 
@@ -35,16 +38,42 @@ def get_user(user_id):
     Returns:
         200 -> the user's wall with the list of all his/her posted stories
     '''
-    us = db.session.query(User).get(user_id)
+    
+    if user_id == current_user.id:
+        return redirect('/')
+
+    us = User.query.get(user_id)
     if us is None:
         abort(404, f'User {user_id} does not exist')
 
-    stories = db.session.query(Story).filter(Story.author_id == us.id).all()
+    stories = Story.query.filter_by(author_id=us.id, 
+                                    is_draft=False, 
+                                    deleted=False)
+    stories = stories.order_by(Story.date.desc()).all()
     return render_template('get_user.html', user=us.username, stories=stories)
 
 
 @users.route('/signup', methods=['GET', 'POST'])
 def signup():
+    '''
+    GET
+    ---
+    Opens the signup page.
+
+    Returns:
+        200 -> the page has been returned
+
+    POST
+    ----
+    Registers a user.
+
+    Raises:
+        IntegrityError -> there is already a user with the chosen username or e-mail address
+    
+    Returns:
+        409 -> the exception above has been raised
+        302 -> the registration was succesful and the user is redirected to its homepage
+    '''
     form = UserForm()
     status = 200
 
@@ -77,16 +106,20 @@ def signup():
 @users.route('/users/<user_id>/follow', methods=['DELETE', 'POST'])
 @login_required
 def follow(user_id):
-    """
-    POST requests add the user with primary key `user_id` to the list of
-    user followed by the currenly logged user. If it is already in the list
-    returns successfully without updating the database.
-    DELETE requests remove the user from the list and if it is not in the list
-    returns successfully without updating the database.
-    User must be logged to access this endpoint.
+    '''
+    Adds (POST)/Removes (DELETE) the user with id <user_id> to/from the list of user 
+    followed by the currently logged user. 
+
+    If it is already in the list returns successfully without updating the database, and
+    the same happens for the removal.
+
     All responses are in JSON format and are meant to be invokated within the
     the frontend (eg. AJAX or fetch), not by url access.
-    """
+
+    Returns:
+        400 -> the user tried to follow himself/herself
+        200 -> follow/unfollow registered successfully
+    '''
 
     followee = User.query.get(user_id)
     if followee is None:
@@ -112,7 +145,7 @@ def follow(user_id):
 
 def get_followed_dict(user_id):
     me = User.query.get(user_id)
-    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id}
+    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id, 'username': x.username}
              for x in me.follows]
     return {'users': users}
 

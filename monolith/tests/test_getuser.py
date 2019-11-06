@@ -16,6 +16,8 @@ def test_getuser(client, auth, database, templates):
     example = Story()
     example.text = 'First story of test1 user :)'
     example.author_id = 2
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
     database.session.commit()
 

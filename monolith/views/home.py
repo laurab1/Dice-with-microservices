@@ -68,4 +68,4 @@ def index():
         message = 'login needed'
 
     return render_template('index.html', stories=stories, stats=stats,
-                           message=message)
+                           message=message, like_it_url='http://127.0.0.1:5000/stories/')
