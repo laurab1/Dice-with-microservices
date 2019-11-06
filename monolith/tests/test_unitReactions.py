@@ -176,3 +176,47 @@ def test_reaction_change(client, auth, database, templates):
     assert r is not None
     assert r.reaction_val == 1
     assert s.likes == 1 and s.dislikes == 0
+
+def test_react_to_deleted_story(client, auth, database, templates):
+    auth.login()
+
+    # add valid story
+    reply = client.get('/roll_dice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 200
+
+    # like it
+    reply = client.post(f'/stories/{new_id}/react', data={'like': 'Like it!'})
+    assert reply.status_code == 410
+
+    # dislike it
+    reply = client.post(f'/stories/{new_id}/react', data={'dislike': 'Dislike it!'})
+    assert reply.status_code == 410
+
+def test_react_to_draft(client, auth, database, templates):
+    auth.login()
+
+    # add draft
+    reply = client.get('/roll_dice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    # like it
+    reply = client.post(f'/stories/{new_id}/react', data={'like': 'Like it!'})
+    assert reply.status_code == 403
+
+    # dislike it
+    reply = client.post(f'/stories/{new_id}/react', data={'dislike': 'Dislike it!'})
+    assert reply.status_code == 403
