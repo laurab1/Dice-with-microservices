@@ -35,6 +35,10 @@ def get_user(user_id):
 def signup():
     form = UserForm()
     status = 200
+
+	if current_user.is_authenticated:
+        return redirect('/')
+
     if form.validate_on_submit():
         new_user = User()
         form.populate_obj(new_user)
