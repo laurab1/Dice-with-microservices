@@ -33,8 +33,8 @@ def get_user(user_id):
     if us is None:
         abort(404, f'User {user_id} does not exist')
 
-    stories = Story.query.filter_by(author_id=us.id, 
-                                    is_draft=False, 
+    stories = Story.query.filter_by(author_id=us.id,
+                                    is_draft=False,
                                     deleted=False)
     stories = stories.order_by(Story.date.desc()).all()
     return render_template('get_user.html', user=us.username, stories=stories)

@@ -2,12 +2,11 @@ import datetime
 import os
 import tempfile
 
+import pytest
 from flask import template_rendered
 
 from monolith.app import create_app
-from monolith.database import User, Story, db
-
-import pytest
+from monolith.database import Story, User, db
 
 
 @pytest.fixture
@@ -111,21 +110,24 @@ class AuthActions:
         """Sends a logout request."""
         return self._client.get('/logout')
 
+
 @pytest.fixture
 def auth(app, client):
     """Provides login/logout capabilities."""
     return AuthActions(app, client)
 
+
 class StoryActions:
     """Class for story management."""
+
     def __init__(self, app, client, templates):
         self._app = app
         self._client = client
         self._templates = templates
-    
+
     def roll_dice(self, follow_redirects=True):
         return self._client.get('/roll_dice', follow_redirects=follow_redirects)
-     
+
     def add_story_text(self, id, dices, text=None):
         story_text = ''
 
@@ -134,7 +136,7 @@ class StoryActions:
                 story_text = story_text + dices[i] + ' '
         else:
             story_text = text
-        
+
         return self._client.post(f'/stories/{id}/edit', data={'text': story_text})
 
     def get_all_stories(self):
@@ -142,16 +144,16 @@ class StoryActions:
 
     def get_story(self, id):
         return self._client.get(f'/stories/{id}')
-    
+
     def get_random_recent_story(self):
         return self._client.get('/stories/random_story')
 
     def get_ranged_stories(self, from_date_str, to_date_str):
         return self._client.get(f'/stories/?from={from_date_str}&to={to_date_str}')
-    
+
     def delete_story(self, id):
         return self._client.delete(f'/stories/{id}')
-    
+
     def post_like_reaction(self, id):
         return self._client.post(f'/stories/{id}/react', data={'like': 'Like it!'})
 
@@ -163,6 +165,7 @@ class StoryActions:
 def story_actions(app, client, templates):
     """Provides login/logout capabilities."""
     return StoryActions(app, client, templates)
+
 
 @pytest.fixture
 def templates(app):
