@@ -1,7 +1,9 @@
 <html>
 
 <head>
-{% include 'html_components/bootstrap.html' %}
+    {% include 'html_components/bootstrap.html' %}
+    <link href="/static/css/story.css" rel="stylesheet"/>
+    <link href="/static/css/background.css" rel="stylesheet"/>
 </head>
 
 <body>
@@ -10,62 +12,60 @@
 {% include 'html_components/nav.html' %}
 <!--end of Navigation bar-->
 
-  <!-- story, marked, val -->
-  <h1>Story</h1>
-    <span id="message"></span>
-    "{{ story.text }}"
-    <br>
-    Likes: <span id="likes">{{ story.likes }}</span>
-    <br>
-    Dislikes: <span id="dislikes">{{ story.dislikes }}</span>
-    <br>
-    ({{ story.date }})
-    <br>
-    {% if story.dice_set != None %}
-      Story generated with the following dice set: {{ ', '.join(story.dice_set) }}
-    {% endif %}
-    {% if current_user.is_authenticated %}
-      <input type="submit" name="like" value="Like it!"
-        onclick="like('{{ url_for('stories._post_story_react', storyid=story.id) }}')" />
-      <input type="submit" name="dislike" value="Dislike it!"
-        onclick="dislike('{{ url_for('stories._post_story_react', storyid=story.id) }}')" />
-    {% endif %}
-  </ul>
-  <script>
+<!-- story, marked, val -->
+
+<div class="container" style="width: 100%">
+    {% include 'html_components/big_story_template.html' %}
+</div>
+
+
+<script>
     function like(url) {
-      let formData = new FormData()
-      formData.append('like', '1')
-      fetch(url, {method: 'POST', body: formData})
-        .then(response => response.ok ? response.json() : Promise.reject('Story already liked'))
-        .then(data => {
-          if (data.message === 'Reaction updated') {
-            $('#likes').text(function (idx, old) {return parseInt(old) + 1})
-            $('#dislikes').text(function (idx, old) {return parseInt(old) - 1})
-          } else {
-            $('#likes').text(function (idx, old) {return parseInt(old) + 1})
-          }
-        }).catch(msg => {
-          $('#message').text(msg)
+        let formData = new FormData()
+        formData.append('like', '1')
+        fetch(url, {method: 'POST', body: formData})
+            .then(response => response.ok ? response.json() : Promise.reject('Story already liked'))
+            .then(data => {
+                if (data.message === 'Reaction updated') {
+                    $('#likes').text(function (idx, old) {
+                        return parseInt(old) + 1
+                    })
+                    $('#dislikes').text(function (idx, old) {
+                        return parseInt(old) - 1
+                    })
+                } else {
+                    $('#likes').text(function (idx, old) {
+                        return parseInt(old) + 1
+                    })
+                }
+            }).catch(msg => {
+            $('#message').text(msg)
         })
     }
 
     function dislike(url) {
-      let formData = new FormData()
-      formData.append('dislike', '1')
-      fetch(url, {method: 'POST', body: formData})
-        .then(response => response.ok ? response.json() : Promise.reject('Story already disliked'))
-        .then(data => {
-          if (data.message === 'Reaction updated') {
-            $('#dislikes').text(function (idx, old) {return parseInt(old) + 1})
-            $('#likes').text(function (idx, old) {return parseInt(old) - 1})
-          } else {
-            $('#dislikes').text(function (idx, old) {return parseInt(old) + 1})
-          }
-        }).catch(msg => {
-          $('#message').text(msg)
+        let formData = new FormData()
+        formData.append('dislike', '1')
+        fetch(url, {method: 'POST', body: formData})
+            .then(response => response.ok ? response.json() : Promise.reject('Story already disliked'))
+            .then(data => {
+                if (data.message === 'Reaction updated') {
+                    $('#dislikes').text(function (idx, old) {
+                        return parseInt(old) + 1
+                    })
+                    $('#likes').text(function (idx, old) {
+                        return parseInt(old) - 1
+                    })
+                } else {
+                    $('#dislikes').text(function (idx, old) {
+                        return parseInt(old) + 1
+                    })
+                }
+            }).catch(msg => {
+            $('#message').text(msg)
         })
     }
-  </script>
+</script>
 </body>
 
 </html>

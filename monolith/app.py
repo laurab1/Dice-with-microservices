@@ -1,5 +1,7 @@
 import datetime as dt
 
+from celery.schedules import crontab
+
 from flask import Flask
 
 from flask_bootstrap import Bootstrap
@@ -19,14 +21,34 @@ def create_app(test=False, database='sqlite:///storytellers.db',
     app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
     app.config['BROKER_URL'] = 'redis://localhost:6379/0'
     app.config['CELERY_RESULT_BACKED'] = 'redis://localhost:6379/0'
-
+    # Specifies the mail from where digests are sent
+    app.config['SERVER_MAIL'] = 'digest@localhost'
+    # The address of the SMTP server
+    app.config['SMTP_SERVER_ADDRESS'] = 'localhost'
+    # The port of the SMTP server
+    app.config['SMTP_SERVER_PORT'] = 8025
+    app.config['CELERY_TIMEZONE'] = 'Europe/Rome'
     app.config['PERMANENT_SESSION_LIFETIME'] = dt.timedelta(minutes=120)
     app.config['SQLALCHEMY_DATABASE_URI'] = database
     app.config['LOGIN_DISABLED'] = login_disabled
+    app.config['CELERYBEAT_SCHEDULE'] = {
+        'monthly-digest': {
+            'task': 'monolith.task.send_digest',
+            # Scheduled for the first day of each month
+            'schedule': crontab(day_of_month='1'),
+            # Scheduled every 10 seconds
+            # 'schedule': 10.0,
+        }
+    }
+
     if test:
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
         app.config['CELERY_ALWAYS_EAGER'] = True
+        app.config['SMTP_SERVER_ADDRESS'] = 'localhost'
+        app.config['SMTP_SERVER_PORT'] = 8025
+        # Disables periodic task
+        app.config['CELERYBEAT_SCHEDULE'] = {}
 
     # initialize Celery
     celery = celeryapp.create_celery_app(app)
