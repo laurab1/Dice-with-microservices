@@ -70,6 +70,10 @@ def _stories(message='', marked=True, id=0, react=0):
             except ValueError:
                 message = 'INVALID date in query parameters: use yyyy-mm-dd'
             else:  # successful try!
+                #because datetime starts from 12pm!
+                if from_dt == to_dt:
+                    to_dt = to_dt + dt.timedelta(days=1)
+
                 # query the database with the given values
                 stories = stories.group_by(Story.date) \
                     .having(Story.date >= from_dt) \

@@ -40,10 +40,15 @@
         </div>
         <!-- /#sidebar-wrapper -->
 
-        <h5>{{ message }}</h5>
         <div class="jumbotron bg-white" id="page-content-wrapper">
-
-
+            <div class="input-daterange input-group" id="datepicker">
+                <input type="date" class="input-sm form-control" name="start" id="start"/>
+                <span class="input-group-addon">to</span>
+                <input type="date" class="input-sm form-control" name="end" id="end"/>
+                <button class="button" id=srcbtn onclick="filter()">Filter results!</button>
+            </div>
+            
+            <h5>{{ message }}</h5>
             <ul class="list-group">
 
                 {#  ---------- PORTION OF CODE THAT SEEMS REDUNDANT -------- WAITING FOR MORE TESTS BEFORE DELETING IT PERMANENTLY  #}
@@ -112,6 +117,19 @@
 </div>
 
 <script>
+    function filter(){
+        var input1 = document.getElementById("start");
+        var input2 = document.getElementById("end");
+
+        if(input1.value){
+            if(!input2.value){
+                input2.value = input1.value
+            }
+
+            window.location.replace("/stories?from="+input1.value+"&to="+input2.value); 
+        }
+    }
+
     function follow(user_id) {
         fetch('/users/' + user_id + '/follow', {method: 'POST'})
             .then(function (response) {

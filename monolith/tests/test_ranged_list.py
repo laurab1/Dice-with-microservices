@@ -50,7 +50,7 @@ def init_database(database):
     example.date = dt.datetime(year=2018, month=12, day=7)
     example.is_draft = False
     example.deleted = False
-    database.session.add(example)
+    database.session.add(example)   
 
     database.session.commit()
 
@@ -63,7 +63,6 @@ def test_all_stories(client, templates, init_database):
     message = templates[-1]['message']
     assert stories.count() == 5
     assert message == ''
-
 
 def test_ranged_stories(client, templates, init_database):
     # invalid query params
@@ -102,6 +101,7 @@ def test_ranged_stories(client, templates, init_database):
     message = templates[-1]['message']
     stories = templates[-1]['stories']
     assert message == ''
+    assert stories.count() == 3
     for story in stories:
         assert story.id == 1 or story.id == 2 or story.id == 5
 
@@ -112,8 +112,18 @@ def test_ranged_stories(client, templates, init_database):
     message = templates[-1]['message']
     stories = templates[-1]['stories']
     assert message == ''
-    for story in stories:
-        assert story.id == 4
+    assert stories.count() == 1
+    assert stories[0].id == 4
+
+    # from date == to_date
+    reply = client.get('/stories?from=2019-1-1&to=2019-1-1')
+    assert reply.status_code == 200
+
+    message = templates[-1]['message']
+    stories = templates[-1]['stories']
+    assert message == ''
+    assert stories.count() == 1
+    assert stories[0].id == 2
 
     # nothing found
     reply = client.get('/stories?from=2015-12-1&to=2017-1-1')
