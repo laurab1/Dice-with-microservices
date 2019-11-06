@@ -123,15 +123,15 @@ class StoryActions:
         self._client = client
         self._templates = templates
     
-    def roll_dice(self):
-        return self._client.get('/roll_dice', follow_redirects=True)
+    def roll_dice(self, follow_redirects=True):
+        return self._client.get('/roll_dice', follow_redirects=follow_redirects)
      
-    def add_story_text(self, id, roll, text=None):
+    def add_story_text(self, id, dices, text=None):
         story_text = ''
 
         if text is None:
-            for i in range(len(roll)):
-                story_text = story_text + roll[i] + ' '
+            for i in range(len(dices)):
+                story_text = story_text + dices[i] + ' '
         else:
             story_text = text
         
@@ -141,22 +141,22 @@ class StoryActions:
         return self._client.get('/stories')
 
     def get_story(self, id):
-        return self._client.get('/stories/'+str(id))
+        return self._client.get(f'/stories/{id}')
     
     def get_random_recent_story(self):
         return self._client.get('/stories/random_story')
 
     def get_ranged_stories(self, from_date_str, to_date_str):
-        return self._client.get('/stories/?from='+from_date_str+'&to='+to_date_str)
+        return self._client.get(f'/stories/?from={from_date_str}&to={to_date_str}')
     
     def delete_story(self, id):
-        return self._client.delete('/stories/'+str(id))
+        return self._client.delete(f'/stories/{id}')
     
     def post_like_reaction(self, id):
-        return self._client.post('/stories/'+str(id)+'/react', data={'like': 'Like it!'})
+        return self._client.post(f'/stories/{id}/react', data={'like': 'Like it!'})
 
     def post_dislike_reaction(self, id):
-        return self._client.post('/stories/'+str(id)+'/react', data={'dislike': 'Dislike it!'})
+        return self._client.post(f'/stories/{id}/react', data={'dislike': 'Dislike it!'})
 
 
 @pytest.fixture
