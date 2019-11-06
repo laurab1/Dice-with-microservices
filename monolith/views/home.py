@@ -1,8 +1,12 @@
+from flask import Blueprint, render_template, jsonify
+from flask import current_app as app
 import datetime as dt
 
 from flask import Blueprint
 from flask import current_app as app
 from flask import jsonify, render_template
+
+from flask_login import login_required
 
 from monolith.auth import current_user
 from monolith.database import Story, db
@@ -10,8 +14,8 @@ from monolith.database import Story, db
 
 home = Blueprint('home', __name__)
 
-
 @home.route('/')
+@login_required
 def index():
     stats = {}
     message = ''
