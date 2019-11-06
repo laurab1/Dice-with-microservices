@@ -103,7 +103,7 @@ def test_edit_deleted_story(client, auth, database, templates):
     assert reply.status_code == 200
 
     reply = client.get(f'/stories/{new_id}/edit')
-    assert reply.status_code == 404
+    assert reply.status_code == 410
 
 
 def test_edit_not_valid_story(client, auth, database, templates):

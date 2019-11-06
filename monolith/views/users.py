@@ -25,7 +25,7 @@ def users_():
 def get_user(user_id):
     us = db.session.query(User).get(user_id)
     if us is None:
-        abort(404)
+        abort(404, f'User {user_id} does not exist')
 
     stories = db.session.query(Story).filter(Story.author_id == us.id).all()
     return render_template('get_user.html', user=us.username, stories=stories)
@@ -35,6 +35,10 @@ def get_user(user_id):
 def signup():
     form = UserForm()
     status = 200
+
+    if current_user.is_authenticated:
+        return redirect('/')
+
     if form.validate_on_submit():
         new_user = User()
         form.populate_obj(new_user)
