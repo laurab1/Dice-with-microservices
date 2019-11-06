@@ -9,7 +9,10 @@ from flask_bootstrap import Bootstrap
 from monolith import celeryapp
 from monolith.auth import login_manager
 from monolith.database import User, db
+from monolith.utility.telebot import token, on_message
 
+from telegram.ext import Updater, InlineQueryHandler, CommandHandler
+import telegram
 
 def create_app(test=False, database='sqlite:///storytellers.db',
                login_disabled=False):
@@ -33,6 +36,14 @@ def create_app(test=False, database='sqlite:///storytellers.db',
     # initialize Celery
     celery = celeryapp.create_celery_app(app)
     celeryapp.celery = celery
+
+    # initialize Telegram
+    updater = Updater(token, use_context = True)
+    
+    dp = updater.dispatcher
+    # function to be executed as soon as 
+    dp.add_handler(CommandHandler('start', on_message))
+    updater.start_polling()
 
     db.init_app(app)
     login_manager.init_app(app)

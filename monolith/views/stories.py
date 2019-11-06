@@ -13,6 +13,7 @@ from monolith.task import add_reaction, remove_reaction
 from monolith.utility.diceutils import get_dice_sets_list
 from monolith.utility.validate_story import NotValidStoryError, _check_story
 
+from monolith.utility.telebot import send_telegram_message
 
 stories = Blueprint('stories', __name__)
 
@@ -226,6 +227,8 @@ def _story_edit(storyid):
                 except NotValidStoryError:
                     return jsonify(error='Your story is not valid'), 400
             db.session.commit()
+            # Send telegram message
+            send_telegram_message(story)
             return redirect(f'/stories/{storyid}')
         return jsonify(error='Your story is too long or data is missing.'), 400
 
