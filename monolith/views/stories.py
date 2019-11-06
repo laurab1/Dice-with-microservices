@@ -7,7 +7,7 @@ from flask import jsonify, redirect, render_template, request
 from flask_login import current_user, login_required
 
 from monolith.classes.DiceSet import DiceSet
-from monolith.database import Reaction, Story, User, db
+from monolith.database import Reaction, Story, db
 from monolith.forms import StoryForm
 from monolith.task import add_reaction, remove_reaction
 from monolith.utility.diceutils import get_dice_sets_list
@@ -145,6 +145,10 @@ def _get_story(storyid):
 
     if s is None:
         abort(404)
+    if s.deleted:
+        abort(410)
+    if s.author_id != current_user.id and s.is_draft:
+        abort(403)  # unauthorized request
 
     if q is not None and not q.marked:
         if q.reaction_val == 1:
@@ -161,6 +165,10 @@ def _post_story_react(storyid):
 
     if s is None:
         abort(404)
+    if s.deleted:
+        abort(410)
+    if s.is_draft:
+        abort(403)
 
     q = Reaction.query.filter_by(reactor_id=current_user.id,
                                  story_id=storyid).one_or_none()
