@@ -3,8 +3,7 @@ from flask import current_app as app
 import datetime as dt
 
 from flask import Blueprint
-from flask import current_app as app
-from flask import jsonify, render_template
+from flask import render_template
 
 from flask_login import login_required
 

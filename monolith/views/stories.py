@@ -4,7 +4,7 @@ from random import randint
 from flask import Blueprint, abort, url_for
 from flask import jsonify, redirect, render_template, request
 
-from flask_login import current_user, login_required, AnonymousUserMixin
+from flask_login import current_user, login_required
 
 from monolith.classes.DiceSet import DiceSet
 from monolith.database import Reaction, Story, db
@@ -149,9 +149,9 @@ def _get_story(storyid):
     s = Story.query.get(storyid)
 
     if s is None:
-        abort(404)
+        abort(404, f'Story {storyid} not found')
     if s.deleted:
-        abort(410)
+        abort(410, f'Story {storyid} was deleted')
     if s.author_id != current_user.id and s.is_draft:
         abort(403)  # unauthorized request
 
@@ -169,9 +169,9 @@ def _post_story_react(storyid):
     s = Story.query.get(storyid)
 
     if s is None:
-        abort(404)
+        abort(404, f'Story {storyid} not found')
     if s.deleted:
-        abort(410)
+        abort(410, f'Story {storyid} was deleted')
     if s.is_draft:
         abort(403)
 
@@ -211,7 +211,7 @@ def _post_story_react(storyid):
 def _deleteStory(storyid):
     story = Story.query.get(storyid)
     if story is None:
-        abort(404)  # story not found
+        abort(404, f'Story {storyid} not found')  # story not found
 
     if story.deleted:
         return jsonify(error='This story was already deleted'), 400
@@ -234,13 +234,13 @@ def _deleteStory(storyid):
 def _story_edit(storyid):
     story = db.session.query(Story).get(storyid)
     if story is None:
-        abort(404)
+        abort(404, f'Story {storyid} not found')
     if story.author_id != current_user.id:
-        abort(401)
+        abort(401, f'You must be the author of story {storyid} to edit')
     if not story.is_draft:
-        abort(403)
+        abort(403, f'Story {storyid} cannot be edited')
     if story.deleted:
-        abort(404)
+        abort(410, f'Story {storyid} was deleted')
 
     form = StoryForm()
     if form.validate_on_submit():

@@ -25,7 +25,7 @@ def users_():
 def get_user(user_id):
     us = db.session.query(User).get(user_id)
     if us is None:
-        abort(404)
+        abort(404, f'User {user_id} does not exist')
 
     stories = db.session.query(Story).filter(Story.author_id == us.id).all()
     return render_template('get_user.html', user=us.username, stories=stories)
