@@ -1,0 +1,17 @@
+<html>
+    <head>
+        {% include 'html_components/bootstrap.html' %}
+        <title>Unauthorized request</title>
+    </head>
+    <body>
+        {% include 'html_components/nav.html' %}
+
+        <div class="container">
+          <h1>401</h1>
+          <p>{{ message }}</p>
+          {% if not current_user.is_authenticated %}
+              <p>Here you can <a href="{{ url_for('auth.login') }}">Login</a> or <a href="{{ url_for('users.signup') }}">Signup</a></p>
+          {% endif %}
+        </div>
+    </body>
+</html>
