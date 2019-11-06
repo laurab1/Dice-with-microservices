@@ -1,0 +1,70 @@
+
+.bg-image {
+
+        /* Add the blur effect */
+        filter: blur(15px) opacity(.8);;
+        -webkit-filter: blur(15px) opacity(.8);;
+
+        /* Full height */
+        height: 95%;
+        width: 100%;
+        overflow: hidden;
+
+        position: absolute;
+        right: 0;
+        /* Center and scale the image nicely */
+        background-repeat: repeat;
+        background-position: left;
+}
+
+.bg-text {
+    color: white;
+    font-weight: bold;
+    top: 15%;
+    height: 90%;
+    overflow: scroll;
+    z-index: 2;
+    text-align: center;
+}
+
+@media (min-width: 990px) {
+
+    .bg-text {
+        color: white;
+        font-weight: bold;
+        position: absolute;
+        overflow-y: auto;
+        overflow-x: hidden;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        padding: 20px;
+        max-height: 80%;
+        max-width: 80%;
+    }
+
+    .bg-image {
+
+        /* Add the blur effect */
+        filter: blur(15px) opacity(.8);;
+        -webkit-filter: blur(15px) opacity(.8);;
+
+        /* Full height */
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+
+        position: absolute;
+        right: 0;
+        /* Center and scale the image nicely */
+        background-repeat: repeat;
+        background-position: left;
+    }
+
+}
+
+.transparent-bg {
+    background-color: rgb(0, 0, 0); /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.2); /* Black w/opacity/see-through */
+}
