@@ -15,19 +15,28 @@ users = Blueprint('users', __name__)
 @users.route('/users')
 @login_required
 def users_():
-    res = db.session.query(User.username, Story.text, func.max(Story.date)) \
-            .outerjoin(Story).group_by(User.id).all()
+    last_story = db.session.query(Story.author_id, Story.text, func.max(Story.date).label('date')) \
+                .group_by(Story.author_id).having(Story.is_draft == False).having(Story.deleted == False) \
+                .subquery()
+    res = db.session.query(User.username, last_story.c.text, last_story.c.date) \
+            .outerjoin(last_story, User.id == last_story.c.author_id).order_by(User.id.asc()).all()
     return render_template('users.html', result=res)
 
 
 @users.route('/users/<user_id>')
 @login_required
 def get_user(user_id):
-    us = db.session.query(User).get(user_id)
+    if user_id == current_user.id:
+        return redirect('/')
+
+    us = User.query.get(user_id)
     if us is None:
         abort(404, f'User {user_id} does not exist')
 
-    stories = db.session.query(Story).filter(Story.author_id == us.id).all()
+    stories = Story.query.filter_by(author_id=us.id, 
+                                    is_draft=False, 
+                                    deleted=False)
+    stories = stories.order_by(Story.date.desc()).all()
     return render_template('get_user.html', user=us.username, stories=stories)
 
 
