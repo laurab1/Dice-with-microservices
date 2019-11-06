@@ -35,23 +35,28 @@ def test_get_story(client, auth, database, templates):
     assert reply.status_code == 410
 
 def test_unauthorized_draft(client, auth, database, templates):
+    # add a draft
     auth.login()
     reply = client.get('/roll_dice', follow_redirects=True)
     assert reply.status_code == 200
     new_id = templates[-1]['story_id']
     auth.logout()
 
+    #try to edit a draft of another user
     auth.login('test1', 'test1123')
     reply = client.get(f'/stories/{new_id}')
     assert reply.status_code == 403
 
 def test_story_with_unmarked_like(client, auth, database, templates):
+    # example story and unmarked reaction
     s = Story()
     s.text = 'Trial story of example admin user :)'
     s.likes = 42
     s.dislikes = 0
     s.author_id = 1
     s.dice_set = ['dice1', 'dice2']
+    s.is_draft = False
+    s.deleted = False
 
     database.session.add(s)
 
@@ -65,22 +70,27 @@ def test_story_with_unmarked_like(client, auth, database, templates):
 
     database.session.commit()
 
+    # get the story
     auth.login()
     reply = client.get('/stories/1')
     template_capture = templates[-1]
     assert reply.status_code == 200
+    # check that the unmarked like is counted
     assert template_capture['story'].likes == 43
     assert template_capture['story'].dislikes == 0
 
     database.session.commit()
 
 def test_story_with_unmarked_dislike(client, auth, database, templates):
+    # example story and unmarked reaction
     s = Story()
     s.text = 'Trial story of example admin user :)'
     s.likes = 42
     s.dislikes = 0
     s.author_id = 1
     s.dice_set = ['dice1', 'dice2']
+    s.is_draft = False
+    s.deleted = False
 
     database.session.add(s)
 
@@ -94,11 +104,13 @@ def test_story_with_unmarked_dislike(client, auth, database, templates):
 
     database.session.commit()
 
+    # get the story
     auth.login()
     reply = client.get('/stories/1')
     template_capture = templates[-1]
     assert reply.status_code == 200
     assert template_capture['story'].likes == 42
+    # check that the unmarked dislike is counted
     assert template_capture['story'].dislikes == 1
 
     database.session.commit()
