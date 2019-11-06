@@ -1,11 +1,8 @@
 <html>
 
 <head>
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet" />
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
-  <style>
+  {% include 'html_components/bootstrap.html' %}
+    <style>
     #is_draft {
       display: none;
     }
@@ -17,7 +14,7 @@
   <!-- ----------------- NAV BAR ------------------ -->
   {% if current_user.is_authenticated %}
 
-  {% include 'nav.html' %}
+  {% include 'html_components/nav.html' %}
 
   <div class="container-fluid">
 

@@ -1,0 +1,36 @@
+{% if story.theme == 'xmas' %}
+    <li class=" text-light mycard xmas">
+        {% elif story.theme == 'halloween' %}
+    <li class="text-light mycard halloween">
+        {% else %}
+    <li class=" text-light mycard standard ">
+{% endif %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12 center-block text-center">
+            <p><h5 class="story-text"><b>{{ story.text }}</b></h5> <br> ({{ story.date }})</p >
+
+            <i class="fas fa-thumbs-up"></i> <span
+                class="badge badge-seconary badge-pill"> {{ story.likes }} </span> <i
+                class="fas fa-thumbs-down"></i> <span
+                class="badge badge-seconary badge-pill"> {{ story.dislikes }}</span>
+
+            <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
+
+            <a class="btn btn-primary" href="{{ like_it_url }}{{ story.id }}">Read this
+                story</a>
+
+            {% if story.author.id != current_user.id %}
+                <a href="#" class="btn btn-secondary"
+                   onclick="follow({{ story.author.id }})">Follow author</a>
+            {% endif %}
+            {% if story.author.id == current_user.id %}
+                <a href="#" class="btn btn-danger" onclick="deleteStory({{ story.id }})">Delete</a>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+</li><br>

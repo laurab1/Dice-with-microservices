@@ -34,6 +34,7 @@ def create_app(test=False, database='sqlite:///storytellers.db',
 
     db.init_app(app)
     login_manager.init_app(app)
+    login_manager.login_view = '/login'
     db.create_all(app=app)
 
     # Required to avoid circular dependencies
@@ -41,6 +42,13 @@ def create_app(test=False, database='sqlite:///storytellers.db',
     for bp in blueprints:
         app.register_blueprint(bp)
         bp.app = app
+
+    from monolith.views import errors
+    app.register_error_handler(400, errors.bad_request)
+    app.register_error_handler(401, errors.unauthorized)
+    app.register_error_handler(403, errors.forbidden)
+    app.register_error_handler(404, errors.page_not_found)
+    app.register_error_handler(410, errors.gone)
 
     # create a first admin user
     with app.app_context():

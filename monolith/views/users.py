@@ -15,19 +15,28 @@ users = Blueprint('users', __name__)
 @users.route('/users')
 @login_required
 def users_():
-    res = db.session.query(User.username, Story.text, func.max(Story.date)) \
-            .outerjoin(Story).group_by(User.id).all()
+    last_story = db.session.query(Story.author_id, Story.text, func.max(Story.date).label('date')) \
+                .group_by(Story.author_id).having(Story.is_draft == False).having(Story.deleted == False) \
+                .subquery()
+    res = db.session.query(User.username, last_story.c.text, last_story.c.date) \
+            .outerjoin(last_story, User.id == last_story.c.author_id).order_by(User.id.asc()).all()
     return render_template('users.html', result=res)
 
 
 @users.route('/users/<user_id>')
 @login_required
 def get_user(user_id):
-    us = db.session.query(User).get(user_id)
-    if us is None:
-        abort(404)
+    if user_id == current_user.id:
+        return redirect('/')
 
-    stories = db.session.query(Story).filter(Story.author_id == us.id).all()
+    us = User.query.get(user_id)
+    if us is None:
+        abort(404, f'User {user_id} does not exist')
+
+    stories = Story.query.filter_by(author_id=us.id, 
+                                    is_draft=False, 
+                                    deleted=False)
+    stories = stories.order_by(Story.date.desc()).all()
     return render_template('get_user.html', user=us.username, stories=stories)
 
 
@@ -35,6 +44,10 @@ def get_user(user_id):
 def signup():
     form = UserForm()
     status = 200
+
+    if current_user.is_authenticated:
+        return redirect('/')
+
     if form.validate_on_submit():
         new_user = User()
         form.populate_obj(new_user)
@@ -94,9 +107,9 @@ def follow(user_id):
         return jsonify(message='User unfollowed')
 
 
-def _get_followed_dict(user_id):
+def get_followed_dict(user_id):
     me = User.query.get(user_id)
-    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id}
+    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id, 'username': x.username}
              for x in me.follows]
     return {'users': users}
 
@@ -104,5 +117,5 @@ def _get_followed_dict(user_id):
 @users.route('/followed', methods=['GET'])
 @login_required
 def get_followed():
-    template_dict = _get_followed_dict(current_user.id)
+    template_dict = get_followed_dict(current_user.id)
     return render_template('followed.html', **template_dict)

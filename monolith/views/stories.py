@@ -7,12 +7,12 @@ from flask import jsonify, redirect, render_template, request
 from flask_login import current_user, login_required
 
 from monolith.classes.DiceSet import DiceSet
-from monolith.database import Reaction, Story, User, db
+from monolith.database import Reaction, Story, db
 from monolith.forms import StoryForm
 from monolith.task import add_reaction, remove_reaction
 from monolith.utility.diceutils import get_dice_sets_list
 from monolith.utility.validate_story import NotValidStoryError, _check_story
-
+from monolith.views.users import get_followed_dict
 
 stories = Blueprint('stories', __name__)
 
@@ -72,8 +72,8 @@ def _stories(message='', marked=True, id=0, react=0):
             else:  # successful try!
                 # query the database with the given values
                 stories = stories.group_by(Story.date) \
-                                 .having(Story.date >= from_dt) \
-                                 .having(Story.date <= to_dt)
+                    .having(Story.date >= from_dt) \
+                    .having(Story.date <= to_dt)
                 if stories.count() == 0:
                     message = 'no stories with the given dates'
         elif theme is not None:
@@ -85,9 +85,17 @@ def _stories(message='', marked=True, id=0, react=0):
                       'range as from=yyyy-mm-dd&to=yyyy-mm-dd or a dice set ' \
                       'theme as theme=\'diceset\'!'
 
+    # get following users if logged
+    curuser = current_user
+    if current_user.is_authenticated:
+        template_dict = get_followed_dict(current_user.id)
+    else:
+        template_dict = {}
+
+
     return render_template('stories.html', message=message, stories=stories,
                            like_it_url='http://127.0.0.1:5000/stories/',
-                           storyid=id, react=react)
+                           storyid=id, react=react, **template_dict)
 
 
 @stories.route('/stories/random_story', methods=['GET'])
@@ -144,7 +152,11 @@ def _get_story(storyid):
     s = Story.query.get(storyid)
 
     if s is None:
-        abort(404)
+        abort(404, f'Story {storyid} not found')
+    if s.deleted:
+        abort(410, f'Story {storyid} was deleted')
+    if s.author_id != current_user.id and s.is_draft:
+        abort(403)  # unauthorized request
 
     if q is not None and not q.marked:
         if q.reaction_val == 1:
@@ -160,7 +172,11 @@ def _post_story_react(storyid):
     s = Story.query.get(storyid)
 
     if s is None:
-        abort(404)
+        abort(404, f'Story {storyid} not found')
+    if s.deleted:
+        abort(410, f'Story {storyid} was deleted')
+    if s.is_draft:
+        abort(403)
 
     q = Reaction.query.filter_by(reactor_id=current_user.id,
                                  story_id=storyid).one_or_none()
@@ -198,7 +214,7 @@ def _post_story_react(storyid):
 def _deleteStory(storyid):
     story = Story.query.get(storyid)
     if story is None:
-        abort(404)  # story not found
+        abort(404, f'Story {storyid} not found')  # story not found
 
     if story.deleted:
         return jsonify(error='This story was already deleted'), 400
@@ -221,13 +237,13 @@ def _deleteStory(storyid):
 def _story_edit(storyid):
     story = db.session.query(Story).get(storyid)
     if story is None:
-        abort(404)
+        abort(404, f'Story {storyid} not found')
     if story.author_id != current_user.id:
-        abort(401)
+        abort(401, f'You must be the author of story {storyid} to edit')
     if not story.is_draft:
-        abort(403)
+        abort(403, f'Story {storyid} cannot be edited')
     if story.deleted:
-        abort(404)
+        abort(410, f'Story {storyid} was deleted')
 
     form = StoryForm()
     if form.validate_on_submit():

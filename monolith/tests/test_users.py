@@ -16,6 +16,8 @@ def test_getusers(client, database, auth, templates):
     example = Story()
     example.text = 'First story of admin user :)'
     example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
     database.session.commit()
 
@@ -26,6 +28,8 @@ def test_getusers(client, database, auth, templates):
                      ('test1', None),
                      ('test2', None),
                      ('test3', None)]
+    
+    client.get('/logout')
 
     client.post('/signup', data={'email': 'prova@prova.com',
                                  'username': 'prova',
@@ -42,6 +46,8 @@ def test_getusers(client, database, auth, templates):
     example = Story()
     example.text = 'First story of prova user :)'
     example.author_id = 5
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
     database.session.commit()
 
@@ -57,6 +63,8 @@ def test_getusers(client, database, auth, templates):
     example = Story()
     example.text = 'Second story of admin user :)'
     example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
     database.session.commit()
 
