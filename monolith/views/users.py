@@ -16,18 +16,25 @@ users = Blueprint('users', __name__)
 @login_required
 def users_():
     res = db.session.query(User.username, Story.text, func.max(Story.date)) \
-            .outerjoin(Story).group_by(User.id).all()
+            .outerjoin(Story).group_by(User.id).having(Story.is_draft == False) \
+            .having(Story.deleted == False).all()
     return render_template('users.html', result=res)
 
 
 @users.route('/users/<user_id>')
 @login_required
 def get_user(user_id):
-    us = db.session.query(User).get(user_id)
+    if user_id == current_user.id:
+        return redirect('/')
+
+    us = User.query.get(user_id)
     if us is None:
         abort(404, f'User {user_id} does not exist')
 
-    stories = db.session.query(Story).filter(Story.author_id == us.id).all()
+    stories = Story.query.filter_by(author_id=us.id, 
+                                    is_draft=False, 
+                                    deleted=False)
+    stories = stories.order_by(Story.date.desc()).all()
     return render_template('get_user.html', user=us.username, stories=stories)
 
 
@@ -100,7 +107,7 @@ def follow(user_id):
 
 def get_followed_dict(user_id):
     me = User.query.get(user_id)
-    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id}
+    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id, 'username': x.username}
              for x in me.follows]
     return {'users': users}
 

@@ -85,9 +85,11 @@ def _stories(message='', marked=True, id=0, react=0):
                       'range as from=yyyy-mm-dd&to=yyyy-mm-dd or a dice set ' \
                       'theme as theme=\'diceset\'!'
 
-    try:
+    # get following users if logged
+    curuser = current_user
+    if current_user.is_authenticated:
         template_dict = get_followed_dict(current_user.id)
-    except Exception:
+    else:
         template_dict = {}
 
     return render_template('stories.html', message=message, stories=stories,
