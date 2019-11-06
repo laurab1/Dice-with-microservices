@@ -4,9 +4,7 @@ from monolith.database import Story
 
 def test_check_mywall(client, auth, database, templates):
     reply = client.get('/')
-    message = templates[-1]['message']
-    assert reply.status_code == 200
-    assert message == 'login needed'
+    assert reply.status_code == 302
 
     auth.login()
 

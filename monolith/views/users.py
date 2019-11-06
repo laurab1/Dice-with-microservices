@@ -94,7 +94,7 @@ def follow(user_id):
         return jsonify(message='User unfollowed')
 
 
-def _get_followed_dict(user_id):
+def get_followed_dict(user_id):
     me = User.query.get(user_id)
     users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id}
              for x in me.follows]
@@ -104,5 +104,5 @@ def _get_followed_dict(user_id):
 @users.route('/followed', methods=['GET'])
 @login_required
 def get_followed():
-    template_dict = _get_followed_dict(current_user.id)
+    template_dict = get_followed_dict(current_user.id)
     return render_template('followed.html', **template_dict)
