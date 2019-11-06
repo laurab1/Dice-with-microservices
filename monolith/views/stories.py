@@ -4,7 +4,7 @@ from random import randint
 from flask import Blueprint, abort, url_for
 from flask import jsonify, redirect, render_template, request
 
-from flask_login import current_user, login_required
+from flask_login import current_user, login_required, AnonymousUserMixin
 
 from monolith.classes.DiceSet import DiceSet
 from monolith.database import Reaction, Story, User, db
@@ -72,8 +72,8 @@ def _stories(message='', marked=True, id=0, react=0):
             else:  # successful try!
                 # query the database with the given values
                 stories = stories.group_by(Story.date) \
-                                 .having(Story.date >= from_dt) \
-                                 .having(Story.date <= to_dt)
+                    .having(Story.date >= from_dt) \
+                    .having(Story.date <= to_dt)
                 if stories.count() == 0:
                     message = 'no stories with the given dates'
         elif theme is not None:
@@ -85,7 +85,11 @@ def _stories(message='', marked=True, id=0, react=0):
                       'range as from=yyyy-mm-dd&to=yyyy-mm-dd or a dice set ' \
                       'theme as theme=\'diceset\'!'
 
-    template_dict = get_followed_dict(current_user.id)
+    try:
+        template_dict = get_followed_dict(current_user.id)
+    except Exception:
+        template_dict = {}
+
     return render_template('stories.html', message=message, stories=stories,
                            like_it_url='http://127.0.0.1:5000/stories/',
                            storyid=id, react=react, **template_dict)
@@ -251,4 +255,3 @@ def _story_edit(storyid):
 
     return render_template('edit_story.html', story_id=storyid,
                            dice=story.dice_set, form=form)
-
