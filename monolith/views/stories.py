@@ -12,7 +12,7 @@ from monolith.forms import StoryForm
 from monolith.task import add_reaction, remove_reaction
 from monolith.utility.diceutils import get_dice_sets_list
 from monolith.utility.validate_story import NotValidStoryError, _check_story
-
+from monolith.views.users import get_followed_dict
 
 stories = Blueprint('stories', __name__)
 
@@ -85,9 +85,10 @@ def _stories(message='', marked=True, id=0, react=0):
                       'range as from=yyyy-mm-dd&to=yyyy-mm-dd or a dice set ' \
                       'theme as theme=\'diceset\'!'
 
+    template_dict = get_followed_dict(current_user.id)
     return render_template('stories.html', message=message, stories=stories,
                            like_it_url='http://127.0.0.1:5000/stories/',
-                           storyid=id, react=react)
+                           storyid=id, react=react, **template_dict)
 
 
 @stories.route('/stories/random_story', methods=['GET'])
@@ -250,3 +251,4 @@ def _story_edit(storyid):
 
     return render_template('edit_story.html', story_id=storyid,
                            dice=story.dice_set, form=form)
+
