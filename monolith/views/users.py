@@ -1,15 +1,13 @@
-from flask import Blueprint, redirect, render_template, request, jsonify, abort
-from flask import current_app as app
-from flask_login import current_user, login_user, login_required
-from monolith.database import db, User, Story
-from monolith.auth import admin_required
-from monolith.database import User, db
+from flask import Blueprint, abort
+from flask import jsonify, redirect, render_template, request
+
+from flask_login import current_user, login_required, login_user
+
+from monolith.database import Story, User, db
 from monolith.forms import UserForm
 
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
-from os import urandom
-
+from sqlalchemy.exc import IntegrityError
 
 users = Blueprint('users', __name__)
 
@@ -17,21 +15,30 @@ users = Blueprint('users', __name__)
 @users.route('/users')
 @login_required
 def users_():
-    result = db.session.query(User.username, 
-                             Story.text,
-                             str(func.max(Story.date))
-            ).outerjoin(Story
-            ).group_by(User.id
-            ).all()
-    if app.config['TESTING']:
-        return jsonify({'users': [(r[0],r[1]) for r in result]})
-    return render_template("users.html", result=result)
+    res = db.session.query(User.username, Story.text, func.max(Story.date)) \
+            .outerjoin(Story).group_by(User.id).all()
+    return render_template('users.html', result=res)
+
+
+@users.route('/users/<user_id>')
+@login_required
+def get_user(user_id):
+    us = db.session.query(User).get(user_id)
+    if us is None:
+        abort(404, f'User {user_id} does not exist')
+
+    stories = db.session.query(Story).filter(Story.author_id == us.id).all()
+    return render_template('get_user.html', user=us.username, stories=stories)
 
 
 @users.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = UserForm()
     status = 200
+
+    if current_user.is_authenticated:
+        return redirect('/')
+
     if form.validate_on_submit():
         new_user = User()
         form.populate_obj(new_user)
@@ -43,16 +50,15 @@ def signup():
             login_user(new_user)
             return redirect('/')
         except IntegrityError as e:
-            status = 409 
+            db.session.rollback()
+            status = 409
             if 'user.username' in str(e):
                 err = 'This username already exists.'
             elif 'user.email' in str(e):
                 err = 'This email is already used.'
 
-            if app.config['TESTING']:
-                return jsonify(error=err), status
             form.email.errors.append(err)
-            
+
     return render_template('signup.html', form=form), status
 
 
@@ -91,10 +97,8 @@ def follow(user_id):
             pass
         return jsonify(message='User unfollowed')
 
-    abort(405)
 
-
-def _get_followed_dict(user_id):
+def get_followed_dict(user_id):
     me = User.query.get(user_id)
     users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id}
              for x in me.follows]
@@ -104,5 +108,5 @@ def _get_followed_dict(user_id):
 @users.route('/followed', methods=['GET'])
 @login_required
 def get_followed():
-    template_dict = _get_followed_dict(current_user.id)
+    template_dict = get_followed_dict(current_user.id)
     return render_template('followed.html', **template_dict)

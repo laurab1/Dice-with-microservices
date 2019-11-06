@@ -1,26 +1,47 @@
-from __future__ import absolute_import, unicode_literals
-from celery import shared_task
-from monolith.database import *
+from flask import current_app as app
 
-#celery task to run asynchronously
-@shared_task
-def add_reaction(reaction, storyid, react):
-    s = Story.query.filter_by(id=storyid)
-    if s.first() != None:
+from flask_login import current_user
+
+from monolith import celeryapp
+from monolith.database import Reaction, Story, db
+
+
+celery = celeryapp.celery
+
+
+# celery task to run asynchronously
+@celery.task
+def add_reaction(reactorid, storyid, react):
+    # Without this two lines testing raises DetachedInstanceError
+    # No explanation still found
+    if app.config['TESTING']:
+        current_user.id
+    s = Story.query.get(storyid)
+    if s is not None:
         if react == 1:
-            s.first().likes += 1
-        elif s.first() != None and react == -1:
-            s.first().dislikes += 1
-    reaction.marked = True
+            s.likes += 1
+        elif s is not None and react == -1:
+            s.dislikes += 1
+    r = Reaction.query.filter(Reaction.reactor_id == reactorid,
+                              Reaction.story_id == storyid).one()
+    r.marked = True
     db.session.commit()
-    
-#another celery task to remove an old reaction
-@shared_task
+    if app.config['TESTING']:
+        current_user.id
+
+# another celery task to remove an old reaction
+@celery.task
 def remove_reaction(storyid, react):
-    s = Story.query.filter_by(id=storyid)
-    if s.first() != None:
+    # Without this two lines testing raises DetachedInstanceError
+    # No explanation still found
+    if app.config['TESTING']:
+        current_user.id
+    s = Story.query.get(storyid)
+    if s is not None:
         if react == 1:
-            s.first().likes -= 1 #TODO: remove the previous vote and add the new one to the queue
-        elif s.first() != None and react == -1:
-            s.first().dislikes -= 1
+            s.likes -= 1
+        elif s is not None and react == -1:
+            s.dislikes -= 1
     db.session.commit()
+    if app.config['TESTING']:
+        current_user.id

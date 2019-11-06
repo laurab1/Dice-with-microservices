@@ -9,6 +9,8 @@ def test_get_random_recent_story_1(client, database, templates):
     example.text = 'recent story'
     example.likes = 0
     example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -16,6 +18,8 @@ def test_get_random_recent_story_1(client, database, templates):
     example.likes = 0
     example.author_id = 1
     example.date = dt.datetime(2019, 9, 5)
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -23,6 +27,8 @@ def test_get_random_recent_story_1(client, database, templates):
     example.date = dt.datetime.now() - dt.timedelta(days=1)
     example.likes = 0
     example.author_id = 2
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     database.session.commit()
@@ -42,6 +48,8 @@ def test_get_random_recent_story_2(client, database, templates):
     example.text = 'recent story 1'
     example.likes = 0
     example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -49,12 +57,16 @@ def test_get_random_recent_story_2(client, database, templates):
     example.likes = 0
     example.author_id = 1
     example.date = dt.datetime(2019, 9, 5)
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
     example.text = 'recent story 2'
     example.likes = 0
     example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -62,6 +74,8 @@ def test_get_random_recent_story_2(client, database, templates):
     example.date = dt.datetime.now() - dt.timedelta(days=1)
     example.likes = 0
     example.author_id = 2
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     database.session.commit()
@@ -71,18 +85,20 @@ def test_get_random_recent_story_2(client, database, templates):
     assert reply.status_code == 200
 
     template_context = templates[-1]
-    assert template_context['stories'][0].id == 1 or template_context['stories'][0].id == 3
+    id = template_context['stories'][0].id
+    assert id == 1 or id == 3
     assert template_context['message'] == ''
 
+
 # no recent story, get a random one
-
-
 def test_get_random_story(client, database, templates):
     example = Story()
     example.text = 'very not recent story (months/years ago)'
     example.likes = 0
     example.author_id = 1
     example.date = dt.datetime(2019, 9, 5)
+    example.is_draft = False
+    example.deleted = False
     database.session.add(example)
 
     example = Story()
@@ -90,6 +106,26 @@ def test_get_random_story(client, database, templates):
     example.date = dt.datetime.now() - dt.timedelta(days=1)
     example.likes = 0
     example.author_id = 2
+    example.is_draft = False
+    example.deleted = False
+    database.session.add(example)
+
+    example = Story()
+    example.text = 'drafted story'
+    example.date = dt.datetime.now() - dt.timedelta(days=1)
+    example.likes = 0
+    example.author_id = 1
+    example.is_draft = True
+    example.deleted = False
+    database.session.add(example)
+
+    example = Story()
+    example.text = 'deleted story'
+    example.date = dt.datetime.now() - dt.timedelta(days=1)
+    example.likes = 0
+    example.author_id = 1
+    example.is_draft = False
+    example.deleted = True
     database.session.add(example)
 
     database.session.commit()
@@ -99,8 +135,10 @@ def test_get_random_story(client, database, templates):
     assert reply.status_code == 200
 
     template_context = templates[-1]
-    assert template_context['stories'][0].id == 1 or template_context['stories'][0].id == 2
-    assert template_context['message'] == 'no stories today. Here is a random one:'
+    id = template_context['stories'][0].id
+    message = template_context['message']
+    assert id == 1 or id == 2
+    assert message == 'no stories today. Here is a random one:'
 
 
 def test_no_stories(client, templates):

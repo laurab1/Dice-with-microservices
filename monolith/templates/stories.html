@@ -1,120 +1,174 @@
 <html>
 
 <head>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-            crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-            crossorigin="anonymous"></script>
+    {% include 'html_components/bootstrap.html' %}
+    <link href="static/css/story.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="static/css/sidebar.css" rel="stylesheet">
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">Storytellers</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
-            aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-        <ul class="navbar-nav">
-            <li class="nav-item active">
-                <a class="nav-link" href="/stories">Home </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/newStory">New Story</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">My Wall <span class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/followed">Followed users</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/logout">Logout ({{ current_user.firstname }})</a>
-            </li>
+<!--Navigation bar-->
+{% include 'html_components/nav.html' %}
 
-        </ul>
+<!--end of Navigation bar-->
+<div class="container-fluid">
+    <div class="d-flex" id="wrapper">
+
+        <!-- Sidebar -->
+        <div class="bg-white border-right" id="sidebar-wrapper" id="sidebar-wrapper">
+            <i class="fas fa-angle-left fa-2x togglebutton" id="menu-toggle"></i>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <br>
+
+            <h4>Followed users</h4>
+
+            <div class="list-group list-group-flush">
+                {% for user in users %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center" id="user_{{ user.id }}">
+                        <a class="text-dark btn" disabled="true"
+                           href="/users/{{ user.id }}">{{ user.username }}</a>
+                        <span type="button" class="badge badge-danger badge-pill btn" onclick="unfollow({{ user.id }})">
+                            Unfollow
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <h5>{{ message }}</h5>
+        <div class="jumbotron bg-white" id="page-content-wrapper">
+
+
+            <ul class="list-group">
+
+                {#  ---------- PORTION OF CODE THAT SEEMS REDUNDANT -------- WAITING FOR MORE TESTS BEFORE DELETING IT PERMANENTLY  #}
+                {#            {% if marked == false %}#}
+                {#                {% for story in stories: %}#}
+                {#                    {% if story.id == storyid %}#}
+                {#                        {% if react == 1 %}#}
+                {#                            <li class="list-group-item d-flex justify-content-between align-items-center">#}
+                {#                                "{{ story.text }}" Likes: {{ story.likes + 1 }} Dislikes: {{ story.dislikes }}#}
+                {#                                ({{ story.date }})#}
+                {#                                {% if current_user.is_authenticated %}#}
+                {#                                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->#}
+                {#                                    <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>#}
+                {#                                    {% if story.author.id != current_user.id %}#}
+                {#                                        <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>#}
+                {#                                    {% endif %}#}
+                {#                                {% endif %}#}
+                {#                            </li>#}
+                {#                        {% else %}#}
+                {#                            <li class="list-group-item d-flex justify-content-between align-items-center">#}
+                {#                                "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes + 1 }}#}
+                {#                                ({{ story.date }})#}
+                {#                                {% if current_user.is_authenticated %}#}
+                {#                                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->#}
+                {#                                    <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>#}
+                {#                                    {% if story.author.id != current_user.id %}#}
+                {#                                        <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>#}
+                {#                                    {% endif %}#}
+                {#                                {% endif %}#}
+                {#                                {% if story.author.id == current_user.id %}#}
+                {#                                    <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>#}
+                {#                                {% endif %}#}
+                {#                            </li>#}
+                {#                        {% endif %}#}
+                {#                    {% else %}#}
+                {#                        <li class="list-group-item d-flex justify-content-between align-items-center">#}
+                {#                            "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})#}
+                {#                            {% if current_user.is_authenticated %}#}
+                {#                                <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->#}
+                {#                                <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>#}
+                {##}
+                {#                                {% if story.author.id != current_user.id %}#}
+                {#                                    <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>#}
+                {#                                {% endif %}#}
+                {#                                {% if story.author.id == current_user.id %}#}
+                {#                                    <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>#}
+                {#                                {% endif %}#}
+                {#                            {% endif %}#}
+                {#                        </li>#}
+                {#                    {% endif %}#}
+                {#                {% endfor %}#}
+                {#            {% else %}#}
+                <div class="row">
+                    {% for story in stories: %}
+                        <div class="col-md-12">
+                            {% include 'html_components/story_template.html' %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {#            {% endif %}#}
+            </ul>
+
+        </div>
     </div>
-</nav>
+</div>
 
-<h1>Story List</h1>
-<h5>{{ message }}</h5>
-<ul>
-    {% if marked == false %}
-        {% for story in stories: %}
-            {% if story.id == storyid %}
-                {% if react == 1 %}
-                    <li>
-                        "{{ story.text }}" Likes: {{ story.likes + 1 }} Dislikes: {{ story.dislikes }} ({{ story.date }})
-                        {% if current_user.is_authenticated %}
-                            <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
-          	        	    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
-                                    {% if story.author.id != current_user.id %}
-                                         <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
-                                    {% endif %}
-                        {% endif %}
-                    </li>
-                {% else %}
-                    <li>
-                        "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes + 1 }} ({{ story.date }})
-                        {% if current_user.is_authenticated %}
-                            <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
-          	        	    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
-                                    {% if story.author.id != current_user.id %}
-                                         <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
-                                    {% endif %}
-                        {% endif %}
-                    </li>
-                {% endif %}
-            {% else %}
-                <li>
-                    "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})
-                    {% if current_user.is_authenticated %}
-                        <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
-          	    	    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
-                            
-                            {% if story.author.id != current_user.id %}
-                                 <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
-                            {% endif %}
-                    {% endif %}
-                </li>
-            {% endif %}
-        {% endfor %}
-    {% else %}
-        {% for story in stories: %}
-            <li>
-                "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})
-                {% if current_user.is_authenticated %}
-                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->
-          		    <a href="{{like_it_url}}{{story.id}}">Read this story</a>
-                            
-                            {% if story.author.id != current_user.id %}
-                                 <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>
-                            {% endif %}
-                {% endif %}
-            </li>
-        {% endfor %}
-    {% endif %}
-</ul>
-
-  <script>
+<script>
     function follow(user_id) {
-      fetch('/users/' + user_id + '/follow', { method: 'POST' })
-        .then(function(response) {
-          if (response.ok) {
-            alert('Now following user ' + user_id)
-          } else {
-            console.log('Invalid follow request to user: ' + user_id)
-          }
-        });
+        fetch('/users/' + user_id + '/follow', {method: 'POST'})
+            .then(function (response) {
+                if (response.ok) {
+                    alert('Now following user ' + user_id)
+                } else {
+                    console.log('Invalid follow request to user: ' + user_id)
+                }
+            });
     }
-  </script>
+
+    function deleteStory(story_id) {
+        fetch('/stories/' + story_id, {method: 'DELETE'})
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message)
+                window.location.replace('/stories');
+            });
+    }
+</script>
+<script>
+    function unfollow(id) {
+        fetch('/users/' + id + '/follow', {method: 'DELETE'})
+            .then(function (response) {
+                if (response.ok) {
+                    let name = $('#user_' + id + ' a').text()
+                    let alert = `
+              <div class="alert alert-info alert-dismissible fade show" role="alert">
+                ${name} unfollowed
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>`
+                    $('#user_' + id).html(alert)
+                } else {
+                    console.log('invalid unfollow operation')
+                }
+            })
+    }
+</script>
+<script>
+    $("#menu-toggle").click(function (e) {
+        e.preventDefault();
+        $("#wrapper").toggleClass("toggled");
+        if (!$("#wrapper").hasClass("toggled")) {
+            $("#menu-toggle").addClass("toggled");
+            $("#menu-toggle").addClass("fa-angle-left");
+            $("#menu-toggle").removeClass("fa-angle-right");
+        } else {
+            $("#menu-toggle").removeClass("toggled");
+            $("#menu-toggle").removeClass("fa-angle-left");
+            $("#menu-toggle").addClass("fa-angle-right");
+        }
+
+    });
+
+</script>
 
 </body>
 </html>

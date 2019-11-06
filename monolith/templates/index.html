@@ -1,63 +1,112 @@
 <html>
 
 <head>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-            crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-            crossorigin="anonymous"></script>
+    {% include 'html_components/bootstrap.html' %}
+    <link href="static/css/story.css" rel="stylesheet"/>
 </head>
+
 <body>
 {% if current_user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">Storytellers</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
-            aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-        <ul class="navbar-nav">
-            <li class="nav-item active">
-                <a class="nav-link" href="/stories">Home </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/newStory">New Story</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">My Wall <span class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/followed">Followed users</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/logout">Logout ({{ current_user.firstname }})</a>
-            </li>
+    <!--Navigation bar-->
+    {% include 'html_components/nav.html' %}
+    <!--end of Navigation bar-->
+    <div class="container-fluid">
+    <div class="row">
 
-        </ul>
+        <div class="col-m"
     </div>
-</nav>
 
-  Hi {{ current_user.firstname }}! <a href="/logout">Logout</a>
+        <div class="jumbotron  bg-white">
+
+            {% if stories != []: %}
+                <div class="row flex-column-reverse flex-md-row">
+
+                    <!-- -------------- STORY LIST ------------- -->
+                    <div class="col-sm-6">
+
+                        <h2>Your Stories</h2>
+                        <hr class="style1">
+                        <br>
+                        {% for story in stories %}
+                            <div>
+                                <ul class="list-group">
+                                    {% if story.is_draft %}
+                                        {% include 'html_components/story_draft_template.html' %}
+                                    {% else %}
+                                        {% include 'html_components/story_template.html' %}
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+                    <!-- -------------- STATISTICS------------- -->
+                    <div class="col-sm-6">
+                        {% if stats != {}: %}
+
+                            <h2>Your Statistics</h2>
+                            <hr class="style1">
+                            <br>
+                            <div class="alert alert-primary" role="alert">
+                                You are an {{ "active" if stats['active'] else "inactive" }} user, since you
+                                {{ "don't" if not stats['active'] }} post a story in the last seven days
+                            </div>
 
 
-    <h2>Your Stories</h2>
-    {% for story in stories%}
-      <div>
-        <li>
-          {{story.text}} -- Likes:{{story.likes}}
-        </li>
-      </div>
-    {% endfor %}
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Number of published stories
+                                    <span class="badge badge-secondary badge-pill">{{ stats['stories'].number_of_stories }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Number of likes received
+                                    <span class="badge badge-secondary badge-pill">{{ stats['stories'].total_likes }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Avg likes per stories:
+                                    <span class="badge badge-secondary badge-pill">{{ stats['stories'].total_likes/stats['stories'].number_of_stories }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Number of dislikes received
+                                    <span class="badge badge-secondary badge-pill">{{ stats['stories'].total_dislikes }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Average of dice used
+                                    <span class="badge badge-secondary badge-pill">{{ stats['avg_dice'] }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Number of stories
+                                    <span class="badge badge-secondary badge-pill">{{ stats['stories_frequency'] }}</span>
+                                </li>
+                            </ul>
+                        {% else: %}
+                            <h2> No stats </h2>
+                        {% endif %}
+                    <br><br>
+                    </div>
+                </div>
+
+            {% else: %}
+                <h2> You haven't published stories yet </h2>
+            {% endif %}
 
 
-{% else %}
-  Hi Anonymous, <a href="/login">Log in</a> or <a href="/signup">Sign Up</a>
+        </div>
+    </div>
+
 {% endif %}
+
+<script>
+    function deleteStory(story_id) {
+        fetch('/stories/' + story_id, {method: 'DELETE'})
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message)
+                window.location.replace('/stories');
+            });
+    }
+</script>
+
 </body>
 </html>

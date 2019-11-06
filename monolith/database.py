@@ -1,7 +1,10 @@
 import datetime as dt
+import json
 from random import randint
 
 from flask_sqlalchemy import SQLAlchemy
+
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -67,11 +70,18 @@ class Story(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     text = db.Column(db.Text(1000))  # around 200 (English) words
     date = db.Column(db.DateTime)
+    is_draft = db.Column(db.Boolean, nullable=False, default=True)
 
-    likes = db.Column(db.Integer) # will store the number of likes, periodically updated in background
-    dislikes = db.Column(db.Integer) #will store the number of dislikes
-    # define foreign key 
+    # will store the number of likes, periodically updated in background
+    likes = db.Column(db.Integer)
+    # will store the number of dislikes
+    dislikes = db.Column(db.Integer)
 
+    theme = db.Column(db.Text(64))
+    _dice_set = db.Column(db.Text(100))
+
+    deleted = db.Column(db.Boolean, default=False)
+    # define foreign key
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', foreign_keys='Story.author_id')
 
@@ -79,16 +89,37 @@ class Story(db.Model):
         super().__init__(*args, **kw)
         self.date = dt.datetime.now()
 
+    @hybrid_property
+    def dice_set(self):
+        return json.loads(self._dice_set)
+
+    @dice_set.setter
+    def dice_set(self, dice_set):
+        self._dice_set = json.dumps(dice_set)
+
+    def toJSON(self):
+        """
+        Makes the class JSON serializable
+        """
+        return json.dumps({'id': self.id,
+                           'text': self.text,
+                           'date': str(self.date),
+                           'likes': self.likes,
+                           'dislikes': self.dislikes,
+                           'author_id': self.author_id})
+
+
 class Reaction(db.Model):
     __tablename__ = 'reaction'
-    
-    reactor_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    reactor_id = db.Column(db.Integer, db.ForeignKey('user.id'),
+                           primary_key=True)
     reactor = db.relationship('User', foreign_keys='Reaction.reactor_id')
 
-    story_id = db.Column(db.Integer, db.ForeignKey('story.id'), primary_key=True)
+    story_id = db.Column(db.Integer, db.ForeignKey('story.id'),
+                         primary_key=True)
     author = db.relationship('Story', foreign_keys='Reaction.story_id')
 
-    reaction_val = db.Column(db.Integer)	
+    reaction_val = db.Column(db.Integer)
 
-    marked = db.Column(db.Boolean, default = False) # True iff it has been counted in Story.likes 
-
+    # True iff it has been counted in Story.likes
+    marked = db.Column(db.Boolean, default=False)
