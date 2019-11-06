@@ -10,7 +10,7 @@ def test_signup(client, auth, database, templates):
 
     u = database.session.query(User).filter_by(username='prova').one()
     assert [u.username, u.email] == ['prova', 'prova@prova.com']
-    
+
     client.get('/logout')
 
     reply = auth.signup('prova@prova.com', 'prova', 'prova123')
