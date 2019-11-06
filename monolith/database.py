@@ -116,7 +116,7 @@ class Story(db.Model):
 
 class Reaction(db.Model):
     '''
-    Models the "reaction" relationship to 
+    Models the "reaction" relationship from a user to a story.
     '''
     __tablename__ = 'reaction'
     reactor_id = db.Column(db.Integer, db.ForeignKey('user.id'),
