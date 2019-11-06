@@ -20,12 +20,31 @@ stories = Blueprint('stories', __name__)
 @stories.route('/new_story', methods=['GET'])
 @login_required
 def _newstory():
+    '''
+    Prepares the initialization of the new story.
+
+    Returns:
+        200 -> a form which enables the user to start a new story with a
+                given dice set (theme and #dice)
+    '''
     return render_template('new_story.html', diceset=get_dice_sets_list())
 
 
 @stories.route('/roll_dice', methods=['GET'])
 @login_required
 def _rollDice():
+    '''
+    Rolls the dice and enables the user to start writing a story.
+
+    Raises:
+        Exception: due to eventual failures during the commit of the
+            created story into the database.
+
+    Returns:
+        302 -> the user is redirected to the page in which he/she can
+                start writing the story on the faces which came out.
+    '''
+
     diceset = request.args.get('diceset', 'standard')
     dicenum = request.args.get('dicenum', 6, type=int)
 
@@ -51,6 +70,21 @@ def _rollDice():
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
+    '''
+    Returns a list of stories depending on the query parameters.
+
+    1) from/to query parameters: the user specifies from which time frame he/she
+        wants the stories;
+    2) theme query parameter: the user specifies the theme of the dice set used in the
+        stories.
+    
+    Raises:
+        1) ValueError: the date format is not valid
+
+    Returns:
+        1) 200 -> the list of the stories in the chosen time frame
+        2) 200 -> the list of the stories of the last 5 days about the chosen theme
+    '''
     stories = Story.query.filter_by(deleted=False, is_draft=False)
     stories = stories.order_by(Story.date.desc())
     # check for query parameters
@@ -97,6 +131,17 @@ def _stories(message='', marked=True, id=0, react=0):
 
 @stories.route('/stories/random_story', methods=['GET'])
 def _get_random_recent_story(message=''):
+    '''
+    Gets a random recent story. 
+    
+    It is checked whether there are stories written
+    in the last 24 hours: if there exists a random one of them is returned, otherwise
+    a random story from the database is returned.
+
+    Returns:
+        200 -> a random story chosen with the criteria described above. 
+    '''
+
     stories = Story.query.filter_by(deleted=False, is_draft=False)
     recent_story = []
 
@@ -144,6 +189,13 @@ def _get_random_recent_story(message=''):
 @stories.route('/stories/<storyid>', methods=['GET'])
 @login_required
 def _get_story(storyid):
+    '''
+    Gets the story with id <storyid>.
+
+    Returns:
+        404 -> no available story with id <storyid> has been found
+        200 -> a story has been found and it is returned to the user
+    '''
     q = Reaction.query.filter_by(reactor_id=current_user.id,
                                  story_id=storyid).one_or_none()
     s = Story.query.get(storyid)
@@ -151,6 +203,8 @@ def _get_story(storyid):
     if s is None:
         abort(404)
 
+    # This check allows to count also the user's reaction even if celery
+    # has not updated it yet.
     if q is not None and not q.marked:
         if q.reaction_val == 1:
             s.likes += 1
@@ -162,6 +216,16 @@ def _get_story(storyid):
 @stories.route('/stories/<storyid>/react', methods=['POST'])
 @login_required
 def _post_story_react(storyid):
+    '''
+    Sets a reaction to the story with id <storyid>.
+
+    The reactions are handled as tasks from celery, allowing an asynchronous
+    update of the database.
+
+    Returns:
+        200 -> the reaction has been set correctly
+        400 -> a reaction to the story was already set by the user
+    '''
     s = Story.query.get(storyid)
 
     if s is None:

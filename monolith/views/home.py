@@ -17,6 +17,15 @@ home = Blueprint('home', __name__)
 @home.route('/')
 @login_required
 def index():
+    '''
+    Calls the main page of the application.
+
+    Returns:
+        200 -> the user's homepage if a user was logged in.  The user's homepage
+            is filled with the user's stories ordered by date and with the user's
+            statistics.
+        200 -> the application's welcome page if no user was logged in
+    '''
     stats = {}
     message = ''
 
