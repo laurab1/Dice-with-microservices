@@ -136,9 +136,28 @@ class StoryActions:
             story_text = text
         
         return self._client.post(f'/stories/{id}/edit', data={'text': story_text})
-    
+
+    def get_all_stories(self):
+        return self._client.get('/stories')
+
     def get_story(self, id):
         return self._client.get('/stories/'+str(id))
+    
+    def get_random_recent_story(self):
+        return self._client.get('/stories/random_story')
+
+    def get_ranged_stories(self, from_date_str, to_date_str):
+        return self._client.get('/stories/?from='+from_date_str+'&to='+to_date_str)
+    
+    def delete_story(self, id):
+        return self._client.delete('/stories/'+str(id))
+    
+    def post_like_reaction(self, id):
+        return self._client.post('/stories/'+str(id)+'/react', data={'like': 'Like it!'})
+
+    def post_dislike_reaction(self, id):
+        return self._client.post('/stories/'+str(id)+'/react', data={'dislike': 'Dislike it!'})
+
 
 @pytest.fixture
 def story_actions(app, client, templates):
