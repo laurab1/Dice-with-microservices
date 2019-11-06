@@ -121,12 +121,16 @@
         var input1 = document.getElementById("start");
         var input2 = document.getElementById("end");
 
+        //if true, applies filtering
         if(input1.value){
             if(!input2.value){
                 input2.value = input1.value
             }
 
             window.location.replace("/stories?from="+input1.value+"&to="+input2.value); 
+        }
+        else{ //no filtering
+            window.location.replace("/stories"); 
         }
     }
 

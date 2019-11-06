@@ -125,6 +125,14 @@ def test_ranged_stories(client, templates, init_database):
     assert stories.count() == 1
     assert stories[0].id == 2
 
+    # from date < to_date
+    reply = client.get('/stories?from=2019-1-1&to=2018-1-1')
+    assert reply.status_code == 200
+
+    message = templates[-1]['message']
+    stories = templates[-1]['stories']
+    assert message == 'Wrong date parameters (from-date greater than to-date or viceversa)!'
+    assert stories == []
     # nothing found
     reply = client.get('/stories?from=2015-12-1&to=2017-1-1')
     assert reply.status_code == 200

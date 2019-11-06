@@ -70,16 +70,20 @@ def _stories(message='', marked=True, id=0, react=0):
             except ValueError:
                 message = 'INVALID date in query parameters: use yyyy-mm-dd'
             else:  # successful try!
-                #because datetime starts from 12pm!
+                #checks for edge cases
                 if from_dt == to_dt:
-                    to_dt = to_dt + dt.timedelta(days=1)
-
-                # query the database with the given values
-                stories = stories.group_by(Story.date) \
-                    .having(Story.date >= from_dt) \
-                    .having(Story.date <= to_dt)
-                if stories.count() == 0:
-                    message = 'no stories with the given dates'
+                    to_dt = from_dt + dt.timedelta(days=1)
+                
+                if from_dt > to_dt:
+                    message = 'Wrong date parameters (from-date greater than to-date or viceversa)!'
+                    stories = []
+                else:
+                    # query the database with the given values
+                    stories = stories.group_by(Story.date) \
+                        .having(Story.date >= from_dt) \
+                        .having(Story.date <= to_dt)
+                    if stories.count() == 0:
+                        message = 'no stories with the given dates'
         elif theme is not None:
             t_delta = dt.datetime.now() - dt.timedelta(days=5)
             stories = stories.filter(Story.date >= t_delta)
