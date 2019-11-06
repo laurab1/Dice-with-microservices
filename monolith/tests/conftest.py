@@ -5,7 +5,7 @@ import tempfile
 from flask import template_rendered
 
 from monolith.app import create_app
-from monolith.database import User, db
+from monolith.database import User, Story, db
 
 import pytest
 
@@ -111,12 +111,39 @@ class AuthActions:
         """Sends a logout request."""
         return self._client.get('/logout')
 
-
 @pytest.fixture
 def auth(app, client):
     """Provides login/logout capabilities."""
     return AuthActions(app, client)
 
+class StoryActions:
+    """Class for story management."""
+    def __init__(self, app, client, templates):
+        self._app = app
+        self._client = client
+        self._templates = templates
+    
+    def roll_dice(self):
+        return self._client.get('/roll_dice', follow_redirects=True)
+     
+    def add_story_text(self, id, roll, text=None):
+        story_text = ''
+
+        if text is None:
+            for i in range(len(roll)):
+                story_text = story_text + roll[i] + ' '
+        else:
+            story_text = text
+        
+        return self._client.post(f'/stories/{id}/edit', data={'text': story_text})
+    
+    def get_story(self, id):
+        return self._client.get('/stories/'+str(id))
+
+@pytest.fixture
+def story_actions(app, client, templates):
+    """Provides login/logout capabilities."""
+    return StoryActions(app, client, templates)
 
 @pytest.fixture
 def templates(app):
