@@ -15,6 +15,12 @@ users = Blueprint('users', __name__)
 @users.route('/users')
 @login_required
 def users_():
+    '''
+    Provides the list of all the users with their last story (if any).
+
+    Returns:
+        200 -> read above
+    '''
     res = db.session.query(User.username, Story.text, func.max(Story.date)) \
             .outerjoin(Story).group_by(User.id).all()
     return render_template('users.html', result=res)
@@ -23,6 +29,12 @@ def users_():
 @users.route('/users/<user_id>')
 @login_required
 def get_user(user_id):
+    '''
+    Opens the wall of the user with id <user_id>.
+
+    Returns:
+        200 -> the user's wall with the list of all his/her posted stories
+    '''
     us = db.session.query(User).get(user_id)
     if us is None:
         abort(404, f'User {user_id} does not exist')

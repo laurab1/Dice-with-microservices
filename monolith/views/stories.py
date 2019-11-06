@@ -36,6 +36,8 @@ def _rollDice():
     '''
     Rolls the dice and enables the user to start writing a story.
 
+    The story is created as a draft, so that it can be edited.
+
     Raises:
         Exception: due to eventual failures during the commit of the
             created story into the database.
@@ -273,6 +275,22 @@ def _post_story_react(storyid):
 @stories.route('/stories/<storyid>', methods=['DELETE'])
 @login_required
 def _deleteStory(storyid):
+    '''
+    Deletes a story.
+
+    The deletion is implemented with a flag into the Story object which determines
+    whether or not the story has been deleted by the user. This has been done in order
+    to maintain coherency of the statistics of the user.
+
+    Raises:
+        Exception: the commit of the story with the modified flag has failed
+    
+    Returns:
+        500 -> the exception above has been raised
+        404 -> the story with id <storyid> was not found
+        403 -> the user is not the owner of the story
+        200 -> the deletion was succesful
+    '''
     story = Story.query.get(storyid)
     if story is None:
         abort(404, f'Story {storyid} not found')  # story not found
@@ -296,6 +314,36 @@ def _deleteStory(storyid):
 @stories.route('/stories/<storyid>/edit', methods=['GET', 'POST'])
 @login_required
 def _story_edit(storyid):
+    '''
+    GET
+    ---
+    Opens the draft with id <storyid> in edit mode.
+    
+    Returns:
+        404 -> the story was not found
+        401 -> the user is not the author of the story
+        403 -> the story has been posted and it is not a draft anymore
+        410 -> the story was deleted
+        200 -> provides the story in edit mode
+
+
+    POST
+    ----
+    Posts the draft with id <storyid> as a completed story.
+
+    If the operation is succesful, the story is not editable anymore.
+
+    Raises:
+        NotValidStoryError -> some of the words (or synonyms) representing the faces
+            of the rolled dice were missing in the story, so it has been rejected
+    
+    Returns:
+        404 -> the story was not found
+        401 -> the user is not the author of the story
+        403 -> the story has been posted and it is not a draft anymore
+        410 -> the story was deleted
+        200 -> the story has been submitted correctly
+    '''
     story = db.session.query(Story).get(storyid)
     if story is None:
         abort(404, f'Story {storyid} not found')
