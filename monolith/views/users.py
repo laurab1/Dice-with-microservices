@@ -36,7 +36,7 @@ def signup():
     form = UserForm()
     status = 200
 
-	if current_user.is_authenticated:
+    if current_user.is_authenticated:
         return redirect('/')
 
     if form.validate_on_submit():

@@ -14,7 +14,7 @@ def login():
     form = LoginForm()
     form.password.errors = []
 
-	if current_user.is_authenticated:
+    if current_user.is_authenticated:
         return redirect('/')
 
     if form.validate_on_submit():
