@@ -96,7 +96,7 @@ def follow(user_id):
 
 def get_followed_dict(user_id):
     me = User.query.get(user_id)
-    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id}
+    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id, 'username': x.username}
              for x in me.follows]
     return {'users': users}
 
