@@ -10,7 +10,8 @@
                 <h5 class="story-text">
                     <span class="badge badge-warning badge-pill">Draft</span> <b>{{ story.text }}</b>
                 </h5>
-                <br> ({{ story.date }})
+                <span style="margin-right: 1rem;">Published: <i>{{ story.date.day }}/{{ story.date.month }}/{{ story.date.year }}</i></span>
+
                 </p >
 
                 <i class="fas fa-thumbs-up"></i> <span

@@ -47,3 +47,28 @@
     background-image: url('../img/draft-pattern.jpg');
     background-repeat: no-repeat;
 }
+
+.centerblock {
+    margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+
+    .centerblock {
+        margin-top: 5rem;
+    }
+
+}
+
+hr.style1 {
+    border-top: 1px solid #8c8b8b;
+}
+
+hr.style2 {
+  border: 0;
+  height: 1px;
+  background-image: -webkit-linear-gradient(left, #21262b, #818f94, #21262b);
+  background-image: -moz-linear-gradient(left,  #21262b, #818f94, #21262b);
+  background-image: -ms-linear-gradient(left, #21262b, #818f94, #21262b);
+  background-image: -o-linear-gradient(left,  #21262b, #818f94, #21262b);
+}
