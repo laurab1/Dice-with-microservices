@@ -11,6 +11,10 @@ from monolith.database import User, db
 
 def create_app(test=False, database='sqlite:///storytellers.db',
                login_disabled=False):
+    '''
+    Prepares initializes the application and its utilities.
+    '''
+    
     app = Flask(__name__)
     Bootstrap(app)
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
@@ -28,10 +32,11 @@ def create_app(test=False, database='sqlite:///storytellers.db',
         app.config['WTF_CSRF_ENABLED'] = False
         app.config['CELERY_ALWAYS_EAGER'] = True
 
-    # initialize Celery
+    # Celery initialization
     celery = celeryapp.create_celery_app(app)
     celeryapp.celery = celery
 
+    # Initialization of the DB and login manager
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = '/login'
@@ -42,7 +47,8 @@ def create_app(test=False, database='sqlite:///storytellers.db',
     for bp in blueprints:
         app.register_blueprint(bp)
         bp.app = app
-
+    
+    # Registration of the error handlers
     from monolith.views import errors
     app.register_error_handler(400, errors.bad_request)
     app.register_error_handler(401, errors.unauthorized)
@@ -50,7 +56,7 @@ def create_app(test=False, database='sqlite:///storytellers.db',
     app.register_error_handler(404, errors.page_not_found)
     app.register_error_handler(410, errors.gone)
 
-    # create a first admin user
+    # Creation of an admin user
     with app.app_context():
         q = db.session.query(User).filter(User.email == 'example@example.com')
         user = q.first()

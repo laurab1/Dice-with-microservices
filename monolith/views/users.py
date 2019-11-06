@@ -153,5 +153,11 @@ def get_followed_dict(user_id):
 @users.route('/followed', methods=['GET'])
 @login_required
 def get_followed():
+    '''
+    Gets the list of the current user's followers.
+
+    Returns:
+        200 -> the list has been returned correctly
+    '''
     template_dict = get_followed_dict(current_user.id)
     return render_template('followed.html', **template_dict)

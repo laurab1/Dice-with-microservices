@@ -9,9 +9,13 @@ from monolith.database import Reaction, Story, db
 celery = celeryapp.celery
 
 
-# celery task to run asynchronously
+# Celery task to run asynchronously
 @celery.task
 def add_reaction(reactorid, storyid, react):
+    '''
+    Performs the add of a reaction to a user's story.
+    '''
+
     # Without this two lines testing raises DetachedInstanceError
     # No explanation still found
     if app.config['TESTING']:
@@ -32,6 +36,10 @@ def add_reaction(reactorid, storyid, react):
 # another celery task to remove an old reaction
 @celery.task
 def remove_reaction(storyid, react):
+    '''
+    Performs the removal of a reaction to a user's story.
+    '''
+
     # Without this two lines testing raises DetachedInstanceError
     # No explanation still found
     if app.config['TESTING']:
