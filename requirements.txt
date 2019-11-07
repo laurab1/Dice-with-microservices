@@ -9,3 +9,4 @@ flask_bootstrap
 requests
 blinker
 aiosmtpd
+pyTelegramBotAPI

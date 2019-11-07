@@ -6,6 +6,7 @@ from flask import Flask
 
 from flask_bootstrap import Bootstrap
 
+from monolith.utility.telebot import create_bot
 from monolith import celeryapp
 from monolith.auth import login_manager
 from monolith.database import User, db
@@ -41,6 +42,8 @@ def create_app(test=False, database='sqlite:///storytellers.db',
         }
     }
 
+    app.config['TELEBOT'] = create_bot()
+    
     if test:
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
