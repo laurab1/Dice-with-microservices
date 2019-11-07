@@ -30,10 +30,24 @@ def app():
     os.unlink(db_path)
 
 
+class ClientFactory:
+
+    def __init__(self, app):
+        self._app = app
+
+    def get(self):
+        return self._app.test_client()
+
+
 @pytest.fixture
-def client(app):
+def client_factory(app):
+    return ClientFactory(app)
+
+
+@pytest.fixture
+def client(app, client_factory):
     """Builds a new test client instance."""
-    return app.test_client()
+    return client_factory.get()
 
 
 def _init_database(db):
