@@ -213,6 +213,35 @@ def get_story_actions(client, templates):
     """Provides stories related capabilities."""
     return StoryActions(client, templates)
 
+class UserActions:
+    """Class for user actions."""
+
+    def __init__(self, client, templates):
+        self._client = client
+        self._templates = templates
+
+    def follow_user(self, user_id):
+        return self._client.post(f'users/{user_id}/follow')
+
+    def unfollow_user(self, user_id):
+        return self._client.delete(f'users/{user_id}/follow')
+
+    def get_followed(self):
+        return self._client.get('/followed')
+
+    def get_user_wall(self, user_id):
+        return self._client.get(f'users/{user_id}')
+
+
+@pytest.fixture
+def user_actions(client, templates):
+    """Provides users related capabilities."""
+    return UserActions(client, templates)
+
+def get_user_actions(client, templates):
+    """Provides users related capabilities."""
+    return UserActions(client, templates)
+
 @pytest.fixture
 def templates(app):
     """Provides an array of captured templates. The last element in the array
