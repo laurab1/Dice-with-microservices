@@ -8,13 +8,13 @@ from flask_bootstrap import Bootstrap
 
 from monolith import celeryapp
 from monolith.auth import login_manager
-from monolith.database import User, db
-from monolith.utility.telebot import token, on_message
+from monolith.database import User, db, DATABASE_NAME
+from monolith.utility.telebot import token, on_start, on_login
 
-from telegram.ext import Updater, InlineQueryHandler, CommandHandler
+from telegram.ext import Updater, InlineQueryHandler, CommandHandler, MessageHandler, Filters
 import telegram
 
-def create_app(test=False, database='sqlite:///storytellers.db',
+def create_app(test=False, database=DATABASE_NAME,
                login_disabled=False):
     app = Flask(__name__)
     Bootstrap(app)
@@ -37,17 +37,20 @@ def create_app(test=False, database='sqlite:///storytellers.db',
     celery = celeryapp.create_celery_app(app)
     celeryapp.celery = celery
 
-    # initialize Telegram
-    updater = Updater(token, use_context = True)
-    
-    dp = updater.dispatcher
-    # function to be executed as soon as 
-    dp.add_handler(CommandHandler('start', on_message))
-    updater.start_polling()
-
+    # initilize Database
     db.init_app(app)
     login_manager.init_app(app)
     db.create_all(app=app)
+
+    # initialize Telegram
+    updater = Updater(token, use_context = True)
+    dp = updater.dispatcher
+
+    # Add functions to the dispatcher. 
+    # When a function such as start is launched on telegram it will run the corresponding function
+    dp.add_handler(CommandHandler('start', on_start))
+    dp.add_handler(CommandHandler('login', on_login))
+    updater.start_polling()
 
     # Required to avoid circular dependencies
     from monolith.views import blueprints
@@ -70,7 +73,7 @@ def create_app(test=False, database='sqlite:///storytellers.db',
             example.set_password('admin')
             db.session.add(example)
             db.session.commit()
-
+   
     return app
 
 
