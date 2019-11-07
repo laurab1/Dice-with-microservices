@@ -45,7 +45,7 @@
                 <div class="modal-body">
 
                     <!-- Search functionality-->
-                    <input type="text" id=sid placeholder="Search a story...">
+                    <input type="text" id=sid placeholder="Search a story by title...">
                     <br><br>
 
                     <!-- date picker-->
@@ -111,15 +111,10 @@
 
         function removeSet() {
             if (set_checked) {
-                $("#"+set_checked+"_set").removeClass("active")
-                $("[name=diceset]").filter("[value='"+set_checked+"']").prop("checked",false);
+                $("#" + set_checked + "_set").removeClass("active")
+                $("[name=diceset]").filter("[value='" + set_checked + "']").prop("checked", false);
                 set_checked = null;
             }
-        }
-
-        function search() {
-            let search = document.getElementById("sid").value
-            window.location.replace("/stories?q=" + search)
         }
 
         function random_story() {
@@ -152,6 +147,43 @@
 
             window.location.replace(query);
         }
+
+        <!-- Functions that get allow to get url parameters from the page-->
+        var getUrlParameter = function getUrlParameter(sParam) {
+            var sPageURL = window.location.search.substring(1),
+                sURLVariables = sPageURL.split('&'),
+                sParameterName,
+                i;
+
+            for (i = 0; i < sURLVariables.length; i++) {
+                sParameterName = sURLVariables[i].split('=');
+
+                if (sParameterName[0] === sParam) {
+                    return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+                }
+            }
+        };
+
+        <!-- when the page is ready set the parameters to the filter form-->
+        $(document).ready(function () {
+            let from = getUrlParameter('from')
+            let to = getUrlParameter('to')
+            let q = getUrlParameter('q')
+            let theme = getUrlParameter('theme')
+
+            if(from){
+                document.getElementById("start").value=from
+            }
+            if(to){
+                document.getElementById("end").value=to
+            }
+            if(q){
+                document.getElementById("sid").value=q
+            }
+            if(theme){
+                $("#" + theme+ "_set").click()
+            }
+        });
 
     </script>
     <script>
