@@ -145,10 +145,13 @@ def _get_random_recent_story(message=''):
             recent_story.append(stories.all()[i])
     else:
         message = 'no stories!'
+    
 
-    return render_template('stories.html', message=message,
-                           stories=recent_story,
-                           like_it_url='http://127.0.0.1:5000/stories/')
+    #if there are no recent stories, just show the "Stories" tab with the error message
+    if len(recent_story) == 0:
+        abort(404, message)
+    else:
+        return render_template('story.html', story=recent_story[0], message=message)
 
 
 @stories.route('/stories/<storyid>', methods=['GET'])

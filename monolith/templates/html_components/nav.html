@@ -40,6 +40,7 @@
         </style>
         <input type="text" id=sid placeholder="Search a story...">
         <button class="button" id=srcbtn onclick="search()">Search!</button>
+        <button class="button" id=rndbtn onclick="random_story()">Random recent story</button>
       </li>
     </ul>
   </div>
@@ -49,7 +50,12 @@
         var input = document.getElementById("sid")
         var storyid = input.value;
         window.location.replace("/stories/" + storyid);  
-    }  
+    } 
+
+    function random_story() {  
+        window.location.replace("/stories/random_story");  
+    }
+
   </script>
   <script>  
     var input = document.getElementById("sid")

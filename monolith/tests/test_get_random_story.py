@@ -38,7 +38,7 @@ def test_get_random_recent_story_1(client, database, templates):
     assert reply.status_code == 200
 
     template_context = templates[-1]
-    assert template_context['stories'][0].id == 1
+    assert template_context['story'].id == 1
     assert template_context['message'] == ''
 
 
@@ -82,10 +82,11 @@ def test_get_random_recent_story_2(client, database, templates):
 
     # story found
     reply = client.get('/stories/random_story')
+    print(reply)
     assert reply.status_code == 200
 
     template_context = templates[-1]
-    id = template_context['stories'][0].id
+    id = template_context['story'].id
     assert id == 1 or id == 3
     assert template_context['message'] == ''
 
@@ -135,7 +136,7 @@ def test_get_random_story(client, database, templates):
     assert reply.status_code == 200
 
     template_context = templates[-1]
-    id = template_context['stories'][0].id
+    id = template_context['story'].id
     message = template_context['message']
     assert id == 1 or id == 2
     assert message == 'no stories today. Here is a random one:'
@@ -144,8 +145,7 @@ def test_get_random_story(client, database, templates):
 def test_no_stories(client, templates):
     # story not found
     reply = client.get('/stories/random_story')
-    assert reply.status_code == 200
+    assert reply.status_code == 404
 
     template_context = templates[-1]
-    assert template_context['stories'] == []
     assert template_context['message'] == 'no stories!'
