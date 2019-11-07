@@ -1,5 +1,5 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <a class="navbar-brand" href="/">Storytellers</a>
+  <a class="navbar-brand" href="/stories">Storytellers</a>
 
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
     aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,6 +23,46 @@
       <li class="nav-item">
         <a class="nav-link" href="/logout">Logout ({{ current_user.firstname }})</a>
       </li>
+      <li class="nav-item" style="margin-left: auto; margin-right: 0cm;">
+        <style>
+          .button {
+            background-color: gray;
+            border: none;
+            color: white;
+            padding: 5px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+          }
+        </style>
+        <input type="text" id=sid placeholder="Search a story...">
+        <button class="button" id=srcbtn onclick="search()">Search!</button>
+        <button class="button" id=rndbtn onclick="random_story()">Random recent story</button>
+      </li>
     </ul>
   </div>
+
+  <script>  
+    function search() {  
+        let search = document.getElementById("sid").value
+        window.location.replace("/stories?q=" + search)
+    } 
+
+    function random_story() {  
+        window.location.replace("/stories/random_story");  
+    }
+
+  </script>
+  <script>  
+    var input = document.getElementById("sid")
+    input.addEventListener("keyup", function(event) {
+      if (event.key === 'Enter') {
+       event.preventDefault();
+       document.getElementById("srcbtn").click();
+      }
+    });
+  </script>
 </nav>
