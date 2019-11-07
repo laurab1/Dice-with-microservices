@@ -1,0 +1,74 @@
+.story-text {
+    /* hide text if it more than N lines  */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* for set '...' in absolute position */
+    position: relative;
+    /* use this value to count block height */
+    line-height: 1.2em;
+    /* max-height = line-height (1.2) * lines max number (3) */
+    max-height: 2.4em;
+    white-space: nowrap;
+}
+
+
+.full-page {
+    height: 90vh;
+    overflow-y: auto;
+}
+
+.navbar {
+    margin-bottom: 0px;
+}
+
+.mycard {
+    margin-bottom: 10px;
+    border-radius: 10px;
+    padding-bottom: 15px;
+}
+
+.halloween {
+    background-image: url('../img/halloween-pattern.jpg');
+    background-repeat: repeat;
+
+}
+
+.xmas {
+    background-image: url('../img/xmas-pattern.jpg');
+    background-repeat: repeat;
+}
+
+.standard {
+    background-image: url('../img/standard-pattern.jpg');
+    background-repeat: repeat;
+}
+
+.draft {
+    background-image: url('../img/draft-pattern.jpg');
+    background-repeat: no-repeat;
+}
+
+.centerblock {
+    margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+
+    .centerblock {
+        margin-top: 5rem;
+    }
+
+}
+
+hr.style1 {
+    border-top: 1px solid #8c8b8b;
+}
+
+hr.style2 {
+  border: 0;
+  height: 1px;
+  background-image: -webkit-linear-gradient(left, #21262b, #818f94, #21262b);
+  background-image: -moz-linear-gradient(left,  #21262b, #818f94, #21262b);
+  background-image: -ms-linear-gradient(left, #21262b, #818f94, #21262b);
+  background-image: -o-linear-gradient(left,  #21262b, #818f94, #21262b);
+}

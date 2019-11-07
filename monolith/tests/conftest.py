@@ -2,6 +2,9 @@ import datetime
 import os
 import tempfile
 
+from aiosmtpd.controller import Controller
+from aiosmtpd.handlers import Message
+
 from flask import template_rendered
 
 from monolith.app import create_app
@@ -89,8 +92,21 @@ class AuthActions:
         self._app = app
         self._client = client
 
+    def signup(self, email, username, password, firstname=None,
+               lastname=None, dateofbirth=None):
+        signup_data = {'email': email,
+                       'username': username,
+                       'password': password}
+        if firstname is not None:
+            signup_data.update({'firstname': firstname})
+        if lastname is not None:
+            signup_data.update({'lastname': lastname})
+        if dateofbirth is not None:
+            signup_data.update({'dateofbirth': dateofbirth})
+        return self._client.post('/signup', data=signup_data)
+
     def login(self, username='Admin', password='admin'):
-        """Sends a login request."""
+        """Sends a login request. By default logs in as admin."""
         return self._client.post('/login', data={
             'usrn_eml': username, 'password': password})
 
@@ -121,3 +137,37 @@ def templates(app):
         yield recorded
     finally:
         template_rendered.disconnect(record, app)
+
+
+class TestSMTPHandler(Message):
+    """Class for intercepted SMTP messages."""
+
+    def __init__(self, message_class=None):
+        super().__init__(message_class)
+        self._messages = []
+
+    def handle_message(self, message):
+        """When receives a new message, it appends the message to the queue."""
+        self._messages.append(message)
+
+    @property
+    def messages(self):
+        """Returns the queue of received messages."""
+        return self._messages
+
+    def reset(self):
+        """Deletes all the messages from the queue of received messages."""
+        self._messages = []
+
+
+@pytest.fixture
+def smtp_server():
+    """Provides an asynchronous SMTP server to test mail
+    delivering functionalities. Returns a controller that stores the received
+    messages.
+    """
+    handler = TestSMTPHandler()
+    controller = Controller(handler)
+    controller.start()
+    yield handler
+    controller.stop()

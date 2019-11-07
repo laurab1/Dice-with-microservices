@@ -80,7 +80,8 @@ class Story(db.Model):
     # will store the number of dislikes
     dislikes = db.Column(db.Integer)
 
-    _dice_set = db.Column(db.Text(100))
+    theme = db.Column(db.Text(64))
+    _dice_set = db.Column(db.Text(100), nullable=False)
 
     deleted = db.Column(db.Boolean, default=False)
     # define foreign key
@@ -98,17 +99,6 @@ class Story(db.Model):
     @dice_set.setter
     def dice_set(self, dice_set):
         self._dice_set = json.dumps(dice_set)
-
-    def toJSON(self):
-        """
-        Makes the class JSON serializable
-        """
-        return json.dumps({'id': self.id,
-                           'text': self.text,
-                           'date': str(self.date),
-                           'likes': self.likes,
-                           'dislikes': self.dislikes,
-                           'author_id': self.author_id})
 
 
 class Reaction(db.Model):

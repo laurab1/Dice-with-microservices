@@ -1,9 +1,9 @@
 import datetime as dt
 from random import randint
 
-from flask import Blueprint, abort
+from flask import Blueprint, abort, url_for
 from flask import jsonify, redirect, render_template, request
-from flask import current_app as app
+
 from flask_login import current_user, login_required
 
 from monolith.classes.DiceSet import DiceSet
@@ -14,98 +14,110 @@ from monolith.utility.diceutils import get_dice_sets_list
 from monolith.utility.validate_story import NotValidStoryError, _check_story
 
 from monolith.utility.telebot import send_telegram_message
+from monolith.views.users import get_followed_dict
 
 stories = Blueprint('stories', __name__)
 
 
-@stories.route('/newStory', methods=['GET'])
+@stories.route('/new_story', methods=['GET'])
 @login_required
 def _newstory():
     return render_template('new_story.html', diceset=get_dice_sets_list())
 
 
-@stories.route('/rollDice', methods=['GET'])
+@stories.route('/roll_dice', methods=['GET'])
 @login_required
 def _rollDice():
-    diceset = ('standard' if request.args.get('diceset') is None
-               else request.args.get('diceset'))
-    dicenum = (6 if request.args.get('dicenum') is None
-               else int(request.args.get('dicenum')))
+    diceset = request.args.get('diceset', 'standard')
+    dicenum = request.args.get('dicenum', 6, type=int)
 
     try:
         dice = DiceSet(diceset, dicenum)
         roll = dice.throw_dice()
         story = Story()
         story.text = ''
+        story.theme = diceset
         story.likes = 0
         story.dislikes = 0
         story.dice_set = roll
         story.author_id = current_user.id
         db.session.add(story)
         db.session.commit()
-    except Exception:
+    except Exception as e:
+        print(e)
         db.session.rollback()
         abort(400)
 
-    return redirect(f'/stories/{story.id}/edit')
+    return redirect(url_for('stories._story_edit', storyid=story.id))
 
-
-@stories.route('/stories/<storyid>', methods=['DELETE'])
-@login_required
-def _deleteStory(storyid):
-    story = Story.query.get(storyid)
-    if story is None:
-        abort(404) #story not found
-    else:
-        if story.deleted == True:
-            return jsonify(error='This story was already deleted'), 400
-        else:
-            message = ''
-            if story.author_id != current_user.id:
-                abort(403) #unauthorized request
-            story.deleted = True
-            try:
-                db.session.commit()
-                return jsonify(message='The story was succesfully deleted')
-            except Exception as e:
-                return jsonify(message='Your story could not be deleted'), 500
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
-    stories = []
-    #check for query parameters
-    if len(request.args) != 0:
-        from_date = request.args.get('from')
-        to_date = request.args.get('to')
+    stories = Story.query.filter_by(deleted=False, is_draft=False)
+    stories = stories.order_by(Story.date.desc())
 
-        #check if the query parameters from and to
-        if from_date is not None and to_date is not None:
-            from_dt = None
-            to_dt = None
-
-            #check if the values are valid
-            try:
-                from_dt = dt.datetime.strptime(from_date, '%Y-%m-%d')
-                to_dt = dt.datetime.strptime(to_date, '%Y-%m-%d')
-            except ValueError as _:
-                message = "INVALID date in query parameters: use yyyy-mm-dd"
-            else: #successful try!
-                #query the database with the given values
-                stories = db.session.query(Story).group_by(Story.date).having(Story.date >= from_dt).having(Story.date <= to_dt).filter_by(deleted=False)
-
-                if stories.count() == 0:
-                    message='no stories with the given dates'
-
-        else:
-            message = 'WRONG QUERY parameters: you have to specify the date range as from=yyyy-mm-dd&to=yyyy-mm-dd!'
+    if stories.count() == 0:
+        message = 'no stories'
     else:
-        stories = db.session.query(Story).filter_by(deleted=False)
-    return render_template("stories.html", message=message, stories=stories,
-                           like_it_url="http://127.0.0.1:5000/stories/", storyid=id, react=react)
+        # check for query parameters
+        if len(request.args) != 0:
+            from_date = request.args.get('from')
+            to_date = request.args.get('to')
+            theme = request.args.get('theme')
+            query = request.args.get('q')
+            # check if the query parameters from and to
+            if from_date is not None and to_date is not None:
+                from_dt = None
+                to_dt = None
+
+                # check if the values are valid
+                try:
+                    from_dt = dt.datetime.strptime(from_date, '%Y-%m-%d')
+                    to_dt = dt.datetime.strptime(to_date, '%Y-%m-%d')
+                except ValueError:
+                    message = 'INVALID date in query parameters: use yyyy-mm-dd'
+                else:  # successful try!
+                    # checks for edge cases
+                    if from_dt == to_dt:
+                        to_dt = from_dt + dt.timedelta(days=1)
+
+                    if from_dt > to_dt:
+                        message = 'Wrong date parameters (from-date greater ' \
+                                'than to-date or viceversa)!'
+                        stories = []
+                    else:
+                        # query the database with the given values
+                        stories = stories.group_by(Story.date) \
+                            .having(Story.date >= from_dt) \
+                            .having(Story.date <= to_dt)
+                        if stories.count() == 0:
+                            message = 'no stories with the given dates'
+
+            if theme is not None:
+                t_delta = dt.datetime.now() - dt.timedelta(days=5)
+                stories = stories.filter(Story.date >= t_delta)
+                stories = stories.filter(Story.theme == theme)
+
+            if query is not None:
+                words = query.split(' ')
+                for word in words:
+                    # search for single words, case insensitive
+                    stories = stories.filter(Story.text.ilike(f'%{word}%'))
+
+    # get following users if logged
+    if current_user.is_authenticated:
+        template_dict = get_followed_dict(current_user.id)
+    else:
+        template_dict = {}
+
+    return render_template('stories.html', message=message, stories=stories,
+                           like_it_url='http://127.0.0.1:5000/stories/',
+                           storyid=id, react=react, **template_dict)
+
 
 @stories.route('/stories/random_story', methods=['GET'])
 def _get_random_recent_story(message=''):
-    stories = db.session.query(Story)  # .order_by(Story.date.desc())
+    stories = Story.query.filter_by(deleted=False, is_draft=False)
     recent_story = []
 
     if stories.first() is not None:
@@ -138,71 +150,106 @@ def _get_random_recent_story(message=''):
             message = 'no stories today. Here is a random one:'
             # (randint returns a fixed value when using pytest, but works fine
             # in reality)
-            i = randint(1, stories.count() - 1)
+            i = randint(0, stories.count() - 1)
 
-            recent_story.append(stories.get(i))
+            recent_story.append(stories.all()[i])
     else:
         message = 'no stories!'
 
-    return render_template('stories.html', message=message,
-                           stories=recent_story,
-                           like_it_url='http://127.0.0.1:5000/stories/')
+
+    #if there are no recent stories, just show the "Stories" tab with the error message
+    if len(recent_story) == 0:
+        abort(404, message)
+    else:
+        return render_template('story.html', story=recent_story[0], message=message)
 
 
-@stories.route('/stories/<storyid>', methods=['GET', 'POST'])
+@stories.route('/stories/<storyid>', methods=['GET'])
 @login_required
 def _get_story(storyid):
-    q = Reaction.query.filter_by(reactor_id=current_user.id, story_id=storyid)
-    message = ''
+    q = Reaction.query.filter_by(reactor_id=current_user.id,
+                                 story_id=storyid).one_or_none()
+    s = Story.query.get(storyid)
 
-    if request.method == 'GET':
-        thisstory = db.session.query(Story).filter_by(id=storyid)
+    if s is None:
+        abort(404, f'Story {storyid} not found')
+    if s.deleted:
+        abort(410, f'Story {storyid} was deleted')
+    if s.author_id != current_user.id and s.is_draft:
+        abort(403)  # unauthorized request
 
-        if thisstory.first() is None:
-            message = 'story not found!'
-            return _stories(message)
-
-        if q.first() is not None and not q.first().marked:
-            if q.first().reaction_val == 1:
-                return render_template('story.html', stories=thisstory,
-                                       marked=False, val=1)
-            else:
-                return render_template('story.html', stories=thisstory,
-                                       marked=False, val=-1)
+    if q is not None and not q.marked:
+        if q.reaction_val == 1:
+            s.likes += 1
         else:
-            return render_template('story.html', stories=thisstory)
+            s.dislikes += 1
+    return render_template('story.html', story=s)
 
-    if request.method == 'POST':
-        react = 0
-        if 'like' in request.form:
-            react = 1
-        else:
-            react = -1
-        if q.first() is None or react != q.first().reaction_val:
-            if q.first() is not None and react != q.first().reaction_val:
-                # remvoe the old reaction if the new one has different value
-                if q.first().marked:
-                    remove_reaction.delay(storyid, q.first().reaction_val)
-                db.session.delete(q.first())
-                db.session.commit()
-            new_reaction = Reaction()
-            new_reaction.reactor_id = current_user.id
-            new_reaction.story_id = storyid
-            new_reaction.reaction_val = react
-            # new_like.liked_id = authorid
-            db.session.add(new_reaction)
+
+@stories.route('/stories/<storyid>/react', methods=['POST'])
+@login_required
+def _post_story_react(storyid):
+    s = Story.query.get(storyid)
+
+    if s is None:
+        abort(404, f'Story {storyid} not found')
+    if s.deleted:
+        abort(410, f'Story {storyid} was deleted')
+    if s.is_draft:
+        abort(403)
+
+    q = Reaction.query.filter_by(reactor_id=current_user.id,
+                                 story_id=storyid).one_or_none()
+
+    react = 1 if 'like' in request.form else -1
+    removed = False
+    if q is None or react != q.reaction_val:
+        if q is not None and react != q.reaction_val:
+            # remove the old reaction if the new one has different value
+            if q.marked:
+                print(current_user.id)
+                remove_reaction.delay(storyid, q.reaction_val)
+                removed = True
+            db.session.delete(q)
             db.session.commit()
-            db.session.refresh(new_reaction)
-            message = 'Got it!'
-            add_reaction.delay(current_user.id, storyid, react)
-            # votes are registered asynchronously by celery tasks
-        else:
-            if react == 1:
-                message = 'You\'ve already liked this story!'
-            else:
-                message = 'You\'ve already disliked this story!'
+        new_reaction = Reaction()
+        new_reaction.reactor_id = current_user.id
+        new_reaction.story_id = storyid
+        new_reaction.reaction_val = react
+        db.session.add(new_reaction)
+        db.session.commit()
+        db.session.refresh(new_reaction)
+        # votes are registered asynchronously by celery tasks
+        add_reaction.delay(current_user.id, storyid, react)
+        message = 'Reaction registerd' if not removed else 'Reaction updated'
+        return jsonify(message=message)
 
-        return _stories(message, False, storyid, react)
+    if react == 1:
+        return jsonify(error='You\'ve already liked this story!'), 400
+    return jsonify(error='You\'ve already disliked this story!'), 400
+
+
+@stories.route('/stories/<storyid>', methods=['DELETE'])
+@login_required
+def _deleteStory(storyid):
+    story = Story.query.get(storyid)
+    if story is None:
+        abort(404, f'Story {storyid} not found')  # story not found
+
+    if story.deleted:
+        return jsonify(error='This story was already deleted'), 400
+
+    if story.author_id != current_user.id:
+        abort(403)  # unauthorized request
+
+    story.deleted = True
+    try:
+        db.session.commit()
+        return jsonify(message='The story was succesfully deleted')
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        return jsonify(message='Your story could not be deleted'), 500
 
 
 @stories.route('/stories/<storyid>/edit', methods=['GET', 'POST'])
@@ -210,32 +257,34 @@ def _get_story(storyid):
 def _story_edit(storyid):
     story = db.session.query(Story).get(storyid)
     if story is None:
-        abort(404)
+        abort(404, f'Story {storyid} not found')
     if story.author_id != current_user.id:
-        abort(401)
+        abort(401, f'You must be the author of story {storyid} to edit')
     if not story.is_draft:
-        abort(403)
+        abort(403, f'Story {storyid} cannot be edited')
+    if story.deleted:
+        abort(410, f'Story {storyid} was deleted')
 
-    if request.method == 'POST':
-        form = StoryForm()
-        if form.validate_on_submit():
-            form.populate_obj(story)
-            if not story.is_draft:
-                try:
-                    _check_story(story.dice_set, story.text)
-                except NotValidStoryError:
-                    return jsonify(error='Your story is not valid'), 400
+    form = StoryForm()
+    if form.validate_on_submit():
+        form.populate_obj(story)
+        if not story.is_draft:
+            try:
+                _check_story(story.dice_set, story.text)
+                db.session.commit()
+                # Send telegram message
+                send_telegram_message(story, current_user.id)
+                return redirect(url_for('stories._get_story', storyid=storyid))
+            except NotValidStoryError:
+                db.session.rollback()
+                form.text.errors.append('The story is not valid.')
+        else:
             db.session.commit()
-            # Send telegram message
-            send_telegram_message(story, current_user.id)
-            return redirect(f'/stories/{storyid}')
-        return jsonify(error='Your story is too long or data is missing.'), 400
+            return redirect(url_for('stories._get_story', storyid=storyid))
 
     if request.method == 'GET':
-        form = StoryForm()
         form.text.data = story.text
         form.is_draft.data = story.is_draft
-        return render_template('edit_story.html', story_id=storyid,
-                               dice=story.dice_set, form=form)
 
-    abort(501)
+    return render_template('edit_story.html', story_id=storyid,
+                           dice=story.dice_set, form=form)

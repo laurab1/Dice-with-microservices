@@ -16,9 +16,9 @@ def create_celery_app(app=None):
         application context.
         """
         def __call__(self, *args, **kwargs):
-            if not celery.conf.CELERY_ALWAYS_EAGER:
-                with app.app_context():
-                    return TaskBase.__call__(self, *args, **kwargs)
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+
 
     celery.Task = ContextTask
     return celery

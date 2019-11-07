@@ -1,5 +1,4 @@
 from monolith.classes.DiceSet import DiceSet
-from monolith.utility.diceutils import *
 from monolith.utility.validate_story import NotValidStoryError, _check_story
 
 import pytest
@@ -37,7 +36,8 @@ def test_correct_story_with_punctuation():
 
 def test_correct_story_with_parentesys():
     roll = ['table', 'window', 'cat', 'chair']
-    story = 'The cat is on the table and...the chair, I think, is near the window:)'
+    story = 'The cat is on the table and...the chair, I think, is near the ' \
+        'window:)'
     _check_story(roll, story)
 
 

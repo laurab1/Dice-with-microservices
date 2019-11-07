@@ -1,11 +1,17 @@
 from monolith.database import Story
-import json
+from sqlalchemy import desc
+
+def test_new_story_selection(client, auth):
+    auth.login()
+    # new story page
+    reply = client.get('/new_story')
+    assert reply.status_code == 200
 
 
 def test_new_story(client, auth, database, templates):
-    auth.login('Admin', 'admin')
+    auth.login()
 
-    reply = client.get('/rollDice', follow_redirects=True)
+    reply = client.get('/roll_dice', follow_redirects=True)
     assert reply.status_code == 200
     new_id = templates[-1]['story_id']
     story = database.session.query(Story).get(new_id)
@@ -17,9 +23,9 @@ def test_new_story(client, auth, database, templates):
 
 
 def test_edit_story(client, auth, database, templates):
-    auth.login('Admin', 'admin')
+    auth.login()
 
-    reply = client.get('/rollDice', follow_redirects=True)
+    reply = client.get('/roll_dice', follow_redirects=True)
     assert reply.status_code == 200
     roll = templates[-1]['dice']
     new_id = templates[-1]['story_id']
@@ -35,18 +41,20 @@ def test_edit_story(client, auth, database, templates):
     assert story.text == story_text
     assert story.author_id == 1
 
-    reply = client.get('/rollDice', follow_redirects=True)
+    reply = client.get('/roll_dice', follow_redirects=True)
     assert reply.status_code == 200
     roll = templates[-1]['dice']
     new_id = templates[-1]['story_id']
     reply = client.post(f'/stories/{new_id}/edit', data={})
-    assert reply.status_code == 400
+    assert reply.status_code == 200
+    form = templates[-1]['form']
+    assert 'This field is required.' in form.text.errors
 
 
 def test_edit_non_draft_story(client, auth, database, templates):
-    auth.login('Admin', 'admin')
+    auth.login()
 
-    reply = client.get('/rollDice', follow_redirects=True)
+    reply = client.get('/roll_dice', follow_redirects=True)
     assert reply.status_code == 200
     new_id = templates[-1]['story_id']
     roll = templates[-1]['dice']
@@ -66,8 +74,8 @@ def test_edit_non_draft_story(client, auth, database, templates):
 
 
 def test_edit_not_author_story(client, auth, database, templates):
-    auth.login('Admin', 'admin')
-    reply = client.get('/rollDice', follow_redirects=True)
+    auth.login()
+    reply = client.get('/roll_dice', follow_redirects=True)
     assert reply.status_code == 200
     new_id = templates[-1]['story_id']
     auth.logout()
@@ -79,15 +87,29 @@ def test_edit_not_author_story(client, auth, database, templates):
 
 
 def test_edit_non_existent_story(client, auth, database):
-    auth.login('Admin', 'admin')
+    auth.login()
     reply = client.get('/stories/0/edit')
     assert reply.status_code == 404
 
 
-def test_edit_not_valid_story(client, auth, database, templates):
-    auth.login('Admin', 'admin')
+def test_edit_deleted_story(client, auth, database, templates):
+    auth.login()
 
-    reply = client.get('/rollDice', follow_redirects=True)
+    reply = client.get('/roll_dice', follow_redirects=True)
+    assert reply.status_code == 200
+    new_id = templates[-1]['story_id']
+
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 200
+
+    reply = client.get(f'/stories/{new_id}/edit')
+    assert reply.status_code == 410
+
+
+def test_edit_not_valid_story(client, auth, database, templates):
+    auth.login()
+
+    reply = client.get('/roll_dice', follow_redirects=True)
     assert reply.status_code == 200
     roll = templates[-1]['dice']
     new_id = templates[-1]['story_id']
@@ -99,13 +121,15 @@ def test_edit_not_valid_story(client, auth, database, templates):
     reply = client.post(f'/stories/{new_id}/edit',
                         data={'text': story})
     database.session.commit()
-    assert reply.status_code == 400
+    assert reply.status_code == 200
+    form = templates[-1]['form']
+    assert 'The story is not valid.' in form.text.errors
 
 
 def test_edit_draft_valid_story(client, auth, database, templates):
-    auth.login('Admin', 'admin')
+    auth.login()
 
-    reply = client.get('/rollDice', follow_redirects=True)
+    reply = client.get('/roll_dice', follow_redirects=True)
     assert reply.status_code == 200
     new_id = templates[-1]['story_id']
 
@@ -116,9 +140,9 @@ def test_edit_draft_valid_story(client, auth, database, templates):
 
 
 def test_edit_get(client, auth, database, templates):
-    auth.login('Admin', 'admin')
+    auth.login()
 
-    reply = client.get('/rollDice', follow_redirects=True)
+    reply = client.get('/roll_dice', follow_redirects=True)
     assert reply.status_code == 200
     roll = templates[-1]['dice']
     new_id = templates[-1]['story_id']
@@ -133,14 +157,17 @@ def test_edit_get(client, auth, database, templates):
     assert template_capture['story_id'] == new_id
     assert template_capture['dice'] == roll
 
-def test_delete_story(client, auth, database, templates):
-    auth.login('Admin', 'admin')
+def test_empty_story_list(client, auth, database, templates):
+    reply = client.get('/stories')
+    assert reply.status_code == 200
+    stories = templates[-1]['stories']
+    assert stories.count() == 0 # no loaded stories
 
-    reply = client.delete('/stories/0') # delete non-existing story
-    assert reply.status_code == 404
+def test_nonempty_story_list(client, auth, database, templates):
+    auth.login()
 
-    # new story
-    reply = client.get('/rollDice', follow_redirects=True)
+    # add 1 story
+    reply = client.get('/roll_dice', follow_redirects=True)
     assert reply.status_code == 200
     roll = templates[-1]['dice']
     new_id = templates[-1]['story_id']
@@ -152,25 +179,108 @@ def test_delete_story(client, auth, database, templates):
     reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
     assert reply.status_code == 302
 
-    #delete the newly created story
+    #check only 1 story is present
+    reply = client.get('/stories')
+    assert reply.status_code == 200
+    stories = templates[-1]['stories']
+    assert stories.count() == 1
+    #and it is the one just published
+    query = database.session.query(Story).filter_by(deleted=False).order_by(desc(Story.date))
+    assert query.count() == stories.count()
+    assert query[0].id == stories[0].id
+    assert query[0].text == stories[0].text
+    assert query[0].author_id == stories[0].author_id
+
+    #add another story
+    reply = client.get('/roll_dice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    #check all stories are present
+    reply = client.get('/stories')
+    assert reply.status_code == 200
+    stories = templates[-1]['stories']
+    assert stories.count() == 2
+
+    #check that queried and rendered items are the same
+    query = database.session.query(Story).filter_by(deleted=False).order_by(desc(Story.date))
+
+    assert stories.count() == query.count()
+
+    for i in range(stories.count()):
+        assert query[i].id == stories[i].id
+        assert query[i].text == stories[i].text
+
+def test_delete_nonexisting_story(client, auth, database, templates):
+    auth.login()
+
+    reply = client.delete('/stories/0')  # delete non-existing story
+    assert reply.status_code == 404
+
+def test_delete_existing_story(client, auth, database, templates):
+    auth.login()
+
+    # new story
+    reply = client.get('/roll_dice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    # delete the newly created story
     reply = client.delete(f'/stories/{new_id}')
     assert reply.status_code == 200
     deletedStory = database.session.query(Story).get(new_id)
-    assert deletedStory.deleted == True
+    assert deletedStory.deleted
 
-    #delete already deleted story
+def test_delete_already_deleted_story(client, auth, database, templates):
+    auth.login()
+
+    # new story
+    reply = client.get('/roll_dice', follow_redirects=True)
+    assert reply.status_code == 200
+    roll = templates[-1]['dice']
+    new_id = templates[-1]['story_id']
+
+    story_text = ''
+    for i in range(len(roll)):
+        story_text = story_text + roll[i] + ' '
+
+    reply = client.post(f'/stories/{new_id}/edit', data={'text': story_text})
+    assert reply.status_code == 302
+
+    # delete the newly created story
+    reply = client.delete(f'/stories/{new_id}')
+    assert reply.status_code == 200
+    deletedStory = database.session.query(Story).get(new_id)
+    assert deletedStory.deleted
+
+    # delete already deleted story
     reply = client.delete(f'/stories/{new_id}')
     assert reply.status_code == 400
 
-    #delete already deleted story again
+    # delete already deleted story again
     reply = client.delete(f'/stories/{new_id}')
     assert reply.status_code == 400
 
-    auth.logout()
-
+def test_delete_story_of_another_user(client, auth, database, templates):
     auth.login('test1', 'test1123')
     # new story by user test1
-    reply = client.get('/rollDice', follow_redirects=True)
+    reply = client.get('/roll_dice', follow_redirects=True)
     assert reply.status_code == 200
     roll = templates[-1]['dice']
     new_id = templates[-1]['story_id']
@@ -183,8 +293,8 @@ def test_delete_story(client, auth, database, templates):
     assert reply.status_code == 302
     auth.logout()
 
-    auth.login('Admin', 'admin')
+    auth.login('test2', 'test2123')
 
-    #delete story of another user
+    # delete story of another user
     reply = client.delete(f'/stories/{new_id}')
     assert reply.status_code == 403

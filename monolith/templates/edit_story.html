@@ -1,10 +1,12 @@
 <html>
 
 <head>
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet" />
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+  {% include 'html_components/bootstrap.html' %}
+    <style>
+    #is_draft {
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
@@ -12,66 +14,44 @@
   <!-- ----------------- NAV BAR ------------------ -->
   {% if current_user.is_authenticated %}
 
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">Storytellers</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
-      aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-      <ul class="navbar-nav">
-        <li class="nav-item active">
-          <a class="nav-link" href="/stories">Home </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/newStory">New Story</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/">My Wall <span class="sr-only">(current)</span></a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/logout">Logout ({{ current_user.firstname }})</a>
-        </li>
-
-      </ul>
-    </div>
-  </nav>
+  {% include 'html_components/nav.html' %}
 
   <div class="container-fluid">
 
     <div class="jumbotron">
 
-      <form action="/stories/{{story_id}}/edit" method="POST" role="form">
+      <form action="/stories/{{story_id}}/edit" method="POST" role="form" name="storyform">
         {{ form.hidden_tag() }}
 
         <label for="validationTooltip01">Current dice values</label>
         <div class="row">
           {% for die in dice %}
-            <div class="col">
-              <div class="card card-block d-flex text-white bg-secondary mb-3" style="width: 8rem; height: 8rem;">
-                <div class="card-body align-items-center d-flex justify-content-center">
-                  <h5 class="card-title ">{{ die }}</h5>
-                </div>
+          <div class="col">
+            <div class="card card-block d-flex text-white bg-secondary mb-3" style="width: 8rem; height: 8rem;">
+              <div class="card-body align-items-center d-flex justify-content-center">
+                <h5 class="card-title ">{{ die }}</h5>
               </div>
             </div>
+          </div>
           {% endfor %}
         </div>
         <br>
         {{ form['text'].label }}
         <br>
         {{ form['text']() }}
-        <br>
-        {{ form['is_draft'].label }}
-        <br>
+
+        <!-- THIS FIELD IS HIDDEN -->
         {{ form['is_draft']() }}
+        <!-- ==================== -->
 
         {% for e in form['text'].errors %}
-          <p class="help-block">{{ e }}</p>
+        <p class="help-block">{{ e }}</p>
         {% endfor %}
         <br>
 
-        <button type="submit" class="btn btn-success">Submit Story</button>
-
+        <button type="button" id="validate" class="btn btn-success">Submit Story</button>
+        <button type="button" id="draft" class="btn btn-primary">Submit Draft Story</button>
+        <button type="button" id="cancel" class="btn btn-danger">Cancel</button>
       </form>
 
     </div>
@@ -79,11 +59,44 @@
 
 
     {% else %}
-      Hi Anonymous, <a href="/login">Log in</a>
+    Hi Anonymous, <a href="/login">Log in</a>
     {% endif %}
 
   </div>
 
+  <script>
+    let manual_unload = false
+    let storyform = document.querySelector('form')
+
+    document.querySelector('#validate').addEventListener('click', evt => {
+      manual_unload = true
+      storyform.is_draft.checked = false
+      storyform.submit()
+    })
+    document.querySelector('#draft').addEventListener('click', evt => {
+      manual_unload = true
+      storyform.is_draft.checked = true
+      storyform.submit()
+    })
+    document.querySelector('#cancel').addEventListener('click', evt => {
+      manual_unload = true
+      fetch("{{ url_for('stories._deleteStory', storyid=story_id) }}", {method: 'DELETE'})
+        .then(response => {
+          window.location = "{{ url_for('stories._stories') }}"
+        })
+    })
+    window.addEventListener('beforeunload', evt => {
+      console.log('event ' + manual_unload)
+      if (manual_unload) {
+        return false
+      }
+
+      evt.preventDefault()
+      console.log('beforeunload')
+      fetch("{{ url_for('stories._deleteStory', storyid=story_id) }}", {method: 'DELETE'})
+      return true
+    });
+  </script>
 
 </body>
 

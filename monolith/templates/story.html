@@ -1,85 +1,71 @@
 <html>
 
 <head>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-    crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-    crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-    crossorigin="anonymous"></script>
+    {% include 'html_components/bootstrap.html' %}
+    <link href="/static/css/story.css" rel="stylesheet"/>
+    <link href="/static/css/background.css" rel="stylesheet"/>
 </head>
 
 <body>
 
 <!--Navigation bar-->
-{% include 'nav.html' %}
+{% include 'html_components/nav.html' %}
 <!--end of Navigation bar-->
 
-  <h1>Story</h1>
-  <!--<h5>{{ message }}</h5>-->
-  <ul>
-    {% for story in stories: %}
-    {% if marked == True %}
-    {% if val == 1 %}
-    <li>
-      "{{ story.text }}" Likes: {{ story.likes + 1 }} Dislikes: {{ story.dislikes }} ({{ story.date }})
-      <br />
-      {% if story.dice_set != None %}
-      Story generated with the following dice set: {{ story.dice_set.split('?') }}
-      {% endif %}
-      {% if current_user.is_authenticated %}
-      <!--<form action="/stories/<storyid>" method="POST""></form>-->
-      <form action="{{ url_for('stories._get_story', storyid=story.id) }}" method="post">
-        <input type="submit" name="like" value="Like it!" />
-        <input type="submit" name="dislike" value="Dislike it!" />
-      </form>
-      <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>
-      		        <a href="{{like_it_url}}{{story.id}}/0">Dislike it!</a>-->
-      {% endif %}
-    </li>
-    {% else %}
-    <li>
-      "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes + 1 }} ({{ story.date }})
-      <br />
-      {% if story.dice_set != None %}
-      Story generated with the following dice set: {{ ', '.join(story.dice_set) }}
-      {% endif %}
-      {% if current_user.is_authenticated %}
-      <!--<form action="/stories/<storyid>" method="POST""></form>-->
-      <form action="{{ url_for('stories._get_story', storyid=story.id) }}" method="post">
-        <input type="submit" name="like" value="Like it!" />
-        <input type="submit" name="dislike" value="Dislike it!" />
-      </form>
-      <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>
-      		        <a href="{{like_it_url}}{{story.id}}/0">Dislike it!</a>-->
-      {% endif %}
-    </li>
-    {% endif %}
-    {% else %}
-    <li>
-      "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})
-      <br />
-      {% if story.dice_set != None %}
-      Story generated with the following dice set: {{ ', '.join(story.dice_set) }}
-      {% endif %}
-      {% if current_user.is_authenticated %}
-      <!--<form action="/stories/<storyid>" method="POST""></form>-->
-      <form action="{{ url_for('stories._get_story', storyid=story.id) }}" method="post">
-        <input type="submit" name="like" value="Like it!" />
-        <input type="submit" name="dislike" value="Dislike it!" />
-      </form>
-      <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>
-      	    	        <a href="{{like_it_url}}{{story.id}}/0">Dislike it!</a>-->
-      {% endif %}
-    </li>
-    {% endif %}
-    {% endfor %}
-  </ul>
+<!-- story, marked, val -->
+
+<div class="container" style="width: 100%">
+    {% include 'html_components/big_story_template.html' %}
+</div>
+
+
+<script>
+    function like(url) {
+        let formData = new FormData()
+        formData.append('like', '1')
+        fetch(url, {method: 'POST', body: formData})
+            .then(response => response.ok ? response.json() : Promise.reject('Story already liked'))
+            .then(data => {
+                if (data.message === 'Reaction updated') {
+                    $('#likes').text(function (idx, old) {
+                        return parseInt(old) + 1
+                    })
+                    $('#dislikes').text(function (idx, old) {
+                        return parseInt(old) - 1
+                    })
+                } else {
+                    $('#likes').text(function (idx, old) {
+                        return parseInt(old) + 1
+                    })
+                }
+            }).catch(msg => {
+            $('#message').text(msg)
+        })
+    }
+
+    function dislike(url) {
+        let formData = new FormData()
+        formData.append('dislike', '1')
+        fetch(url, {method: 'POST', body: formData})
+            .then(response => response.ok ? response.json() : Promise.reject('Story already disliked'))
+            .then(data => {
+                if (data.message === 'Reaction updated') {
+                    $('#dislikes').text(function (idx, old) {
+                        return parseInt(old) + 1
+                    })
+                    $('#likes').text(function (idx, old) {
+                        return parseInt(old) - 1
+                    })
+                } else {
+                    $('#dislikes').text(function (idx, old) {
+                        return parseInt(old) + 1
+                    })
+                }
+            }).catch(msg => {
+            $('#message').text(msg)
+        })
+    }
+</script>
 </body>
 
 </html>

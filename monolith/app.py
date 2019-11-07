@@ -1,6 +1,6 @@
 import datetime as dt
 
-from celery import Celery
+from celery.schedules import crontab
 
 from flask import Flask
 
@@ -24,14 +24,34 @@ def create_app(test=False, database=DATABASE_NAME,
     app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
     app.config['BROKER_URL'] = 'redis://localhost:6379/0'
     app.config['CELERY_RESULT_BACKED'] = 'redis://localhost:6379/0'
-
+    # Specifies the mail from where digests are sent
+    app.config['SERVER_MAIL'] = 'digest@localhost'
+    # The address of the SMTP server
+    app.config['SMTP_SERVER_ADDRESS'] = 'localhost'
+    # The port of the SMTP server
+    app.config['SMTP_SERVER_PORT'] = 8025
+    app.config['CELERY_TIMEZONE'] = 'Europe/Rome'
     app.config['PERMANENT_SESSION_LIFETIME'] = dt.timedelta(minutes=120)
     app.config['SQLALCHEMY_DATABASE_URI'] = database
     app.config['LOGIN_DISABLED'] = login_disabled
+    app.config['CELERYBEAT_SCHEDULE'] = {
+        'monthly-digest': {
+            'task': 'monolith.task.send_digest',
+            # Scheduled for the first day of each month
+            'schedule': crontab(day_of_month='1'),
+            # Scheduled every 10 seconds
+            # 'schedule': 10.0,
+        }
+    }
+
     if test:
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
         app.config['CELERY_ALWAYS_EAGER'] = True
+        app.config['SMTP_SERVER_ADDRESS'] = 'localhost'
+        app.config['SMTP_SERVER_PORT'] = 8025
+        # Disables periodic task
+        app.config['CELERYBEAT_SCHEDULE'] = {}
 
     # initialize Celery
     celery = celeryapp.create_celery_app(app)
@@ -40,6 +60,7 @@ def create_app(test=False, database=DATABASE_NAME,
     # initilize Database
     db.init_app(app)
     login_manager.init_app(app)
+    login_manager.login_view = '/login'
     db.create_all(app=app)
 
     # initialize Telegram
@@ -57,6 +78,13 @@ def create_app(test=False, database=DATABASE_NAME,
     for bp in blueprints:
         app.register_blueprint(bp)
         bp.app = app
+
+    from monolith.views import errors
+    app.register_error_handler(400, errors.bad_request)
+    app.register_error_handler(401, errors.unauthorized)
+    app.register_error_handler(403, errors.forbidden)
+    app.register_error_handler(404, errors.page_not_found)
+    app.register_error_handler(410, errors.gone)
 
     # create a first admin user
     with app.app_context():

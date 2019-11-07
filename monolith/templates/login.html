@@ -1,27 +1,53 @@
+<html>
+<head>
+    {% include 'html_components/bootstrap.html' %}
+</head>
+<body>
 {% extends "bootstrap/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% block title %}
-Login
+    Login
 {% endblock %}
 {% block content %}
-{{super()}}
-<div class="col-md-4 col-lg-offset-4">
-  <h1>Login</h1>
-  <form action="" method="POST">
-    {{ form.hidden_tag() }}
-    <dl>
-     {% for field in form.display %}
-     <dt>{{ form[field].label }}</dt>
-     <dd>{{ form[field]() }}</dd>
-       {% if form[field].errors %}
-          {% for e in form[field].errors %}
-           <p class="help-block">{{ e }}</p>
-          {% endfor %}
-       {% endif %}
-     {% endfor %}
-    </dl>
-    <p>
-    <input class="btn btn-primary" type=submit value="Submit">
-  </form>
-</div>
+    {{ super() }}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+                <div class="card card-signin my-5">
+                    <div class="card-body">
+
+                        <h1>Sign up</h1>
+                        <br>
+                        <form action="" method="POST">
+                            {{ form.hidden_tag() }}
+                            <dl>
+                                {% for field in form.display %}
+                                    <dt>{{ form[field].label }}</dt>
+                                    <dd>{{ form[field]() }}</dd>
+                                    {% if form[field].errors %}
+                                        {% for e in form[field].errors %}
+                                            <p class="help-block">{{ e }}</p>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                            </dl>
+                            <p>
+                                <input class="btn btn-primary" type=submit value="Login">
+                        </form>
+
+                        <span class="txt1 p-b-9">
+                    Don’t have an account?
+                </span>
+                        <a class="txt3" href="/signup">
+                            Sign up now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
+</body>
+</html>
+
