@@ -55,7 +55,11 @@
                              id="page-content-wrapper">
 
                             <h3 class="display-5" style="margin-top: 4rem">
-                                {{ message }}
+                                {% if message is defined and message!="" %}
+                                    {{ message }}
+                                {% else %}
+                                    Nothing found
+                                {% endif %}
                             </h3>
 
                         </div>
