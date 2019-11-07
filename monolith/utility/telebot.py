@@ -36,7 +36,6 @@ def on_start(update, context):
 
 
 def on_login(update, context):
-    global token, chat_id
     username = ' '.join(context.args)
     if username == "":
         telegram_bot.send_message(chat_id=update.effective_chat.id, text="Use the command /login <username>")
@@ -56,6 +55,6 @@ def on_login(update, context):
             db_telegram_session.commit()
             telegram_bot.send_message(chat_id=update.effective_chat.id, text="Hello {0}. You will receive your follow users stories".format(user.firstname))
         except Exception:
-            db.session.rollback()
+            db_telegram_session.rollback()
             telegram_bot.send_message(chat_id=update.effective_chat.id, text="An error has occured while saving your chat id".format(user.firstname))
     pass
