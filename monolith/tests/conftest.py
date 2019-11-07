@@ -209,6 +209,9 @@ def story_actions(client, templates):
     """Provides stories related capabilities."""
     return StoryActions(client, templates)
 
+def get_story_actions(client, templates):
+    """Provides stories related capabilities."""
+    return StoryActions(client, templates)
 
 @pytest.fixture
 def templates(app):
