@@ -102,8 +102,7 @@ def database(app):
 class AuthActions:
     """Class for login/logout management."""
 
-    def __init__(self, app, client):
-        self._app = app
+    def __init__(self, client):
         self._client = client
 
     def signup(self, email, username, password, firstname=None,
@@ -130,16 +129,18 @@ class AuthActions:
 
 
 @pytest.fixture
-def auth(app, client):
+def auth(client):
     """Provides login/logout capabilities."""
-    return AuthActions(app, client)
+    return AuthActions(client)
 
+def get_auth(client):
+    """Provides login/logout capabilities."""
+    return AuthActions(client)
 
 class StoryActions:
     """Class for story management."""
 
-    def __init__(self, app, client, templates):
-        self._app = app
+    def __init__(self, client, templates):
         self._client = client
         self._templates = templates
 
@@ -204,9 +205,9 @@ class StoryActions:
 
 
 @pytest.fixture
-def story_actions(app, client, templates):
+def story_actions(client, templates):
     """Provides stories related capabilities."""
-    return StoryActions(app, client, templates)
+    return StoryActions(client, templates)
 
 
 @pytest.fixture

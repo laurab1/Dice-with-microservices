@@ -1,5 +1,34 @@
 from monolith.database import Story
+from monolith.tests.conftest import get_auth
 
+def test_client_factory(client_factory, templates):
+    email1 = "prova@prova.com"
+    username1 = "Test1"
+    password1 = "12345678"
+
+    client1 = client_factory.get()
+    client2 = client_factory.get()
+
+    assert client1 != client2
+
+    auth1 = get_auth(client1)
+    auth2 = get_auth(client2)
+
+    assert auth1 != auth2
+
+    # signup and login
+    reply = auth1.signup(email=email1, username=username1, password=password1)
+    assert reply.status_code == 302
+
+    email2 = "xx@xx.com"
+    username2 = "Test2"
+    password2 = "12345678"
+
+    # signup and login
+    reply = auth2.signup(email=email2, username=username2, password=password2)
+    assert reply.status_code == 302
+
+    
 
 def test_two_users(auth, story_actions, templates):
     email = "prova@prova.com"
