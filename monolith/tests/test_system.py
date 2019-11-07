@@ -59,10 +59,9 @@ def test_two_users(auth, story_actions, templates):
     stories = templates[-1]['stories']
     assert stories.count() == 1
 
-    # try to sign up with the same credentials (error!)
+    # try to sign up when already logged
     reply = auth.signup(email=email, username=username, password=password)
     assert reply.status_code == 302
-    assert templates[-1]['request'].path == '/stories'
 
     # correct signup and login
     other_email = "aa@bb.com"

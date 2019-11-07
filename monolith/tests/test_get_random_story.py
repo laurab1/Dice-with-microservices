@@ -4,7 +4,7 @@ from monolith.database import Story
 
 
 # one recent story, two not so recent
-def test_get_random_recent_story_1(client, database, templates):
+def test_get_random_recent_story_1(client, database, templates, story_actions):
     example = Story()
     example.text = 'recent story'
     example.likes = 0
@@ -34,7 +34,7 @@ def test_get_random_recent_story_1(client, database, templates):
     database.session.commit()
 
     # story found
-    reply = client.get('/stories/random_story')
+    reply = story_actions.get_random_recent_story()
     assert reply.status_code == 200
 
     template_context = templates[-1]
@@ -43,7 +43,7 @@ def test_get_random_recent_story_1(client, database, templates):
 
 
 # two recent stories to pick from, two not so recent
-def test_get_random_recent_story_2(client, database, templates):
+def test_get_random_recent_story_2(client, database, templates, story_actions):
     example = Story()
     example.text = 'recent story 1'
     example.likes = 0
@@ -81,7 +81,7 @@ def test_get_random_recent_story_2(client, database, templates):
     database.session.commit()
 
     # story found
-    reply = client.get('/stories/random_story')
+    reply = story_actions.get_random_recent_story()
     assert reply.status_code == 200
 
     template_context = templates[-1]
@@ -91,7 +91,7 @@ def test_get_random_recent_story_2(client, database, templates):
 
 
 # no recent story, get a random one
-def test_get_random_story(client, database, templates):
+def test_get_random_story(client, database, templates, story_actions):
     example = Story()
     example.text = 'very not recent story (months/years ago)'
     example.likes = 0
@@ -131,7 +131,7 @@ def test_get_random_story(client, database, templates):
     database.session.commit()
 
     # story found
-    reply = client.get('/stories/random_story')
+    reply = story_actions.get_random_recent_story()
     assert reply.status_code == 200
 
     template_context = templates[-1]
@@ -141,9 +141,9 @@ def test_get_random_story(client, database, templates):
     assert message == 'no stories today. Here is a random one:'
 
 
-def test_no_stories(client, templates):
+def test_no_stories(client, templates, story_actions):
     # story not found
-    reply = client.get('/stories/random_story')
+    reply = story_actions.get_random_recent_story()
     assert reply.status_code == 200
 
     template_context = templates[-1]

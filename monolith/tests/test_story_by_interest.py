@@ -3,7 +3,7 @@ import datetime as dt
 from monolith.database import Story
 
 
-def test_get_by_interest(client, auth, database, templates):
+def test_get_by_interest(client, auth, database, templates, story_actions):
     auth.login()
 
     example1 = Story()
@@ -34,6 +34,6 @@ def test_get_by_interest(client, auth, database, templates):
     database.session.add(example3)
     database.session.commit()
 
-    reply = client.get('/stories?theme=xmas')
+    reply = story_actions.get_all_stories(theme='xmas')
     assert reply.status_code == 200
     assert templates[-1]['stories'].all() == [example2]

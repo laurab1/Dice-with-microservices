@@ -28,7 +28,7 @@ def test_getusers(client, database, auth, templates):
                      ('test1', None),
                      ('test2', None),
                      ('test3', None)]
-    
+
     client.get('/logout')
 
     client.post('/signup', data={'email': 'prova@prova.com',

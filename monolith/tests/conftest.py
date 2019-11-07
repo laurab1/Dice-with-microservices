@@ -2,11 +2,12 @@ import datetime
 import os
 import tempfile
 
-import pytest
 from flask import template_rendered
 
 from monolith.app import create_app
-from monolith.database import Story, User, db
+from monolith.database import User, db
+
+import pytest
 
 
 @pytest.fixture
@@ -125,10 +126,20 @@ class StoryActions:
         self._client = client
         self._templates = templates
 
-    def roll_dice(self, follow_redirects=True):
-        return self._client.get('/roll_dice', follow_redirects=follow_redirects)
+    def roll_dice(self, dice_set=None, dicenum=None, follow_redirects=True):
+        query = {}
+        if dice_set is not None:
+            query.update({'diceset': dice_set})
+        if dicenum is not None:
+            query.update({'dicenum': dicenum})
+        if query:
+            return self._client.get('/roll_dice',
+                                    query_string=query,
+                                    follow_redirects=follow_redirects)
+        return self._client.get('/roll_dice',
+                                follow_redirects=follow_redirects)
 
-    def add_story_text(self, id, dices, text=None):
+    def add_story_text(self, id, dices, text=None, is_draft=False):
         story_text = ''
 
         if text is None:
@@ -137,9 +148,20 @@ class StoryActions:
         else:
             story_text = text
 
-        return self._client.post(f'/stories/{id}/edit', data={'text': story_text})
+        if is_draft:
+            return self._client.post(f'/stories/{id}/edit',
+                                     data={'text': story_text,
+                                           'is_draft': 'y'})
+        return self._client.post(f'/stories/{id}/edit',
+                                 data={'text': story_text})
 
-    def get_all_stories(self):
+    def get_all_stories(self, date_range=None, theme=None):
+        if date_range is not None:
+            query = {'from': date_range[0], 'to': date_range[1]}
+            return self._client.get(f'/stories', query_string=query)
+        if theme is not None:
+            query = {'theme': theme}
+            return self._client.get('/stories', query_string=query)
         return self._client.get('/stories')
 
     def get_story(self, id):
@@ -149,21 +171,24 @@ class StoryActions:
         return self._client.get('/stories/random_story')
 
     def get_ranged_stories(self, from_date_str, to_date_str):
-        return self._client.get(f'/stories/?from={from_date_str}&to={to_date_str}')
+        return self._client.get(
+            f'/stories/?from={from_date_str}&to={to_date_str}')
 
     def delete_story(self, id):
         return self._client.delete(f'/stories/{id}')
 
     def post_like_reaction(self, id):
-        return self._client.post(f'/stories/{id}/react', data={'like': 'Like it!'})
+        return self._client.post(f'/stories/{id}/react',
+                                 data={'like': 'Like it!'})
 
     def post_dislike_reaction(self, id):
-        return self._client.post(f'/stories/{id}/react', data={'dislike': 'Dislike it!'})
+        return self._client.post(f'/stories/{id}/react',
+                                 data={'dislike': 'Dislike it!'})
 
 
 @pytest.fixture
 def story_actions(app, client, templates):
-    """Provides login/logout capabilities."""
+    """Provides stories related capabilities."""
     return StoryActions(app, client, templates)
 
 
