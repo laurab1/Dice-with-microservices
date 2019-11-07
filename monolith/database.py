@@ -78,7 +78,7 @@ class Story(db.Model):
     dislikes = db.Column(db.Integer)
 
     theme = db.Column(db.Text(64))
-    _dice_set = db.Column(db.Text(100))
+    _dice_set = db.Column(db.Text(100), nullable=False)
 
     deleted = db.Column(db.Boolean, default=False)
     # define foreign key

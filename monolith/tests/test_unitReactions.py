@@ -111,7 +111,6 @@ def test_dislike(client, auth, database, templates, story_actions):
     assert r.reaction_val == -1
     assert s.likes == 0 and s.dislikes == 2
 
-
 def test_reaction_change(client, auth, database, templates, story_actions):
     auth.login()
 

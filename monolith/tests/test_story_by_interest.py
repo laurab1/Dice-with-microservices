@@ -12,6 +12,7 @@ def test_get_by_interest(client, auth, database, templates, story_actions):
     example1.author_id = 2
     example1.is_draft = False
     example1.deleted = False
+    example1.dice_set = ['a', 'b', 'c']
     database.session.add(example1)
     database.session.commit()
 
@@ -21,6 +22,7 @@ def test_get_by_interest(client, auth, database, templates, story_actions):
     example2.author_id = 3
     example2.is_draft = False
     example2.deleted = False
+    example2.dice_set = ['a', 'b', 'c']
     database.session.add(example2)
     database.session.commit()
 
@@ -31,6 +33,7 @@ def test_get_by_interest(client, auth, database, templates, story_actions):
     example3.author_id = 4
     example3.is_draft = False
     example3.deleted = False
+    example3.dice_set = ['a', 'b', 'c']
     database.session.add(example3)
     database.session.commit()
 

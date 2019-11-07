@@ -18,6 +18,7 @@ def test_getusers(client, database, auth, templates):
     example.author_id = 1
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
     database.session.commit()
 
@@ -48,6 +49,7 @@ def test_getusers(client, database, auth, templates):
     example.author_id = 5
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
     database.session.commit()
 
@@ -65,6 +67,7 @@ def test_getusers(client, database, auth, templates):
     example.author_id = 1
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
     database.session.commit()
 
