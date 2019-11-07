@@ -1,6 +1,8 @@
 <html>
 <head>
     {% include 'html_components/bootstrap.html' %}
+    <link href="/static/css/story.css" rel="stylesheet"/>
+    <link href="/static/css/background.css" rel="stylesheet"/>
 </head>
 <body>
 
@@ -10,8 +12,9 @@
     {% include 'html_components/nav.html' %}
     <!--end of Navigation bar-->
 
-    <div class="container-fluid">
-        <div class="jumbotron">
+    <div class="container d-flex flex-wrap align-items-center h-75">
+
+        <div class="jumbotron w-100 transparent-bg">
 
             <form action="/roll_dice" method="GET" role="form">
 
