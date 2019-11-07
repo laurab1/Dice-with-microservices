@@ -26,43 +26,52 @@
         <div class="bg-image standard"></div>
     {% endif %}
 
-    <div class="container d-flex flex-wrap align-items-center h-75  bg-text">
-    <div class="jumbotron w-100 transparent-bg">
+    <div class="container d-flex flex-wrap align-items-center bg-text">
+        <div class="jumbotron w-100 transparent-bg">
 
-        <form action="/stories/{{ story_id }}/edit" method="POST" role="form" name="storyform">
-            {{ form.hidden_tag() }}
+            <form action="/stories/{{ story_id }}/edit" method="POST" role="form" name="storyform">
+                {{ form.hidden_tag() }}
 
-            <label for="validationTooltip01">Current dice values</label>
-            <div class="row">
-                {% for die in dice %}
-                    <div class="col">
-                        <div class="card card-block d-flex text-white transparent-bg mb-3"
-                             style="width: 8rem; height: 8rem;">
-                            <div class="card-body align-items-center d-flex justify-content-center">
-                                <h5 class="card-title ">{{ die }}</h5>
+                <div class="row">
+                    <div class="col-sm-12 center-block text-center">
+                        <h5>Current dice values </h5>
+                        <hr class="style2">
+                    </div>
+                </div>
+                <div class="row">
+                    {% for die in dice %}
+                        <div class="col">
+                            <div class="card card-block d-flex text-white bg-transparent border border-light mb-3"
+                                 style="width: 8rem; height: 8rem;">
+                                <div class="card-body align-items-center d-flex justify-content-center">
+                                    <h5 class="card-title ">{{ die }}</h5>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <br>
-            {{ form['text'].label }}
-            <br>
-            {{ form['text'](class_='form-control input-lg transparent-bg') }}
+                    {% endfor %}
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 center-block text-center">
+                        <br>
+                        {{ form['text'].label }}
+                        <br>
+                        {{ form['text'](class_='form-control input-lg transparent-bg') }}
 
-            <!-- THIS FIELD IS HIDDEN -->
-            {{ form['is_draft']() }}
-            <!-- ==================== -->
+                        <!-- THIS FIELD IS HIDDEN -->
+                        {{ form['is_draft']() }}
+                        <!-- ==================== -->
 
-            {% for e in form['text'].errors %}
-                <p class="help-block">{{ e }}</p>
-            {% endfor %}
-            <br>
+                        {% for e in form['text'].errors %}
+                            <p class="help-block">{{ e }}</p>
+                        {% endfor %}
+                        <br>
 
-            <button type="button" id="validate" class="btn btn-success">Submit Story</button>
-            <button type="button" id="draft" class="btn btn-primary">Submit Draft Story</button>
-            <button type="button" id="cancel" class="btn btn-danger">Cancel</button>
-        </form>
+                        <button type="button" id="validate" class="btn btn-success">Submit Story</button>
+                        <button type="button" id="draft" class="btn btn-primary">Submit Draft Story</button>
+                        <button type="button" id="cancel" class="btn btn-danger">Cancel</button>
+            </form>
+        </div>
+    </div>
 
     </div>
 

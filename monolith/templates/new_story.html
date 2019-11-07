@@ -12,7 +12,10 @@
     {% include 'html_components/nav.html' %}
     <!--end of Navigation bar-->
 
-    <div class="container d-flex flex-wrap align-items-center h-75">
+
+    <div class="bg-image draft"></div>
+
+    <div class="container d-flex flex-wrap align-items-center bg-text">
 
         <div class="jumbotron w-100 transparent-bg">
 
@@ -45,7 +48,7 @@
                 <div class="form-group">
                     <div class="btn-group" data-toggle="buttons">
                         {% for set in diceset %}
-                            <label class="btn btn-light">
+                            <label class="btn btn-dark text-white">
                                 <input type="radio" name="diceset" id="dicenum" autocomplete="off" value="{{ set }}"
                                        style="visibility:hidden;" checked>
                                 {{ set }}
