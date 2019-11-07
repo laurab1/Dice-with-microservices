@@ -69,6 +69,15 @@ def test_all_stories(client, templates, init_database):
     assert stories.count() == 5
     assert message == ''
 
+def test_no_stories(client, templates):
+    reply = client.get('/stories')
+    assert reply.status_code == 200
+
+    stories = templates[-1]['stories']
+    message = templates[-1]['message']
+    assert stories.count() == 0
+    assert message == 'no stories'
+
 
 def test_ranged_stories(client, templates, init_database):
     # valid query params, invalid values (1)
