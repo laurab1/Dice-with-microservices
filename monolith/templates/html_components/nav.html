@@ -25,7 +25,7 @@
             </li>
         </ul>
         <span class="navbar-text">
-                <button type="button" class="btn btn-secondary fas fa-filter" data-toggle="modal"
+                <button type="button" class="btn btn-secondary fas fa-filter" id="filterButton" data-toggle="modal"
                         data-target="#filterModal"></button>
         </span>
 
@@ -170,18 +170,27 @@
             let to = getUrlParameter('to')
             let q = getUrlParameter('q')
             let theme = getUrlParameter('theme')
+            let filtered=false
 
             if(from){
                 document.getElementById("start").value=from
+                filtered=true
             }
             if(to){
                 document.getElementById("end").value=to
+                filtered=true
             }
             if(q){
                 document.getElementById("sid").value=q
+                filtered=true
             }
             if(theme){
                 $("#" + theme+ "_set").click()
+                filtered=true
+            }
+
+            if(filtered){
+                $('#filterButton').removeClass('btn-secondary').addClass('btn-warning')
             }
         });
 
