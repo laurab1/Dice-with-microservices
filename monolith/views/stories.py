@@ -53,50 +53,54 @@ def _rollDice():
 def _stories(message='', marked=True, id=0, react=0):
     stories = Story.query.filter_by(deleted=False, is_draft=False)
     stories = stories.order_by(Story.date.desc())
-    # check for query parameters
-    if len(request.args) != 0:
-        from_date = request.args.get('from')
-        to_date = request.args.get('to')
-        theme = request.args.get('theme')
-        query = request.args.get('q')
-        # check if the query parameters from and to
-        if from_date is not None and to_date is not None:
-            from_dt = None
-            to_dt = None
 
-            # check if the values are valid
-            try:
-                from_dt = dt.datetime.strptime(from_date, '%Y-%m-%d')
-                to_dt = dt.datetime.strptime(to_date, '%Y-%m-%d')
-            except ValueError:
-                message = 'INVALID date in query parameters: use yyyy-mm-dd'
-            else:  # successful try!
-                # checks for edge cases
-                if from_dt == to_dt:
-                    to_dt = from_dt + dt.timedelta(days=1)
+    if stories.count() == 0:
+        message = 'no stories'
+    else:
+        # check for query parameters
+        if len(request.args) != 0:
+            from_date = request.args.get('from')
+            to_date = request.args.get('to')
+            theme = request.args.get('theme')
+            query = request.args.get('q')
+            # check if the query parameters from and to
+            if from_date is not None and to_date is not None:
+                from_dt = None
+                to_dt = None
 
-                if from_dt > to_dt:
-                    message = 'Wrong date parameters (from-date greater ' \
-                              'than to-date or viceversa)!'
-                    stories = []
-                else:
-                    # query the database with the given values
-                    stories = stories.group_by(Story.date) \
-                        .having(Story.date >= from_dt) \
-                        .having(Story.date <= to_dt)
-                    if stories.count() == 0:
-                        message = 'no stories with the given dates'
+                # check if the values are valid
+                try:
+                    from_dt = dt.datetime.strptime(from_date, '%Y-%m-%d')
+                    to_dt = dt.datetime.strptime(to_date, '%Y-%m-%d')
+                except ValueError:
+                    message = 'INVALID date in query parameters: use yyyy-mm-dd'
+                else:  # successful try!
+                    # checks for edge cases
+                    if from_dt == to_dt:
+                        to_dt = from_dt + dt.timedelta(days=1)
 
-        if theme is not None:
-            t_delta = dt.datetime.now() - dt.timedelta(days=5)
-            stories = stories.filter(Story.date >= t_delta)
-            stories = stories.filter(Story.theme == theme)
+                    if from_dt > to_dt:
+                        message = 'Wrong date parameters (from-date greater ' \
+                                'than to-date or viceversa)!'
+                        stories = []
+                    else:
+                        # query the database with the given values
+                        stories = stories.group_by(Story.date) \
+                            .having(Story.date >= from_dt) \
+                            .having(Story.date <= to_dt)
+                        if stories.count() == 0:
+                            message = 'no stories with the given dates'
 
-        if query is not None:
-            words = query.split(' ')
-            for word in words:
-                # search for single words, case insensitive
-                stories = stories.filter(Story.text.ilike(f'%{word}%'))
+            if theme is not None:
+                t_delta = dt.datetime.now() - dt.timedelta(days=5)
+                stories = stories.filter(Story.date >= t_delta)
+                stories = stories.filter(Story.theme == theme)
+
+            if query is not None:
+                words = query.split(' ')
+                for word in words:
+                    # search for single words, case insensitive
+                    stories = stories.filter(Story.text.ilike(f'%{word}%'))
 
     # get following users if logged
     if current_user.is_authenticated:
