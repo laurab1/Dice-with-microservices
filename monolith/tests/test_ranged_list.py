@@ -71,14 +71,6 @@ def test_all_stories(client, templates, init_database):
 
 
 def test_ranged_stories(client, templates, init_database):
-    # invalid query params
-    reply = client.get('/stories?test=ciao')
-    assert reply.status_code == 200
-
-    message = templates[-1]['message']
-    assert message == 'WRONG QUERY parameters: you have to specify the date ' \
-        'range as from=yyyy-mm-dd&to=yyyy-mm-dd or a dice set theme as ' \
-        'theme=\'diceset\'!'
     # valid query params, invalid values (1)
     reply = client.get('/stories?from=2018-12-1&to=2019-x-1')
     assert reply.status_code == 200
@@ -137,7 +129,8 @@ def test_ranged_stories(client, templates, init_database):
 
     message = templates[-1]['message']
     stories = templates[-1]['stories']
-    assert message == 'Wrong date parameters (from-date greater than to-date or viceversa)!'
+    assert message == 'Wrong date parameters (from-date greater than ' \
+                      'to-date or viceversa)!'
     assert stories == []
     # nothing found
     reply = client.get('/stories?from=2015-12-1&to=2017-1-1')

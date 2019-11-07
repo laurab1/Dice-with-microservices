@@ -47,9 +47,8 @@
 
   <script>  
     function search() {  
-        var input = document.getElementById("sid")
-        var storyid = input.value;
-        window.location.replace("/stories/" + storyid);  
+        let search = document.getElementById("sid").value
+        window.location.replace("/stories?q=" + search)
     } 
 
     function random_story() {  
