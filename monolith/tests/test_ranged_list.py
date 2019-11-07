@@ -126,7 +126,7 @@ def test_ranged_stories(client, templates, init_database, story_actions):
     assert stories[0].id == 4
 
     # from date == to_date
-    reply = client.get('/stories?from=2019-1-1&to=2019-1-1')
+    reply = story_actions.get_all_stories(date_range=('2019-1-1', '2019-1-1'))
     assert reply.status_code == 200
 
     message = templates[-1]['message']
@@ -136,7 +136,7 @@ def test_ranged_stories(client, templates, init_database, story_actions):
     assert stories[0].id == 2
 
     # from date < to_date
-    reply = client.get('/stories?from=2019-1-1&to=2018-1-1')
+    reply = story_actions.get_all_stories(date_range=('2019-1-1', '2018-1-1'))
     assert reply.status_code == 200
 
     message = templates[-1]['message']

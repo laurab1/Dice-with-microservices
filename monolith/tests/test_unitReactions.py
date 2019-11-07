@@ -14,7 +14,7 @@ def test_viewStory(client, auth, templates, story_actions):
     assert reply.status_code == 302
 
     # retrieve the trial story
-    reply = client.get(f'/stories/{new_id}')
+    reply = story_actions.get_story(new_id)
     assert reply.status_code == 200
 
     # retrieve non-existing story

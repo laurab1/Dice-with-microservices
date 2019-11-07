@@ -154,7 +154,7 @@ def test_get_random_story(client, database, templates, story_actions):
 
 def test_no_stories(client, templates, story_actions):
     # story not found
-    reply = client.get('/stories/random_story')
+    reply = story_actions.get_random_recent_story()
     assert reply.status_code == 404
 
     template_context = templates[-1]
