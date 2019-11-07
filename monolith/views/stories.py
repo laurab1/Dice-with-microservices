@@ -217,7 +217,6 @@ def _story_edit(storyid):
         abort(403)
 
     if request.method == 'POST':
-        print(request.form)
         form = StoryForm()
         if form.validate_on_submit():
             form.populate_obj(story)
@@ -228,7 +227,7 @@ def _story_edit(storyid):
                     return jsonify(error='Your story is not valid'), 400
             db.session.commit()
             # Send telegram message
-            send_telegram_message(story)
+            send_telegram_message(story, current_user.id)
             return redirect(f'/stories/{storyid}')
         return jsonify(error='Your story is too long or data is missing.'), 400
 
