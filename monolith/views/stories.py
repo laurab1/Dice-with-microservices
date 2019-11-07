@@ -283,4 +283,4 @@ def _story_edit(storyid):
         form.is_draft.data = story.is_draft
 
     return render_template('edit_story.html', story_id=storyid,
-                           dice=story.dice_set, form=form)
+                           dice=story.dice_set, form=form, story=story)

@@ -28,7 +28,8 @@
 
             <div class="list-group list-group-flush">
                 {% for user in users %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center" id="user_{{ user.id }}">
+                    <div class="list-group-item d-flex justify-content-between align-items-center"
+                         id="user_{{ user.id }}">
                         <a class="text-dark btn" disabled="true"
                            href="/users/{{ user.id }}">{{ user.username }}</a>
                         <span type="button" class="badge badge-danger badge-pill btn" onclick="unfollow({{ user.id }})">
@@ -41,99 +42,38 @@
         <!-- /#sidebar-wrapper -->
 
         <div class="jumbotron bg-white" id="page-content-wrapper">
-            <div class="input-daterange input-group" id="datepicker">
-                <input type="date" class="input-sm form-control" name="start" id="start"/>
-                <span class="input-group-addon">to</span>
-                <input type="date" class="input-sm form-control" name="end" id="end"/>
-                <button class="button" id=srcbtn onclick="filter()">Filter results!</button>
-            </div>
-            
-            <h5>{{ message }}</h5>
-            <ul class="list-group">
 
-                {#  ---------- PORTION OF CODE THAT SEEMS REDUNDANT -------- WAITING FOR MORE TESTS BEFORE DELETING IT PERMANENTLY  #}
-                {#            {% if marked == false %}#}
-                {#                {% for story in stories: %}#}
-                {#                    {% if story.id == storyid %}#}
-                {#                        {% if react == 1 %}#}
-                {#                            <li class="list-group-item d-flex justify-content-between align-items-center">#}
-                {#                                "{{ story.text }}" Likes: {{ story.likes + 1 }} Dislikes: {{ story.dislikes }}#}
-                {#                                ({{ story.date }})#}
-                {#                                {% if current_user.is_authenticated %}#}
-                {#                                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->#}
-                {#                                    <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>#}
-                {#                                    {% if story.author.id != current_user.id %}#}
-                {#                                        <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>#}
-                {#                                    {% endif %}#}
-                {#                                {% endif %}#}
-                {#                            </li>#}
-                {#                        {% else %}#}
-                {#                            <li class="list-group-item d-flex justify-content-between align-items-center">#}
-                {#                                "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes + 1 }}#}
-                {#                                ({{ story.date }})#}
-                {#                                {% if current_user.is_authenticated %}#}
-                {#                                    <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->#}
-                {#                                    <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>#}
-                {#                                    {% if story.author.id != current_user.id %}#}
-                {#                                        <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>#}
-                {#                                    {% endif %}#}
-                {#                                {% endif %}#}
-                {#                                {% if story.author.id == current_user.id %}#}
-                {#                                    <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>#}
-                {#                                {% endif %}#}
-                {#                            </li>#}
-                {#                        {% endif %}#}
-                {#                    {% else %}#}
-                {#                        <li class="list-group-item d-flex justify-content-between align-items-center">#}
-                {#                            "{{ story.text }}" Likes: {{ story.likes }} Dislikes: {{ story.dislikes }} ({{ story.date }})#}
-                {#                            {% if current_user.is_authenticated %}#}
-                {#                                <!--<a href="{{like_it_url}}{{story.id}}/1">Like it!</a>-->#}
-                {#                                <a href="{{ like_it_url }}{{ story.id }}">Read this story</a>#}
-                {##}
-                {#                                {% if story.author.id != current_user.id %}#}
-                {#                                    <a href="#" onclick="follow({{ story.author.id }})">Follow author</a>#}
-                {#                                {% endif %}#}
-                {#                                {% if story.author.id == current_user.id %}#}
-                {#                                    <a href="#" onclick="deleteStory({{ story.id }})">Delete</a>#}
-                {#                                {% endif %}#}
-                {#                            {% endif %}#}
-                {#                        </li>#}
-                {#                    {% endif %}#}
-                {#                {% endfor %}#}
-                {#            {% else %}#}
+            <!-- Story list -->
+            <ul class="list-group">
                 <div class="row">
                     {% for story in stories: %}
                         <div class="col-md-12">
                             {% include 'html_components/story_template.html' %}
                         </div>
+                    {% else %}
+                        <div class="container text-center justify-content-center align-items-center h-100"
+                             id="page-content-wrapper">
+
+                            <h3 class="display-5" style="margin-top: 4rem">
+                                {% if message is defined and message!="" %}
+                                    {{ message }}
+                                {% else %}
+                                    Nothing found
+                                {% endif %}
+                            </h3>
+
+                        </div>
                     {% endfor %}
                 </div>
-
-                {#            {% endif %}#}
             </ul>
 
         </div>
     </div>
+
+
 </div>
 
 <script>
-    function filter(){
-        var input1 = document.getElementById("start");
-        var input2 = document.getElementById("end");
-
-        //if true, applies filtering
-        if(input1.value){
-            if(!input2.value){
-                input2.value = input1.value
-            }
-
-            window.location.replace("/stories?from="+input1.value+"&to="+input2.value); 
-        }
-        else{ //no filtering
-            window.location.replace("/stories"); 
-        }
-    }
-
     function follow(user_id) {
         fetch('/users/' + user_id + '/follow', {method: 'POST'})
             .then(function (response) {
