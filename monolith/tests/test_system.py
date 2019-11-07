@@ -242,3 +242,11 @@ def test_interaction_among_followers(client_factory, templates):
     users = templates[-1]['users']
     # client1 is not a follower of client1
     assert (int(user1_id) in [u.id for u in templates[-1]['users']]) == False
+
+    #client1 logout
+    reply = auth1.logout()
+    assert reply.status_code == 302
+
+    #client2 logout
+    reply = auth2.logout()
+    assert reply.status_code == 302
