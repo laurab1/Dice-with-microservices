@@ -1,68 +1,166 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <a class="navbar-brand" href="/stories">Storytellers</a>
+    <a class="navbar-brand" href="/stories">Storytellers</a>
 
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
-    aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+            aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
 
-  <div class="collapse navbar-collapse" id="navbarNavDropdown">
-    <ul class="navbar-nav">
-      <li class="nav-item">
-        <a class="nav-link" href="/stories">Stories</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/new_story">New Story</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/">My Wall</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/users">Users</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/logout">Logout ({{ current_user.firstname }})</a>
-      </li>
-      <li class="nav-item" style="margin-left: auto; margin-right: 0cm;">
-        <style>
-          .button {
-            background-color: gray;
-            border: none;
-            color: white;
-            padding: 5px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-          }
-        </style>
-        <input type="text" id=sid placeholder="Search a story...">
-        <button class="button" id=srcbtn onclick="search()">Search!</button>
-        <button class="button" id=rndbtn onclick="random_story()">Random recent story</button>
-      </li>
-    </ul>
-  </div>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="/stories">Stories</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/new_story">New Story</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/">My Wall</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/users">Users</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/logout">Logout ({{ current_user.firstname }})</a>
+            </li>
+        </ul>
+        <span class="navbar-text">
+                <button type="button" class="btn btn-secondary fas fa-filter" data-toggle="modal"
+                        data-target="#filterModal"></button>
+        </span>
 
-  <script>  
-    function search() {  
-        let search = document.getElementById("sid").value
-        window.location.replace("/stories?q=" + search)
-    } 
+    </div>
 
-    function random_story() {  
-        window.location.replace("/stories/random_story");  
-    }
+    <!-- Modal -->
+    <div class="modal fade" id="filterModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Story search filter</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
 
-  </script>
-  <script>  
-    var input = document.getElementById("sid")
-    input.addEventListener("keyup", function(event) {
-      if (event.key === 'Enter') {
-       event.preventDefault();
-       document.getElementById("srcbtn").click();
-      }
-    });
-  </script>
+                    <!-- Search functionality-->
+                    <input type="text" id=sid placeholder="Search a story...">
+                    <br><br>
+
+                    <!-- date picker-->
+                    <div class="row">
+                        <div class="col-md-10">
+                            <div class="input-daterange input-group" id="datepicker">
+                                <input type="date" class="input-sm form-control" name="start" id="start"/>
+                                <span class="input-group-addon">to</span>
+                                <input type="date" class="input-sm form-control" name="end" id="end"/>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+
+                    <!-- theme picker-->
+                    <div class="btn-group" data-toggle="buttons">
+                        <label class="btn btn-light" id="standard_set" onclick="pickSet('standard')">
+                            <input type="radio" name="diceset" autocomplete="off" value="standard"
+                                   style="visibility:hidden;" onclick="pickSet('standard')">
+                            standard
+                            <img src="/static/img/standard.png" style="height: 2em;width: 2em;">
+                        </label>
+                        <label class="btn btn-light" id="halloween_set" onclick="pickSet('halloween')">
+                            <input type="radio" name="diceset" autocomplete="off" value="halloween"
+                                   style="visibility:hidden;" onclick="pickSet('halloween')">
+                            halloween
+                            <img src="/static/img/halloween.png" style="height: 2em;width: 2em;">
+                        </label>
+                        <label class="btn btn-light" id="xmas_set" onclick="pickSet('xmas')">
+                            <input type="radio" name="diceset" autocomplete="off" value="xmas"
+                                   style="visibility:hidden;" onclick="pickSet('xmas')">
+                            xmas
+                            <img src="/static/img/xmas.png" style="height: 2em;width: 2em;">
+                        </label>
+                    </div>
+                    <i class="fas fa-times-circle" onclick="removeSet()"></i>
+                    <br><br>
+
+                    <!-- random story-->
+                    <button class="btn btn-secondary" id=rndbtn onclick="random_story()">Random recent story
+                    </button>
+                    <br><br>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <a type="button" class="btn btn-danger" id=srcbtn href="/stories">Reset filters</a>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="filter()">Filter
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let set_checked
+
+        function pickSet(setname) {
+            set_checked = setname;
+        }
+
+        function removeSet() {
+            if (set_checked) {
+                $("#"+set_checked+"_set").removeClass("active")
+                $("[name=diceset]").filter("[value='"+set_checked+"']").prop("checked",false);
+                set_checked = null;
+            }
+        }
+
+        function search() {
+            let search = document.getElementById("sid").value
+            window.location.replace("/stories?q=" + search)
+        }
+
+        function random_story() {
+            window.location.replace("/stories/random_story");
+        }
+
+        function filter() {
+            let input1 = document.getElementById("start");
+            let input2 = document.getElementById("end");
+            let search = document.getElementById("sid").value
+            let query = "/stories?"
+
+            //filter by name
+            if (search) {
+                query += "&q=" + search
+            }
+
+            //filter date
+            if (input1.value) {
+                if (!input2.value) {
+                    input2.value = input1.value
+                }
+                query += ("&from=" + input1.value + "&to=" + input2.value)
+            }
+
+            //filter theme
+            if (set_checked) {
+                query += "&theme=" + set_checked
+            }
+
+            window.location.replace(query);
+        }
+
+    </script>
+    <script>
+        var input = document.getElementById("sid")
+        input.addEventListener("keyup", function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById("srcbtn").click();
+            }
+        });
+    </script>
 </nav>
