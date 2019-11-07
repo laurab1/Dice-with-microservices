@@ -93,7 +93,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <a type="button" class="btn btn-danger" id=srcbtn href="/stories">Reset filters</a>
+                    <button type="button" class="btn btn-danger" id=srcbtn onclick="resetfilter()">Reset filters</button>
                     <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="filter()">Filter
                     </button>
 
@@ -146,6 +146,13 @@
             }
 
             window.location.replace(query);
+        }
+
+        function resetfilter() {
+            document.getElementById("start").value=null
+            document.getElementById("end").value=null
+            document.getElementById("sid").value=null
+            removeSet()
         }
 
         <!-- Functions that get allow to get url parameters from the page-->
