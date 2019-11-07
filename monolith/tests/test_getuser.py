@@ -18,6 +18,7 @@ def test_getuser(client, auth, database, templates):
     example.author_id = 2
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
     database.session.commit()
 

@@ -73,7 +73,7 @@ def _stories(message='', marked=True, id=0, react=0):
                 #checks for edge cases
                 if from_dt == to_dt:
                     to_dt = from_dt + dt.timedelta(days=1)
-                
+
                 if from_dt > to_dt:
                     message = 'Wrong date parameters (from-date greater than to-date or viceversa)!'
                     stories = []
@@ -145,7 +145,7 @@ def _get_random_recent_story(message=''):
             recent_story.append(stories.all()[i])
     else:
         message = 'no stories!'
-    
+
 
     #if there are no recent stories, just show the "Stories" tab with the error message
     if len(recent_story) == 0:

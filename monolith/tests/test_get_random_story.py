@@ -11,6 +11,7 @@ def test_get_random_recent_story_1(client, database, templates):
     example.author_id = 1
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -20,6 +21,7 @@ def test_get_random_recent_story_1(client, database, templates):
     example.date = dt.datetime(2019, 9, 5)
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -29,6 +31,7 @@ def test_get_random_recent_story_1(client, database, templates):
     example.author_id = 2
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     database.session.commit()
@@ -50,6 +53,7 @@ def test_get_random_recent_story_2(client, database, templates):
     example.author_id = 1
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -59,6 +63,7 @@ def test_get_random_recent_story_2(client, database, templates):
     example.date = dt.datetime(2019, 9, 5)
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -67,6 +72,7 @@ def test_get_random_recent_story_2(client, database, templates):
     example.author_id = 1
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -76,6 +82,7 @@ def test_get_random_recent_story_2(client, database, templates):
     example.author_id = 2
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     database.session.commit()
@@ -100,6 +107,7 @@ def test_get_random_story(client, database, templates):
     example.date = dt.datetime(2019, 9, 5)
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -109,6 +117,7 @@ def test_get_random_story(client, database, templates):
     example.author_id = 2
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -118,6 +127,7 @@ def test_get_random_story(client, database, templates):
     example.author_id = 1
     example.is_draft = True
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -127,6 +137,7 @@ def test_get_random_story(client, database, templates):
     example.author_id = 1
     example.is_draft = False
     example.deleted = True
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     database.session.commit()

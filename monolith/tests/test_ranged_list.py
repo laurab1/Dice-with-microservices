@@ -14,6 +14,7 @@ def init_database(database):
     example.date = dt.datetime(year=2018, month=12, day=1)
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -23,6 +24,7 @@ def init_database(database):
     example.date = dt.datetime(year=2019, month=1, day=1)
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -32,6 +34,7 @@ def init_database(database):
     example.date = dt.datetime(year=2019, month=3, day=12)
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -41,6 +44,7 @@ def init_database(database):
     example.date = dt.datetime(year=2017, month=10, day=1)
     example.is_draft = False
     example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
 
     example = Story()
@@ -50,7 +54,8 @@ def init_database(database):
     example.date = dt.datetime(year=2018, month=12, day=7)
     example.is_draft = False
     example.deleted = False
-    database.session.add(example)   
+    example.dice_set = ['a', 'b', 'c']
+    database.session.add(example)
 
     database.session.commit()
 
@@ -63,6 +68,7 @@ def test_all_stories(client, templates, init_database):
     message = templates[-1]['message']
     assert stories.count() == 5
     assert message == ''
+
 
 def test_ranged_stories(client, templates, init_database):
     # invalid query params
