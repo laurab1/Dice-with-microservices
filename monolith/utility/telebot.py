@@ -49,7 +49,8 @@ def on_login(update, context):
     try:
         reply = requests.post('http://localhost:5000/bot/register',
                               data={'username': username, 'chat_id': chat_id})
-    except Exception:
+    except Exception as e:
+        print(e)
         return telegram_bot.send_message(
             chat_id=chat_id,
             text='Server is currently not reachable')
