@@ -8,15 +8,17 @@ from flask_bootstrap import Bootstrap
 
 from monolith import celeryapp
 from monolith.auth import login_manager
-from monolith.database import User, db
+from monolith.database import DATABASE_NAME, User, db
+from monolith.utility.telebot import create_bot, on_login, on_start, token
+
+from telegram.ext import CommandHandler, Updater
 
 
-def create_app(test=False, database='sqlite:///storytellers.db',
-               login_disabled=False):
+def create_app(test=False, database=DATABASE_NAME,
+               login_disabled=False, test_telegram=False):
     '''
     Prepares initializes the application and its utilities.
     '''
-    
     app = Flask(__name__)
     Bootstrap(app)
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
@@ -53,6 +55,8 @@ def create_app(test=False, database='sqlite:///storytellers.db',
         app.config['SMTP_SERVER_PORT'] = 8025
         # Disables periodic task
         app.config['CELERYBEAT_SCHEDULE'] = {}
+    if test_telegram:
+        app.config['TELEGRAM_TESTING'] = True
 
     # Celery initialization
     celery = celeryapp.create_celery_app(app)
@@ -64,12 +68,26 @@ def create_app(test=False, database='sqlite:///storytellers.db',
     login_manager.login_view = '/login'
     db.create_all(app=app)
 
+    if not test or (test and test_telegram):
+        # initialize Telegram
+        create_bot(mock=test_telegram)
+        updater = Updater(token, use_context=True)
+        dp = updater.dispatcher
+
+        # Add functions to the dispatcher.
+        # When a function such as start is launched on telegram it will run the
+        # corresponding function
+        dp.add_handler(CommandHandler('start', on_start))
+        dp.add_handler(CommandHandler('login', on_login))
+        updater.start_polling()
+        app.config['TELEGRAM_UPDATER'] = updater
+
     # Required to avoid circular dependencies
     from monolith.views import blueprints
     for bp in blueprints:
         app.register_blueprint(bp)
         bp.app = app
-    
+
     # Registration of the error handlers
     from monolith.views import errors
     app.register_error_handler(400, errors.bad_request)

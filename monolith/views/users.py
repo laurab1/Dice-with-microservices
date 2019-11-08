@@ -167,3 +167,21 @@ def get_followed():
     '''
     template_dict = get_followed_dict(current_user.id)
     return render_template('followed.html', **template_dict)
+
+
+@users.route('/bot/register', methods=['POST'])
+def register():
+    username = request.form.get('username')
+    chat_id = request.form.get('chat_id')
+
+    if username is not None and chat_id is not None:
+        user = User.query.filter_by(username=username).one_or_none()
+
+        if user is not None:
+            user.telegram_chat_id = chat_id
+            db.session.commit()
+            return '', 200
+
+        abort(404)
+
+    abort(400)

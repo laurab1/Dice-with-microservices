@@ -152,11 +152,13 @@ def auth(client):
     '''
     return AuthActions(client)
 
+
 def get_auth(client):
     '''
     Provides login/logout capabilities.
     '''
     return AuthActions(client)
+
 
 class StoryActions:
     '''
@@ -234,11 +236,13 @@ def story_actions(client, templates):
     '''
     return StoryActions(client, templates)
 
+
 def get_story_actions(client, templates):
     '''
     Provides stories related capabilities.
     '''
     return StoryActions(client, templates)
+
 
 class UserActions:
     '''
@@ -269,11 +273,13 @@ def user_actions(client, templates):
     '''
     return UserActions(client, templates)
 
+
 def get_user_actions(client, templates):
     '''
     Provides users related capabilities.
     '''
     return UserActions(client, templates)
+
 
 @pytest.fixture
 def templates(app):

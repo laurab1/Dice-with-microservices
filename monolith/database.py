@@ -8,6 +8,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
+DATABASE_NAME = 'sqlite:///storytellers.db'
+
 db = SQLAlchemy()
 
 
@@ -37,6 +39,7 @@ class User(db.Model):
     lastname = db.Column(db.Unicode(128))
     password = db.Column(db.Unicode(128))
     dateofbirth = db.Column(db.DateTime)
+    telegram_chat_id = db.Column(db.Integer)
     is_active = db.Column(db.Boolean, default=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_anonymous = False
