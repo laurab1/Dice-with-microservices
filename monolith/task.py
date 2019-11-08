@@ -61,9 +61,11 @@ def remove_reaction(storyid, react):
 
 @celery.task
 def send_digest():
-    """Periodic task that sends to users a digest of the stories that were
+    '''
+    Periodic task that sends to users a digest of the stories that were
     submitted during the last 4 weeks from followed users.
-    """
+    '''
+    
     ids = User.query.all()
     now = dt.datetime.now().replace(minute=0, hour=0, second=0, microsecond=0)
     date_from = now - dt.timedelta(weeks=4)

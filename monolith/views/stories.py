@@ -75,17 +75,17 @@ def _stories(message='', marked=True, id=0, react=0):
     '''
     Returns a list of stories depending on the query parameters.
 
-    1) from/to query parameters: the user specifies from which time frame he/she
+    - from/to query parameters: the user specifies from which time frame he/she
         wants the stories;
-    2) theme query parameter: the user specifies the theme of the dice set used in the
-        stories.
-    
+    - theme query parameter: the user specifies the theme of the dice set used in the
+        stories;
+    - q parameters: the user specifies a word that must be present in the stories.
+
     Raises:
-        1) ValueError: the date format is not valid
+        ValueError: the date format is not valid
 
     Returns:
-        1) 200 -> the list of the stories in the chosen time frame
-        2) 200 -> the list of the stories of the last 5 days about the chosen theme
+        200 -> the list of the stories in the chosen time frame
     '''
     stories = Story.query.filter_by(deleted=False, is_draft=False)
     stories = stories.order_by(Story.date.desc())
