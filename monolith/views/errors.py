@@ -1,3 +1,8 @@
+'''
+This file contains the renderings of the user-friendly pages for the
+HTTP error codes.
+'''
+
 from flask import render_template
 
 

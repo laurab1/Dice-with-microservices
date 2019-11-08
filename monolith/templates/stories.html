@@ -28,13 +28,12 @@
 
             <div class="list-group list-group-flush">
                 {% for user in users %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center"
-                         id="user_{{ user.id }}">
+                    <div class="list-group-item d-flex justify-content-between align-items-center" id="user_{{ user.id }}">
                         <a class="text-dark btn" disabled="true"
                            href="/users/{{ user.id }}">{{ user.username }}</a>
-                        <span type="button" class="badge badge-danger badge-pill btn" onclick="unfollow({{ user.id }})">
+                        <a type="button" class="btn badge badge-danger badge-pill bg-danger text-white" onclick="unfollow({{ user.id }})">
                             Unfollow
-                        </span>
+                        </a>
                     </div>
                 {% endfor %}
             </div>

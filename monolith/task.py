@@ -13,9 +13,13 @@ from monolith.database import Reaction, Story, User, db
 celery = celeryapp.celery
 
 
-# celery task to run asynchronously
+# Celery task to run asynchronously
 @celery.task
 def add_reaction(reactorid, storyid, react):
+    '''
+    Performs the add of a reaction to a user's story.
+    '''
+
     # Without this two lines testing raises DetachedInstanceError
     # No explanation still found
     if app.config['TESTING']:
@@ -36,6 +40,10 @@ def add_reaction(reactorid, storyid, react):
 # another celery task to remove an old reaction
 @celery.task
 def remove_reaction(storyid, react):
+    '''
+    Performs the removal of a reaction to a user's story.
+    '''
+
     # Without this two lines testing raises DetachedInstanceError
     # No explanation still found
     if app.config['TESTING']:
@@ -53,9 +61,11 @@ def remove_reaction(storyid, react):
 
 @celery.task
 def send_digest():
-    """Periodic task that sends to users a digest of the stories that were
+    '''
+    Periodic task that sends to users a digest of the stories that were
     submitted during the last 4 weeks from followed users.
-    """
+    '''
+    
     ids = User.query.all()
     now = dt.datetime.now().replace(minute=0, hour=0, second=0, microsecond=0)
     date_from = now - dt.timedelta(weeks=4)

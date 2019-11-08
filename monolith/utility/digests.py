@@ -6,9 +6,10 @@ from monolith.database import Story
 
 
 def story_digest(story):
-    """Returns a textual representation of a given story, meant to be sent
+    '''
+    Returns a textual representation of a given story, meant to be sent
     via mail digest.
-    """
+    '''
     roll = ', '.join(story.dice_set)
     name = f'{story.author.firstname} {story.author.lastname}'
     return (
@@ -21,8 +22,17 @@ def story_digest(story):
 
 
 def build_user_digest(user, date_from, date_to):
-    """Builds a complete email digest for a given user and a given time
-    interval."""
+    '''
+    Builds a complete email digest for a given user and a given time
+    interval.
+
+    Args:
+        user(User): the user requesting the service
+        date_from(date)/date_to(date): determine the time frame of the digest
+    
+    Returns:
+        msg: message to be sent via e-mail
+    '''
     msg = EmailMessage()
     msg['Subject'] = f'Storyteller digest from {date_from} to {date_to}'
     msg['From'] = app.config['SERVER_MAIL']

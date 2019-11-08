@@ -16,6 +16,9 @@ from telegram.ext import CommandHandler, Updater
 
 def create_app(test=False, database=DATABASE_NAME,
                login_disabled=False, test_telegram=False):
+    '''
+    Prepares initializes the application and its utilities.
+    '''
     app = Flask(__name__)
     Bootstrap(app)
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
@@ -55,11 +58,11 @@ def create_app(test=False, database=DATABASE_NAME,
     if test_telegram:
         app.config['TELEGRAM_TESTING'] = True
 
-    # initialize Celery
+    # Celery initialization
     celery = celeryapp.create_celery_app(app)
     celeryapp.celery = celery
 
-    # initilize Database
+    # Initialization of the DB and login manager
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = '/login'
@@ -85,6 +88,7 @@ def create_app(test=False, database=DATABASE_NAME,
         app.register_blueprint(bp)
         bp.app = app
 
+    # Registration of the error handlers
     from monolith.views import errors
     app.register_error_handler(400, errors.bad_request)
     app.register_error_handler(401, errors.unauthorized)
@@ -92,7 +96,7 @@ def create_app(test=False, database=DATABASE_NAME,
     app.register_error_handler(404, errors.page_not_found)
     app.register_error_handler(410, errors.gone)
 
-    # create a first admin user
+    # Creation of an admin user
     with app.app_context():
         q = db.session.query(User).filter(User.email == 'example@example.com')
         user = q.first()

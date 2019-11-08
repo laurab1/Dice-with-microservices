@@ -28,6 +28,10 @@ class WrongWordError(Exception):
 
 
 def get_synonyms(word):
+    '''
+    Gets the synonyms of a word.
+    '''
+
     url = f'{_URL_WORDS_API}{word}/synonyms'
     response = requests.request('GET', url, headers=_HEADERS_WORDS_API)
 
@@ -37,6 +41,19 @@ def get_synonyms(word):
 
 
 def _check_story(roll, story_text):
+    '''
+    Validates the story by checking if the words (or a synonym) of all the faces of the
+    rolled dice are contained in the text. 
+
+    Args:
+        roll(list(str)): list of words representing the faces
+        story_text(str): the text of the story
+    
+    Raises:
+        NotValidStoryError
+
+    '''
+
     n_dices = len(roll)
     roll_lower = [w.lower() for w in roll]
 

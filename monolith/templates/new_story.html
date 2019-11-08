@@ -18,50 +18,55 @@
     <div class="container d-flex flex-wrap align-items-center bg-text">
 
         <div class="jumbotron w-100 transparent-bg">
+            <div class="row">
+                <div class="col">
 
-            <form action="/roll_dice" method="GET" role="form">
+                    <form action="/roll_dice" method="GET" role="form">
 
-                <label for="validationTooltip01">How many dice you want to roll?</label>
-                <div class="form-group">
-                    <div class="btn-group" data-toggle="buttons">
+                        <label for="validationTooltip01">How many dice you want to roll?</label>
+                        <div class="form-group">
+                            <div class="btn-group" data-toggle="buttons">
 
-                        <label class="btn btn-secondary active">
-                            <input type="radio" name="dicenum" id="dicenum" autocomplete="off" value="4"
-                                   style="visibility:hidden;" checked> 4
-                        </label>
-
-
-                        <label class="btn btn-secondary">
-                            <input type="radio" name="dicenum" id="dicenum" autocomplete="off" value="5"
-                                   style="visibility:hidden;"> 5
-                        </label>
+                                <label class="btn btn-secondary active">
+                                    <input type="radio" name="dicenum" id="dicenum" autocomplete="off" value="4"
+                                           style="visibility:hidden;" checked> 4
+                                </label>
 
 
-                        <label class="btn btn-secondary">
-                            <input type="radio" name="dicenum" id="dicenum" autocomplete="off" value="6"
-                                   style="visibility:hidden;"> 6
-                        </label>
+                                <label class="btn btn-secondary">
+                                    <input type="radio" name="dicenum" id="dicenum" autocomplete="off" value="5"
+                                           style="visibility:hidden;"> 5
+                                </label>
 
-                    </div>
+
+                                <label class="btn btn-secondary">
+                                    <input type="radio" name="dicenum" id="dicenum" autocomplete="off" value="6"
+                                           style="visibility:hidden;"> 6
+                                </label>
+
+                            </div>
+                        </div>
+                        <label for="validationTooltip02">Choose Dice Set</label>
+                        <div class="form-group">
+                            <div class="btn-group" data-toggle="buttons">
+                                {% for set in diceset %}
+                                    <label class="btn btn-dark text-white">
+                                        <input type="radio" name="diceset" id="dicenum" autocomplete="off"
+                                               value="{{ set }}"
+                                               style="visibility:hidden;" checked>
+                                        {{ set }}
+                                        <img src="static/img/{{ set }}.png" style="height: 2em;width: 2em;">
+                                    </label>
+
+                                {% endfor %}
+
+                            </div>
+                        </div>
+                        <br>
+                        <button type="submit" class="btn btn-success">Roll the dice</button>
+                    </form>
                 </div>
-                <label for="validationTooltip02">Choose Dice Set</label>
-                <div class="form-group">
-                    <div class="btn-group" data-toggle="buttons">
-                        {% for set in diceset %}
-                            <label class="btn btn-dark text-white">
-                                <input type="radio" name="diceset" id="dicenum" autocomplete="off" value="{{ set }}"
-                                       style="visibility:hidden;" checked>
-                                {{ set }}
-                                <img src="static/img/{{ set }}.png" style="height: 2em;width: 2em;">
-                            </label>
-
-                        {% endfor %}
-
-                    </div>
-                </div>
-                <br>
-                <button type="submit" class="btn btn-success">Roll the dice</button>
-            </form>
+            </div>
         </div>
     </div>
 
