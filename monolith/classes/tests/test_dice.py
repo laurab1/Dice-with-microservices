@@ -34,7 +34,3 @@ class TestDie(unittest.TestCase):
         die = Die(RESOURCES_DIR + '/diceset/standard/die0.txt')
         res = die.throw_die()
         self.assertEqual(res, 'bag')
-
-
-if __name__ == '__main__':
-    unittest.main()
