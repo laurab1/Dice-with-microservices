@@ -8,3 +8,4 @@ pip-tools
 flask_bootstrap
 requests
 blinker
+aiosmtpd

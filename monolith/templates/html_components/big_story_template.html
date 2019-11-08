@@ -1,0 +1,102 @@
+{% if story.theme == 'xmas' %}
+    <div class="bg-image xmas"></div>
+{% elif story.theme == 'halloween' %}
+    <div class="bg-image halloween"></div>
+{% elif story.theme == 'standard' %}
+    <div class="bg-image standard"></div>
+{% endif %}
+
+
+<div class=" justify-content-center align-items-center bg-text">
+
+
+    <div class="mycard transparent-bg">
+
+
+        <div class="container">
+            {% if story.dice_set != None %}
+                <br>
+                <!-- DRAFT BADGE -->
+                {% if story.is_draft %}
+                    <h4 class="story-text"><span class="badge badge-warning badge-pill">Draft</span></h4><br>
+                {% endif %}
+
+                <!-- DICE USED -->
+                <div class="row">
+                    <div class="col-sm-12 center-block text-center">
+                        <h5>Dice used </h5>
+                        <hr class="style2">
+                    </div>
+                </div>
+                <div class="row">
+                    {% for die in story.dice_set %}
+                        <div class="col">
+                            <div class="card card-block d-flex bg-transparent border border-light text-white mb-3"
+                                 style="width: 8rem; height: 8rem;">
+                                <div class="card-body align-items-center d-flex justify-content-center">
+                                    <h5 class="card-title ">{{ die }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %} <br>
+
+            <div class="row">
+                <div class="col-sm-12 center-block text-center">
+                    <h5>Story</h5>
+                    <hr class="style2">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12 center-block text-center">
+
+                    <!-- EDIT BADGE -->
+                    {% if story.is_draft %}
+                        {% if story.author.id == current_user.id %}
+                            <a class="btn btn-warning" href="/stories/{{ story.id }}/edit">Edit</a>
+                        {% endif %}
+                    {% endif %}
+
+                    <p style="text-align: justify-all">
+                    <h5 class="text-justify">
+                        <b>{{ story.text }}</b>
+                    </h5>
+                    </p >
+                    <br>
+                    <!-- LIKE DISLIKE, DATE, AUTHOR -->
+                    {% if current_user.is_authenticated %}
+                        <div class="row">
+                            <div class="col-md-6"></div>
+                            <div class="col-md-6">
+                                <b><span id="message" class="text-danger"></span></b>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <span style="margin-right: 1rem;">Published: <i>{{ story.date.day }}/{{ story.date.month }}/{{ story.date.year }}</i></span>
+                            </div>
+                            <div class="col-md-4">
+                                <i name="like" class="btn btn-primary  fas fa-thumbs-up"
+                                   onclick="like('{{ url_for('stories._post_story_react', storyid=story.id) }}')"></i>
+                                <span class="badge badge-seconary badge-pill" id="likes"> {{ story.likes }} </span>
+
+                                <i name="like" class="btn btn-danger fas fa-thumbs-down"
+                                   onclick="dislike('{{ url_for('stories._post_story_react', storyid=story.id) }}')"></i>
+                                <span class="badge badge-seconary badge-pill"
+                                      id="dislikes"> {{ story.dislikes }} </span>
+                            </div>
+                            <div class="col-md-4">
+                                Author: <a href="/users/{{ story.author.id }} "
+                                           class="btn badge badge-pill badge-dark"> {{ story.author.username }} </a>
+                            </div>
+                        </div>
+                    {% endif %}
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

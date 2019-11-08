@@ -91,7 +91,7 @@ class Story(db.Model):
 
     # Hybrid property which allows to rebuild the faces of the rolled dice
     # for this story as a JSON object.
-    _dice_set = db.Column(db.Text(100))
+    _dice_set = db.Column(db.Text(100), nullable=False)
 
     # Flags which determine whether the story is deleted or is a draft.
     deleted = db.Column(db.Boolean, default=False)

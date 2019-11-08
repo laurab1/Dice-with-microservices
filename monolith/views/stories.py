@@ -89,45 +89,60 @@ def _stories(message='', marked=True, id=0, react=0):
     '''
     stories = Story.query.filter_by(deleted=False, is_draft=False)
     stories = stories.order_by(Story.date.desc())
-    # check for query parameters
-    if len(request.args) != 0:
-        from_date = request.args.get('from')
-        to_date = request.args.get('to')
-        theme = request.args.get('theme')
-        # check if the query parameters from and to
-        if from_date is not None and to_date is not None:
-            from_dt = None
-            to_dt = None
 
-            # check if the values are valid
-            try:
-                from_dt = dt.datetime.strptime(from_date, '%Y-%m-%d')
-                to_dt = dt.datetime.strptime(to_date, '%Y-%m-%d')
-            except ValueError:
-                message = 'INVALID date in query parameters: use yyyy-mm-dd'
-            else:  # successful try!
-                # query the database with the given values
-                stories = stories.group_by(Story.date) \
-                    .having(Story.date >= from_dt) \
-                    .having(Story.date <= to_dt)
-                if stories.count() == 0:
-                    message = 'no stories with the given dates'
-        elif theme is not None:
-            t_delta = dt.datetime.now() - dt.timedelta(days=5)
-            stories = stories.filter(Story.date >= t_delta)
-            stories = stories.filter(Story.theme == theme)
-        else:
-            message = 'WRONG QUERY parameters: you have to specify the date ' \
-                      'range as from=yyyy-mm-dd&to=yyyy-mm-dd or a dice set ' \
-                      'theme as theme=\'diceset\'!'
+    if stories.count() == 0:
+        message = 'no stories'
+    else:
+        # check for query parameters
+        if len(request.args) != 0:
+            from_date = request.args.get('from')
+            to_date = request.args.get('to')
+            theme = request.args.get('theme')
+            query = request.args.get('q')
+            # check if the query parameters from and to
+            if from_date is not None and to_date is not None:
+                from_dt = None
+                to_dt = None
+
+                # check if the values are valid
+                try:
+                    from_dt = dt.datetime.strptime(from_date, '%Y-%m-%d')
+                    to_dt = dt.datetime.strptime(to_date, '%Y-%m-%d')
+                except ValueError:
+                    message = 'INVALID date in query parameters: use yyyy-mm-dd'
+                else:  # successful try!
+                    # checks for edge cases
+                    if from_dt == to_dt:
+                        to_dt = from_dt + dt.timedelta(days=1)
+
+                    if from_dt > to_dt:
+                        message = 'Wrong date parameters (from-date greater ' \
+                                'than to-date or viceversa)!'
+                        stories = []
+                    else:
+                        # query the database with the given values
+                        stories = stories.group_by(Story.date) \
+                            .having(Story.date >= from_dt) \
+                            .having(Story.date <= to_dt)
+                        if stories.count() == 0:
+                            message = 'no stories with the given dates'
+
+            if theme is not None:
+                t_delta = dt.datetime.now() - dt.timedelta(days=5)
+                stories = stories.filter(Story.date >= t_delta)
+                stories = stories.filter(Story.theme == theme)
+
+            if query is not None:
+                words = query.split(' ')
+                for word in words:
+                    # search for single words, case insensitive
+                    stories = stories.filter(Story.text.ilike(f'%{word}%'))
 
     # get following users if logged
-    curuser = current_user
     if current_user.is_authenticated:
         template_dict = get_followed_dict(current_user.id)
     else:
         template_dict = {}
-
 
     return render_template('stories.html', message=message, stories=stories,
                            like_it_url='http://127.0.0.1:5000/stories/',
@@ -186,9 +201,12 @@ def _get_random_recent_story(message=''):
     else:
         message = 'no stories!'
 
-    return render_template('stories.html', message=message,
-                           stories=recent_story,
-                           like_it_url='http://127.0.0.1:5000/stories/')
+
+    #if there are no recent stories, just show the "Stories" tab with the error message
+    if len(recent_story) == 0:
+        abort(404, message)
+    else:
+        return render_template('story.html', story=recent_story[0], message=message)
 
 
 @stories.route('/stories/<storyid>', methods=['GET'])
@@ -377,4 +395,4 @@ def _story_edit(storyid):
         form.is_draft.data = story.is_draft
 
     return render_template('edit_story.html', story_id=storyid,
-                           dice=story.dice_set, form=form)
+                           dice=story.dice_set, form=form, story=story)

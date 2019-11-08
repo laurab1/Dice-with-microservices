@@ -1,102 +1,122 @@
 <html>
 
 <head>
-  {% include 'html_components/bootstrap.html' %}
+    {% include 'html_components/bootstrap.html' %}
     <style>
-    #is_draft {
-      display: none;
-    }
-  </style>
+        #is_draft {
+            display: none;
+        }
+    </style>
+    <link href="/static/css/story.css" rel="stylesheet"/>
+    <link href="/static/css/background.css" rel="stylesheet"/>
 </head>
 
 <body>
 
-  <!-- ----------------- NAV BAR ------------------ -->
-  {% if current_user.is_authenticated %}
+<!-- ----------------- NAV BAR ------------------ -->
+{% if current_user.is_authenticated %}
 
-  {% include 'html_components/nav.html' %}
+    {% include 'html_components/nav.html' %}
 
-  <div class="container-fluid">
+    {% if story.theme == 'xmas' %}
+        <div class="bg-image xmas"></div>
+    {% elif story.theme == 'halloween' %}
+        <div class="bg-image halloween"></div>
+    {% elif story.theme == 'standard' %}
+        <div class="bg-image standard"></div>
+    {% endif %}
 
-    <div class="jumbotron">
+    <div class="container d-flex flex-wrap align-items-center bg-text">
+        <div class="jumbotron w-100 transparent-bg">
 
-      <form action="/stories/{{story_id}}/edit" method="POST" role="form" name="storyform">
-        {{ form.hidden_tag() }}
+            <form action="/stories/{{ story_id }}/edit" method="POST" role="form" name="storyform">
+                {{ form.hidden_tag() }}
 
-        <label for="validationTooltip01">Current dice values</label>
-        <div class="row">
-          {% for die in dice %}
-          <div class="col">
-            <div class="card card-block d-flex text-white bg-secondary mb-3" style="width: 8rem; height: 8rem;">
-              <div class="card-body align-items-center d-flex justify-content-center">
-                <h5 class="card-title ">{{ die }}</h5>
-              </div>
-            </div>
-          </div>
-          {% endfor %}
+                <div class="row">
+                    <div class="col-sm-12 center-block text-center">
+                        <h5>Current dice values </h5>
+                        <hr class="style2">
+                    </div>
+                </div>
+                <div class="row">
+                    {% for die in dice %}
+                        <div class="col">
+                            <div class="card card-block d-flex text-white bg-transparent border border-light mb-3"
+                                 style="width: 8rem; height: 8rem;">
+                                <div class="card-body align-items-center d-flex justify-content-center">
+                                    <h5 class="card-title ">{{ die }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 center-block text-center">
+                        <br>
+                        {{ form['text'].label }}
+                        <br>
+                        {{ form['text'](class_='form-control input-lg bg-dark text-white') }}
+
+                        <!-- THIS FIELD IS HIDDEN -->
+                        {{ form['is_draft']() }}
+                        <!-- ==================== -->
+
+                        {% for e in form['text'].errors %}
+                            <p class="help-block">{{ e }}</p>
+                        {% endfor %}
+                        <br>
+
+                        <button type="button" id="validate" class="btn btn-success">Submit Story</button>
+                        <button type="button" id="draft" class="btn btn-primary">Submit Draft Story</button>
+                        <button type="button" id="cancel" class="btn btn-danger">Cancel</button>
+            </form>
         </div>
-        <br>
-        {{ form['text'].label }}
-        <br>
-        {{ form['text']() }}
-
-        <!-- THIS FIELD IS HIDDEN -->
-        {{ form['is_draft']() }}
-        <!-- ==================== -->
-
-        {% for e in form['text'].errors %}
-        <p class="help-block">{{ e }}</p>
-        {% endfor %}
-        <br>
-
-        <button type="button" id="validate" class="btn btn-success">Submit Story</button>
-        <button type="button" id="draft" class="btn btn-primary">Submit Draft Story</button>
-        <button type="button" id="cancel" class="btn btn-danger">Cancel</button>
-      </form>
+    </div>
 
     </div>
 
 
 
-    {% else %}
+{% else %}
     Hi Anonymous, <a href="/login">Log in</a>
-    {% endif %}
+{% endif %}
 
-  </div>
+</div>
 
-  <script>
+
+<script>
     let manual_unload = false
     let storyform = document.querySelector('form')
 
     document.querySelector('#validate').addEventListener('click', evt => {
-      manual_unload = true
-      storyform.is_draft.checked = false
-      storyform.submit()
+        manual_unload = true
+        storyform.is_draft.checked = false
+        storyform.submit()
     })
     document.querySelector('#draft').addEventListener('click', evt => {
-      manual_unload = true
-      storyform.is_draft.checked = true
-      storyform.submit()
+        manual_unload = true
+        storyform.is_draft.checked = true
+        storyform.submit()
     })
     document.querySelector('#cancel').addEventListener('click', evt => {
-      manual_unload = true
-      fetch("{{ url_for('stories._deleteStory', storyid=story_id) }}", {method: 'DELETE'})
-        .then(response => {
-          window.location = "{{ url_for('stories._stories') }}"
-        })
+        manual_unload = true
+        fetch("{{ url_for('stories._deleteStory', storyid=story_id) }}", {method: 'DELETE'})
+            .then(response => {
+                window.location = "{{ url_for('stories._stories') }}"
+            })
     })
     window.addEventListener('beforeunload', evt => {
-      console.log('event ' + manual_unload)
-      if (manual_unload) {
-        return false
-      }
+        console.log('event ' + manual_unload)
+        if (manual_unload) {
+            return false
+        }
 
-      evt.preventDefault()
-      console.log('beforeunload')
-      fetch("{{ url_for('stories._deleteStory', storyid=story_id) }}", {method: 'DELETE'})
-      return true
+        evt.preventDefault()
+        console.log('beforeunload')
+        fetch("{{ url_for('stories._deleteStory', storyid=story_id) }}", {method: 'DELETE'})
+        return true
     });
-  </script>
+</script>
 
 </body>
 

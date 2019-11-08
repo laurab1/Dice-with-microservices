@@ -10,8 +10,9 @@ def test_signup(client, auth, database, templates):
 
     u = database.session.query(User).filter_by(username='prova').one()
     assert [u.username, u.email] == ['prova', 'prova@prova.com']
-    
-    client.get('/logout')
+
+    auth.logout()
+    assert reply.status_code == 302
 
     reply = auth.signup('prova@prova.com', 'prova', 'prova123')
     template_capture = templates[-1]['form']['email'].errors
