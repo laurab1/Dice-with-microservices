@@ -9,7 +9,7 @@ from flask_bootstrap import Bootstrap
 from monolith import celeryapp
 from monolith.auth import login_manager
 from monolith.database import DATABASE_NAME, User, db
-from monolith.utility.telebot import on_login, on_start, token
+from monolith.utility.telebot import create_bot, on_login, on_start, token
 
 from telegram.ext import CommandHandler, Updater
 
@@ -52,6 +52,8 @@ def create_app(test=False, database=DATABASE_NAME,
         app.config['SMTP_SERVER_PORT'] = 8025
         # Disables periodic task
         app.config['CELERYBEAT_SCHEDULE'] = {}
+    if test_telegram:
+        app.config['TELEGRAM_TESTING'] = True
 
     # initialize Celery
     celery = celeryapp.create_celery_app(app)
@@ -65,6 +67,7 @@ def create_app(test=False, database=DATABASE_NAME,
 
     if not test or (test and test_telegram):
         # initialize Telegram
+        create_bot(mock=test_telegram)
         updater = Updater(token, use_context=True)
         dp = updater.dispatcher
 

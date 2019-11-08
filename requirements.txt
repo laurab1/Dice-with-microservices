@@ -10,3 +10,4 @@ requests
 blinker
 python-telegram-bot
 aiosmtpd
+git+https://github.com/jsenin/ptbtest@master
