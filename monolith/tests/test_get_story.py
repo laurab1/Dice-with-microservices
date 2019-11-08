@@ -1,7 +1,7 @@
 from monolith.database import Story, Reaction
 
 
-def test_get_story(client, auth, database, templates):
+def test_get_story(client, auth, database, templates, story_actions):
     example = Story()
     example.text = 'Trial story of example admin user :)'
     example.likes = 42
@@ -14,40 +14,43 @@ def test_get_story(client, auth, database, templates):
     auth.login()
 
     # story found
-    reply = client.get('/stories/1')
+    reply = story_actions.get_story(1)
     template_capture = templates[-1]
     assert reply.status_code == 200
     assert template_capture['story'].id == 1
     # assert template_capture['message'] == ''
 
     # story not found
-    reply = client.get('/stories/0')
+    reply = story_actions.get_story(0)
     assert reply.status_code == 404
 
     # invalid input
-    reply = client.get('stories/ciao')
+    reply = story_actions.get_story('ciao')
     assert reply.status_code == 404
 
-    #deleted story
-    reply = client.delete('/stories/1')
+    # deleted story
+    reply = story_actions.delete_story(1)
     assert reply.status_code == 200
-    reply = client.get('stories/1')
+    reply = story_actions.get_story(1)
     assert reply.status_code == 410
 
-def test_unauthorized_draft(client, auth, database, templates):
+
+def test_unauthorized_draft(client, auth, database, templates, story_actions):
     # add a draft
     auth.login()
-    reply = client.get('/roll_dice', follow_redirects=True)
+    reply = story_actions.roll_dice()
     assert reply.status_code == 200
     new_id = templates[-1]['story_id']
     auth.logout()
 
-    #try to edit a draft of another user
+    # try to edit a draft of another user
     auth.login('test1', 'test1123')
-    reply = client.get(f'/stories/{new_id}')
+    reply = story_actions.get_story(new_id)
     assert reply.status_code == 403
 
-def test_story_with_unmarked_like(client, auth, database, templates):
+
+def test_story_with_unmarked_like(client, auth, database, templates,
+                                  story_actions):
     # example story and unmarked reaction
     s = Story()
     s.text = 'Trial story of example admin user :)'
@@ -72,7 +75,7 @@ def test_story_with_unmarked_like(client, auth, database, templates):
 
     # get the story
     auth.login()
-    reply = client.get('/stories/1')
+    reply = story_actions.get_story(1)
     template_capture = templates[-1]
     assert reply.status_code == 200
     # check that the unmarked like is counted
@@ -81,7 +84,9 @@ def test_story_with_unmarked_like(client, auth, database, templates):
 
     database.session.commit()
 
-def test_story_with_unmarked_dislike(client, auth, database, templates):
+
+def test_story_with_unmarked_dislike(client, auth, database, templates,
+                                     story_actions):
     # example story and unmarked reaction
     s = Story()
     s.text = 'Trial story of example admin user :)'
@@ -106,7 +111,7 @@ def test_story_with_unmarked_dislike(client, auth, database, templates):
 
     # get the story
     auth.login()
-    reply = client.get('/stories/1')
+    reply = story_actions.get_story(1)
     template_capture = templates[-1]
     assert reply.status_code == 200
     assert template_capture['story'].likes == 42
