@@ -15,7 +15,7 @@ from telegram.ext import CommandHandler, Updater
 
 
 def create_app(test=False, database=DATABASE_NAME,
-               login_disabled=False):
+               login_disabled=False, test_telegram=False):
     app = Flask(__name__)
     Bootstrap(app)
     app.config['WTF_CSRF_SECRET_KEY'] = 'A SECRET KEY'
@@ -63,16 +63,18 @@ def create_app(test=False, database=DATABASE_NAME,
     login_manager.login_view = '/login'
     db.create_all(app=app)
 
-    # initialize Telegram
-    updater = Updater(token, use_context=True)
-    dp = updater.dispatcher
+    if not test or (test and test_telegram):
+        # initialize Telegram
+        updater = Updater(token, use_context=True)
+        dp = updater.dispatcher
 
-    # Add functions to the dispatcher.
-    # When a function such as start is launched on telegram it will run the
-    # corresponding function
-    dp.add_handler(CommandHandler('start', on_start))
-    dp.add_handler(CommandHandler('login', on_login))
-    updater.start_polling()
+        # Add functions to the dispatcher.
+        # When a function such as start is launched on telegram it will run the
+        # corresponding function
+        dp.add_handler(CommandHandler('start', on_start))
+        dp.add_handler(CommandHandler('login', on_login))
+        updater.start_polling()
+        app.config['TELEGRAM_UPDATER'] = updater
 
     # Required to avoid circular dependencies
     from monolith.views import blueprints
