@@ -11,6 +11,15 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
+    '''
+    Performs the login of a user. 
+    It checks whether the input is the username or the e-mail address, 
+    the password and performs the authentication.
+
+    Returns:
+        302 -> redirection to the user's homepage if the authentication is succesful
+        200 -> the login page with the corresponding error message
+    '''
     form = LoginForm()
     form.password.errors = []
 
@@ -36,6 +45,13 @@ def login():
 
 @auth.route('/logout')
 def logout():
+    '''
+    Performs the logout of the user.
+
+    Returns:
+        302 -> redirection to the welcome page if a user was logged in
+        203 -> notifies that the operation was not needed
+    '''
     if current_user.is_authenticated:
         logout_user()
         return redirect(url_for('home.index'))

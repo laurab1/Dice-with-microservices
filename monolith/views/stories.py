@@ -20,12 +20,33 @@ stories = Blueprint('stories', __name__)
 @stories.route('/new_story', methods=['GET'])
 @login_required
 def _newstory():
+    '''
+    Prepares the initialization of the new story.
+
+    Returns:
+        200 -> a form which enables the user to start a new story with a
+                given dice set (theme and #dice)
+    '''
     return render_template('new_story.html', diceset=get_dice_sets_list())
 
 
 @stories.route('/roll_dice', methods=['GET'])
 @login_required
 def _rollDice():
+    '''
+    Rolls the dice and enables the user to start writing a story.
+
+    The story is created as a draft, so that it can be edited.
+
+    Raises:
+        Exception: due to eventual failures during the commit of the
+            created story into the database.
+
+    Returns:
+        302 -> the user is redirected to the page in which he/she can
+                start writing the story on the faces which came out.
+    '''
+
     diceset = request.args.get('diceset', 'standard')
     dicenum = request.args.get('dicenum', 6, type=int)
 
@@ -51,6 +72,21 @@ def _rollDice():
 
 @stories.route('/stories', methods=['GET'])
 def _stories(message='', marked=True, id=0, react=0):
+    '''
+    Returns a list of stories depending on the query parameters.
+
+    - from/to query parameters: the user specifies from which time frame he/she
+        wants the stories;
+    - theme query parameter: the user specifies the theme of the dice set used in the
+        stories;
+    - q parameters: the user specifies a word that must be present in the stories.
+
+    Raises:
+        ValueError: the date format is not valid
+
+    Returns:
+        200 -> the list of the stories in the chosen time frame
+    '''
     stories = Story.query.filter_by(deleted=False, is_draft=False)
     stories = stories.order_by(Story.date.desc())
 
@@ -115,6 +151,17 @@ def _stories(message='', marked=True, id=0, react=0):
 
 @stories.route('/stories/random_story', methods=['GET'])
 def _get_random_recent_story(message=''):
+    '''
+    Gets a random recent story. 
+    
+    It is checked whether there are stories written
+    in the last 24 hours: if there exists a random one of them is returned, otherwise
+    a random story from the database is returned.
+
+    Returns:
+        200 -> a random story chosen with the criteria described above. 
+    '''
+
     stories = Story.query.filter_by(deleted=False, is_draft=False)
     recent_story = []
 
@@ -165,6 +212,13 @@ def _get_random_recent_story(message=''):
 @stories.route('/stories/<storyid>', methods=['GET'])
 @login_required
 def _get_story(storyid):
+    '''
+    Gets the story with id <storyid>.
+
+    Returns:
+        404 -> no available story with id <storyid> has been found
+        200 -> a story has been found and it is returned to the user
+    '''
     q = Reaction.query.filter_by(reactor_id=current_user.id,
                                  story_id=storyid).one_or_none()
     s = Story.query.get(storyid)
@@ -176,6 +230,8 @@ def _get_story(storyid):
     if s.author_id != current_user.id and s.is_draft:
         abort(403)  # unauthorized request
 
+    # This check allows to count also the user's reaction even if celery
+    # has not updated it yet.
     if q is not None and not q.marked:
         if q.reaction_val == 1:
             s.likes += 1
@@ -187,6 +243,16 @@ def _get_story(storyid):
 @stories.route('/stories/<storyid>/react', methods=['POST'])
 @login_required
 def _post_story_react(storyid):
+    '''
+    Sets a reaction to the story with id <storyid>.
+
+    The reactions are handled as tasks from celery, allowing an asynchronous
+    update of the database.
+
+    Returns:
+        200 -> the reaction has been set correctly
+        400 -> a reaction to the story was already set by the user
+    '''
     s = Story.query.get(storyid)
 
     if s is None:
@@ -230,6 +296,22 @@ def _post_story_react(storyid):
 @stories.route('/stories/<storyid>', methods=['DELETE'])
 @login_required
 def _deleteStory(storyid):
+    '''
+    Deletes a story.
+
+    The deletion is implemented with a flag into the Story object which determines
+    whether or not the story has been deleted by the user. This has been done in order
+    to maintain coherency of the statistics of the user.
+
+    Raises:
+        Exception: the commit of the story with the modified flag has failed
+    
+    Returns:
+        500 -> the exception above has been raised
+        404 -> the story with id <storyid> was not found
+        403 -> the user is not the owner of the story
+        200 -> the deletion was succesful
+    '''
     story = Story.query.get(storyid)
     if story is None:
         abort(404, f'Story {storyid} not found')  # story not found
@@ -253,6 +335,36 @@ def _deleteStory(storyid):
 @stories.route('/stories/<storyid>/edit', methods=['GET', 'POST'])
 @login_required
 def _story_edit(storyid):
+    '''
+    GET
+    ---
+    Opens the draft with id <storyid> in edit mode.
+    
+    Returns:
+        404 -> the story was not found
+        401 -> the user is not the author of the story
+        403 -> the story has been posted and it is not a draft anymore
+        410 -> the story was deleted
+        200 -> provides the story in edit mode
+
+
+    POST
+    ----
+    Posts the draft with id <storyid> as a completed story.
+
+    If the operation is succesful, the story is not editable anymore.
+
+    Raises:
+        NotValidStoryError -> some of the words (or synonyms) representing the faces
+            of the rolled dice were missing in the story, so it has been rejected
+    
+    Returns:
+        404 -> the story was not found
+        401 -> the user is not the author of the story
+        403 -> the story has been posted and it is not a draft anymore
+        410 -> the story was deleted
+        200 -> the story has been submitted correctly
+    '''
     story = db.session.query(Story).get(storyid)
     if story is None:
         abort(404, f'Story {storyid} not found')

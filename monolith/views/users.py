@@ -15,6 +15,12 @@ users = Blueprint('users', __name__)
 @users.route('/users')
 @login_required
 def users_():
+    '''
+    Provides the list of all the users with their last story (if any).
+
+    Returns:
+        200 -> read above
+    '''
     return render_template('users.html', result=_get_users())
 
 
@@ -32,6 +38,13 @@ def _get_users(withid=False):
 @users.route('/users/<user_id>')
 @login_required
 def get_user(user_id):
+    '''
+    Opens the wall of the user with id <user_id>.
+
+    Returns:
+        200 -> the user's wall with the list of all his/her posted stories
+    '''
+    
     if user_id == current_user.id:
         return redirect('/')
 
@@ -48,6 +61,25 @@ def get_user(user_id):
 
 @users.route('/signup', methods=['GET', 'POST'])
 def signup():
+    '''
+    GET
+    ---
+    Opens the signup page.
+
+    Returns:
+        200 -> the page has been returned
+
+    POST
+    ----
+    Registers a user.
+
+    Raises:
+        IntegrityError -> there is already a user with the chosen username or e-mail address
+    
+    Returns:
+        409 -> the exception above has been raised
+        302 -> the registration was succesful and the user is redirected to its homepage
+    '''
     form = UserForm()
     status = 200
 
@@ -80,16 +112,20 @@ def signup():
 @users.route('/users/<user_id>/follow', methods=['DELETE', 'POST'])
 @login_required
 def follow(user_id):
-    """
-    POST requests add the user with primary key `user_id` to the list of
-    user followed by the currenly logged user. If it is already in the list
-    returns successfully without updating the database.
-    DELETE requests remove the user from the list and if it is not in the list
-    returns successfully without updating the database.
-    User must be logged to access this endpoint.
+    '''
+    Adds (POST)/Removes (DELETE) the user with id <user_id> to/from the list of user 
+    followed by the currently logged user. 
+
+    If it is already in the list returns successfully without updating the database, and
+    the same happens for the removal.
+
     All responses are in JSON format and are meant to be invokated within the
     the frontend (eg. AJAX or fetch), not by url access.
-    """
+
+    Returns:
+        400 -> the user tried to follow himself/herself
+        200 -> follow/unfollow registered successfully
+    '''
 
     followee = User.query.get(user_id)
     if followee is None:
@@ -123,5 +159,11 @@ def get_followed_dict(user_id):
 @users.route('/followed', methods=['GET'])
 @login_required
 def get_followed():
+    '''
+    Gets the list of the current user's followers.
+
+    Returns:
+        200 -> the list has been returned correctly
+    '''
     template_dict = get_followed_dict(current_user.id)
     return render_template('followed.html', **template_dict)
