@@ -1,6 +1,5 @@
 from flask import Blueprint, abort
 from flask import jsonify, redirect, render_template, request
-from flask import current_app as app
 
 from flask_login import current_user, login_required, login_user
 
@@ -16,33 +15,77 @@ users = Blueprint('users', __name__)
 @users.route('/users')
 @login_required
 def users_():
-    res = db.session.query(User.username, Story.text, func.max(Story.date)) \
-            .outerjoin(Story).group_by(User.id).all()
-    return render_template('users.html', result=res)
+    '''
+    Provides the list of all the users with their last story (if any).
+
+    Returns:
+        200 -> read above
+    '''
+    return render_template('users.html', result=_get_users())
 
 
-@users.route('/user/<username>')
+def _get_users(withid=False):
+    last_story = db.session.query(Story.author_id, Story.text, func.max(Story.date).label('date')) \
+        .group_by(Story.author_id).having(Story.is_draft == False).having(Story.deleted == False) \
+        .subquery()
+
+    res = db.session.query(User.username, last_story.c.text, last_story.c.date, User.id,) \
+            .outerjoin(last_story, User.id == last_story.c.author_id).order_by(User.id.asc()).all()
+
+    return res
+
+
+@users.route('/users/<user_id>')
 @login_required
-def get_user(username):
-    us = None
-    us = db.session.query(User).filter(User.username == username)
-    us = us.first()
-    if us is not None:
-        stories = db.session.query(Story).filter(Story.author_id == us.id).all()
+def get_user(user_id):
+    '''
+    Opens the wall of the user with id <user_id>.
 
-    else:   # User does not exist, failure with exit 404.
-        abort(404)
+    Returns:
+        200 -> the user's wall with the list of all his/her posted stories
+    '''
+    
+    if user_id == current_user.id:
+        return redirect('/')
 
-    if app.config['TESTING']:
-        return jsonify({'user': username,
-                        'stories': [s.toJSON() for s in stories]})
-    return render_template("get_user.html", user=username, stories=stories)
+    us = User.query.get(user_id)
+    if us is None:
+        abort(404, f'User {user_id} does not exist')
+
+    stories = Story.query.filter_by(author_id=us.id,
+                                    is_draft=False,
+                                    deleted=False)
+    stories = stories.order_by(Story.date.desc()).all()
+    return render_template('get_user.html', user=us.username, userid=us.id, stories=stories, users=_get_users())
 
 
 @users.route('/signup', methods=['GET', 'POST'])
 def signup():
+    '''
+    GET
+    ---
+    Opens the signup page.
+
+    Returns:
+        200 -> the page has been returned
+
+    POST
+    ----
+    Registers a user.
+
+    Raises:
+        IntegrityError -> there is already a user with the chosen username or e-mail address
+    
+    Returns:
+        409 -> the exception above has been raised
+        302 -> the registration was succesful and the user is redirected to its homepage
+    '''
     form = UserForm()
     status = 200
+
+    if current_user.is_authenticated:
+        return redirect('/')
+
     if form.validate_on_submit():
         new_user = User()
         form.populate_obj(new_user)
@@ -69,16 +112,20 @@ def signup():
 @users.route('/users/<user_id>/follow', methods=['DELETE', 'POST'])
 @login_required
 def follow(user_id):
-    """
-    POST requests add the user with primary key `user_id` to the list of
-    user followed by the currenly logged user. If it is already in the list
-    returns successfully without updating the database.
-    DELETE requests remove the user from the list and if it is not in the list
-    returns successfully without updating the database.
-    User must be logged to access this endpoint.
+    '''
+    Adds (POST)/Removes (DELETE) the user with id <user_id> to/from the list of user 
+    followed by the currently logged user. 
+
+    If it is already in the list returns successfully without updating the database, and
+    the same happens for the removal.
+
     All responses are in JSON format and are meant to be invokated within the
     the frontend (eg. AJAX or fetch), not by url access.
-    """
+
+    Returns:
+        400 -> the user tried to follow himself/herself
+        200 -> follow/unfollow registered successfully
+    '''
 
     followee = User.query.get(user_id)
     if followee is None:
@@ -101,12 +148,10 @@ def follow(user_id):
             pass
         return jsonify(message='User unfollowed')
 
-    abort(405)
 
-
-def _get_followed_dict(user_id):
+def get_followed_dict(user_id):
     me = User.query.get(user_id)
-    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id}
+    users = [{'firstname': x.firstname, 'lastname': x.lastname, 'id': x.id, 'username': x.username}
              for x in me.follows]
     return {'users': users}
 
@@ -114,5 +159,29 @@ def _get_followed_dict(user_id):
 @users.route('/followed', methods=['GET'])
 @login_required
 def get_followed():
-    template_dict = _get_followed_dict(current_user.id)
+    '''
+    Gets the list of the current user's followers.
+
+    Returns:
+        200 -> the list has been returned correctly
+    '''
+    template_dict = get_followed_dict(current_user.id)
     return render_template('followed.html', **template_dict)
+
+
+@users.route('/bot/register', methods=['POST'])
+def register():
+    username = request.form.get('username')
+    chat_id = request.form.get('chat_id')
+
+    if username is not None and chat_id is not None:
+        user = User.query.filter_by(username=username).one_or_none()
+
+        if user is not None:
+            user.telegram_chat_id = chat_id
+            db.session.commit()
+            return '', 200
+
+        abort(404)
+
+    abort(400)

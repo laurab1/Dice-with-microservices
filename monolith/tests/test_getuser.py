@@ -1,28 +1,40 @@
-from monolith.database import User, Story
+from monolith.database import Story
 
-def test_getuser(client, database):
-    reply = client.post('/login', data={'usrn_eml': 'Admin',
-                                        'password': 'admin'})
+
+def test_getuser(client, auth, database, templates):
+    reply = auth.login()
     assert reply.status_code == 302
 
-    reply = client.get('/user/test1')
-    assert reply.get_json()['user'] == 'test1'
-    assert reply.get_json()['stories'] == []
+    reply = client.get('/users/2')
+    assert reply.status_code == 200
+
+    user = templates[-1]['user']
+    stories = templates[-1]['stories']
+    assert user == 'test1'
+    assert stories == []
 
     example = Story()
     example.text = 'First story of test1 user :)'
     example.author_id = 2
+    example.is_draft = False
+    example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
     database.session.commit()
-    
-    reply = client.get('/user/test1')
-    assert reply.get_json()['user'] == 'test1'
-    assert reply.get_json()['stories'] == [example.toJSON()]
 
-def test_getuser_fail(client, database):
-    reply = client.post('/login', data={'usrn_eml': 'Admin',
-                                        'password': 'admin'})
+    reply = client.get('/users/2')
+    assert reply.status_code == 200
+
+    user = templates[-1]['user']
+    stories = templates[-1]['stories']
+    assert user == 'test1'
+    assert len(stories) == 1
+    assert stories[0].id == example.id
+
+
+def test_getuser_fail(client, auth, database):
+    reply = auth.login()
     assert reply.status_code == 302
 
-    reply = client.get('/user/utenteNonEsistente')
+    reply = client.get('/users/utenteNonEsistente')
     assert reply.status_code == 404

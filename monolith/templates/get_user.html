@@ -1,19 +1,141 @@
-{% extends "bootstrap/base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+<html>
 
-{% block title %}
-{{user}}'s wall
-{% endblock %}
+<head>
+    {% include 'html_components/bootstrap.html' %}
+    <link href="/static/css/story.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/css/sidebar.css" rel="stylesheet">
+    <title>{{ user }}'s wall</title>
+</head>
+<body>
 
-{% block content %}
-{{super()}}
-<div>
-    <ul>
-        {% for s in stories: %}
-        <li>
-        {{s.text}} -- Likes:{{s.likes}}
-        </li>
-        {% endfor %}
-    </ul>
+<!--Navigation bar-->
+{% include 'html_components/nav.html' %}
+
+<!--end of Navigation bar-->
+<div class="container-fluid">
+    <div class="d-flex" id="wrapper">
+
+        <!-- Sidebar -->
+        <div class="bg-white border-right" id="sidebar-wrapper" id="sidebar-wrapper">
+            <i class="fas fa-angle-left fa-2x togglebutton" id="menu-toggle"></i>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <br>
+
+            <h4>Users</h4>
+
+            <div class="list-group list-group-flush">
+                {% for usr in users %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center"
+                         id="user_{{ usr.id }}">
+                        <a class="text-dark btn" disabled="true"
+                           href="/users/{{ usr.id }}">{{ usr.username }}</a>
+                        {% if usr[1]: %}
+                        <button type="button" class="badge badge-dark badge-pill btn" data-toggle="modal"
+                                data-target="#user_{{ usr.id }}_last_story">
+                            Last Story
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- user last story -->
+                    {% if usr[1]: %}
+
+                        <div class="modal fade" id="user_{{ usr.id }}_last_story" tabindex="-1" role="dialog"
+                             aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLongTitle">Last story from {{ usr.username }}</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {{ usr[1] }} <br> <br>
+                                        Published: <i>{{ usr[2].day }}/{{usr[2].month }}/{{usr[2].year }}</i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+
+                {% endfor %}
+            </div>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <h5>{{ message }}</h5>
+        <div class="jumbotron bg-white" id="page-content-wrapper">
+
+            <h5>{{ user }}'s Wall</h5>
+            <hr class="style1">
+
+            {% if userid != current_user.id %}
+                <a href="#" class="btn btn-secondary"
+                   onclick="follow({{ userid }})">Follow author</a>
+                <br><br>
+            {% endif %}
+
+
+            <ul class="list-group">
+                <div class="row">
+                    {% for story in stories: %}
+                        <div class="col-md-12">
+                            {% include 'html_components/story_template.html' %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+            </ul>
+
+        </div>
+    </div>
 </div>
-{% endblock %}
+
+<script>
+    function follow(user_id) {
+        fetch('/users/' + user_id + '/follow', {method: 'POST'})
+            .then(function (response) {
+                if (response.ok) {
+                    alert('Now following user ' + user_id)
+                    location.reload();
+                } else {
+                    console.log('Invalid follow request to user: ' + user_id)
+                }
+            });
+    }
+
+    function deleteStory(story_id) {
+        fetch('/stories/' + story_id, {method: 'DELETE'})
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message)
+                window.location.replace('/stories');
+            });
+    }
+</script>
+<script>
+    $("#menu-toggle").click(function (e) {
+        e.preventDefault();
+        $("#wrapper").toggleClass("toggled");
+        if (!$("#wrapper").hasClass("toggled")) {
+            $("#menu-toggle").addClass("toggled");
+            $("#menu-toggle").addClass("fa-angle-left");
+            $("#menu-toggle").removeClass("fa-angle-right");
+        } else {
+            $("#menu-toggle").removeClass("toggled");
+            $("#menu-toggle").removeClass("fa-angle-left");
+            $("#menu-toggle").addClass("fa-angle-right");
+        }
+
+    });
+
+</script>
+
+</body>
+</html>

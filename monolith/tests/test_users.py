@@ -1,4 +1,4 @@
-from monolith.database import Story
+from monolith.database import Story, User
 
 
 def test_getusers(client, database, auth, templates):
@@ -16,6 +16,9 @@ def test_getusers(client, database, auth, templates):
     example = Story()
     example.text = 'First story of admin user :)'
     example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
     database.session.commit()
 
@@ -26,6 +29,8 @@ def test_getusers(client, database, auth, templates):
                      ('test1', None),
                      ('test2', None),
                      ('test3', None)]
+
+    client.get('/logout')
 
     client.post('/signup', data={'email': 'prova@prova.com',
                                  'username': 'prova',
@@ -42,6 +47,9 @@ def test_getusers(client, database, auth, templates):
     example = Story()
     example.text = 'First story of prova user :)'
     example.author_id = 5
+    example.is_draft = False
+    example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
     database.session.commit()
 
@@ -57,6 +65,9 @@ def test_getusers(client, database, auth, templates):
     example = Story()
     example.text = 'Second story of admin user :)'
     example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
     database.session.add(example)
     database.session.commit()
 
@@ -68,3 +79,19 @@ def test_getusers(client, database, auth, templates):
                      ('test2', None),
                      ('test3', None),
                      ('prova', 'First story of prova user :)')]
+
+
+def test_telegram_register(app, client, database):
+    reply = client.post('/bot/register',
+                        data={'username': 'Admin', 'chat_id': 42})
+    assert reply.status_code == 200
+    assert database.session.query(User).get(1).telegram_chat_id == 42
+
+    reply = client.post('/bot/register',
+                        data={'username': 'test', 'chat_id': 42})
+    assert reply.status_code == 404
+
+    reply = client.post('/bot/register', data={'username': 'test'})
+    assert reply.status_code == 400
+    reply = client.post('/bot/register', data={'chat_id': 42})
+    assert reply.status_code == 400

@@ -98,8 +98,14 @@ def test_followed_get(client, database, auth, templates):
     assert templates
     users = templates[-1]['users']
     assert len(users) == 2
-    user1 = {'firstname': 'Admin', 'lastname': 'Admin', 'id': 1}
-    user3 = {'firstname': 'First2', 'lastname': 'Last2', 'id': 3}
+    user1 = {'firstname': 'Admin',
+             'lastname': 'Admin',
+             'id': 1,
+             'username': 'Admin'}
+    user3 = {'firstname': 'First2',
+             'lastname': 'Last2',
+             'id': 3,
+             'username': 'test2'}
     assert users[0] == user1
     assert users[1] == user3
 

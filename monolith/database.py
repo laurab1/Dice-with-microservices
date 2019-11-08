@@ -8,11 +8,16 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
+DATABASE_NAME = 'sqlite:///storytellers.db'
+
 db = SQLAlchemy()
 
 
-"""Followers table, provides the many-to-many relationship between followers
-and followee. Primary key is composed by both the foreign keys."""
+'''
+Models the "following" relationship as a many-to-many relationship from
+and to the Users table. 
+Primary key is composed by both the foreign keys.
+'''
 followers = db.Table(
     'followers',
     db.Column('follower_id', db.Integer, db.ForeignKey('user.id'),
@@ -23,6 +28,9 @@ followers = db.Table(
 
 
 class User(db.Model):
+    '''
+    Models the user of the application.
+    '''
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.Unicode(128), unique=True, nullable=False)
@@ -31,6 +39,7 @@ class User(db.Model):
     lastname = db.Column(db.Unicode(128))
     password = db.Column(db.Unicode(128))
     dateofbirth = db.Column(db.DateTime)
+    telegram_chat_id = db.Column(db.Integer)
     is_active = db.Column(db.Boolean, default=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_anonymous = False
@@ -66,21 +75,32 @@ class User(db.Model):
 
 
 class Story(db.Model):
+    '''
+    Models a story of the game.
+    '''
     __tablename__ = 'story'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    text = db.Column(db.Text(1000))  # around 200 (English) words
-    date = db.Column(db.DateTime)
-    is_draft = db.Column(db.Boolean, nullable=False, default=True)
 
-    # will store the number of likes, periodically updated in background
+    # Text of the story, around 200 (English) words.
+    text = db.Column(db.Text(1000))
+    date = db.Column(db.DateTime)
+
+    # The number of [dis]likes, periodically updated in background by celery.
     likes = db.Column(db.Integer)
-    # will store the number of dislikes
     dislikes = db.Column(db.Integer)
 
-    _dice_set = db.Column(db.Text(100))
+    # Name of the dice set used to write the story.
+    theme = db.Column(db.Text(64))
 
+    # Hybrid property which allows to rebuild the faces of the rolled dice
+    # for this story as a JSON object.
+    _dice_set = db.Column(db.Text(100), nullable=False)
+
+    # Flags which determine whether the story is deleted or is a draft.
     deleted = db.Column(db.Boolean, default=False)
-    # define foreign key
+    is_draft = db.Column(db.Boolean, nullable=False, default=True)
+
+    # Foreign key for the user who wrote it
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', foreign_keys='Story.author_id')
 
@@ -96,19 +116,11 @@ class Story(db.Model):
     def dice_set(self, dice_set):
         self._dice_set = json.dumps(dice_set)
 
-    def toJSON(self):
-        """
-        Makes the class JSON serializable
-        """
-        return json.dumps({'id': self.id,
-                           'text': self.text,
-                           'date': str(self.date),
-                           'likes': self.likes,
-                           'dislikes': self.dislikes,
-                           'author_id': self.author_id})
-
 
 class Reaction(db.Model):
+    '''
+    Models the "reaction" relationship from a user to a story.
+    '''
     __tablename__ = 'reaction'
     reactor_id = db.Column(db.Integer, db.ForeignKey('user.id'),
                            primary_key=True)
@@ -120,5 +132,5 @@ class Reaction(db.Model):
 
     reaction_val = db.Column(db.Integer)
 
-    # True iff it has been counted in Story.likes
+    # True iff it has been counted in Story.likes.
     marked = db.Column(db.Boolean, default=False)

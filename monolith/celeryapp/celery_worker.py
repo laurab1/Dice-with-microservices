@@ -1,4 +1,6 @@
-"""Entry point for celery workers."""
+'''
+Entry point for celery workers.
+'''
 
 from monolith.app import celeryapp, create_app
 

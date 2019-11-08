@@ -1,0 +1,33 @@
+<li class="mycard text-light draft ">
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 center-block text-center">
+
+
+                <p>
+
+                <h5 class="story-text">
+                    <span class="badge badge-warning badge-pill">Draft</span> <b>{{ story.text }}</b>
+                </h5>
+                <span style="margin-right: 1rem;">Published: <i>{{ story.date.day }}/{{ story.date.month }}/{{ story.date.year }}</i></span>
+
+                </p >
+
+                <i class="fas fa-thumbs-up"></i> <span
+                    class="badge badge-seconary badge-pill"> {{ story.likes }} </span> <i
+                    class="fas fa-thumbs-down"></i> <span
+                    class="badge badge-seconary badge-pill"> {{ story.dislikes }}</span>
+
+                {% if story.author.id == current_user.id %}
+                    <a class="btn btn-danger" onclick="deleteStory({{ story.id }})">Delete</a>
+                    <a class="btn btn-warning" href="/stories/{{ story.id }}/edit">Edit</a>
+                {% endif %}
+
+
+            </div>
+
+        </div>
+
+    </div>
+</li><br>
