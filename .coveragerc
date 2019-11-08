@@ -2,3 +2,4 @@
 omit =
     */tests/conftest.py
     */celeryapp/celery_worker.py
+    *tests*
