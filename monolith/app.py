@@ -8,11 +8,11 @@ from flask_bootstrap import Bootstrap
 
 from monolith import celeryapp
 from monolith.auth import login_manager
-from monolith.database import User, db, DATABASE_NAME
-from monolith.utility.telebot import token, on_start, on_login
+from monolith.database import DATABASE_NAME, User, db
+from monolith.utility.telebot import on_login, on_start, token
 
-from telegram.ext import Updater, InlineQueryHandler, CommandHandler, MessageHandler, Filters
-import telegram
+from telegram.ext import CommandHandler, Updater
+
 
 def create_app(test=False, database=DATABASE_NAME,
                login_disabled=False):
@@ -64,11 +64,12 @@ def create_app(test=False, database=DATABASE_NAME,
     db.create_all(app=app)
 
     # initialize Telegram
-    updater = Updater(token, use_context = True)
+    updater = Updater(token, use_context=True)
     dp = updater.dispatcher
 
-    # Add functions to the dispatcher. 
-    # When a function such as start is launched on telegram it will run the corresponding function
+    # Add functions to the dispatcher.
+    # When a function such as start is launched on telegram it will run the
+    # corresponding function
     dp.add_handler(CommandHandler('start', on_start))
     dp.add_handler(CommandHandler('login', on_login))
     updater.start_polling()
@@ -101,7 +102,7 @@ def create_app(test=False, database=DATABASE_NAME,
             example.set_password('admin')
             db.session.add(example)
             db.session.commit()
-   
+
     return app
 
 

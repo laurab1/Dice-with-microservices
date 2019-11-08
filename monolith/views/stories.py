@@ -272,8 +272,10 @@ def _story_edit(storyid):
             try:
                 _check_story(story.dice_set, story.text)
                 db.session.commit()
+                print('PRE SEND')
                 # Send telegram message
                 send_telegram_message(story, current_user.id)
+                print('POST SEND')
                 return redirect(url_for('stories._get_story', storyid=storyid))
             except NotValidStoryError:
                 db.session.rollback()
