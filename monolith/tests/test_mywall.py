@@ -1,5 +1,4 @@
-# tests myWall functionality
-from monolith.database import Story
+from monolith.database import Story, User
 
 
 def test_check_mywall(client, auth, database, templates):
@@ -14,7 +13,6 @@ def test_check_mywall(client, auth, database, templates):
     assert stories == []
 
     example = Story()
-    # gets story_id=1 as user_id or as the first?
     example.text = 'Trial story of example admin user :)'
     example.likes = 42
     example.dislikes = 0
@@ -30,7 +28,6 @@ def test_check_mywall(client, auth, database, templates):
     assert stories[0].id == example.id
 
     example2 = Story()
-    # gets story_id=1 as user_id or as the first?
     example2.text = 'New story of example admin user :)'
     example2.likes = 42
     example2.dislikes = 0
@@ -86,3 +83,136 @@ def test_statistics(client, auth, database, templates):
 
     # Active user, it has been published at least one story in the last 7 days
     assert stats['active']
+
+def test_getusers(client, database, auth, templates):
+    reply = auth.login('Admin', 'admin')
+    assert reply.status_code == 302
+
+    reply = client.get('/users')
+    template_capture = templates[-1]['result']
+    users = [(r[0], r[1]) for r in template_capture]
+    assert users == [('Admin', None),
+                     ('test1', None),
+                     ('test2', None),
+                     ('test3', None)]
+
+    example = Story()
+    example.text = 'First story of admin user :)'
+    example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
+    database.session.add(example)
+    database.session.commit()
+
+    reply = client.get('/users')
+    template_capture = templates[-1]['result']
+    users = [(r[0], r[1]) for r in template_capture]
+    assert users == [('Admin', 'First story of admin user :)'),
+                     ('test1', None),
+                     ('test2', None),
+                     ('test3', None)]
+
+    client.get('/logout')
+
+    client.post('/signup', data={'email': 'prova@prova.com',
+                                 'username': 'prova',
+                                 'password': 'prova123'})
+    reply = client.get('/users')
+    template_capture = templates[-1]['result']
+    users = [(r[0], r[1]) for r in template_capture]
+    assert users == [('Admin', 'First story of admin user :)'),
+                     ('test1', None),
+                     ('test2', None),
+                     ('test3', None),
+                     ('prova', None)]
+
+    example = Story()
+    example.text = 'First story of prova user :)'
+    example.author_id = 5
+    example.is_draft = False
+    example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
+    database.session.add(example)
+    database.session.commit()
+
+    reply = client.get('/users')
+    template_capture = templates[-1]['result']
+    users = [(r[0], r[1]) for r in template_capture]
+    assert users == [('Admin', 'First story of admin user :)'),
+                     ('test1', None),
+                     ('test2', None),
+                     ('test3', None),
+                     ('prova', 'First story of prova user :)')]
+
+    example = Story()
+    example.text = 'Second story of admin user :)'
+    example.author_id = 1
+    example.is_draft = False
+    example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
+    database.session.add(example)
+    database.session.commit()
+
+    reply = client.get('/users')
+    template_capture = templates[-1]['result']
+    users = [(r[0], r[1]) for r in template_capture]
+    assert users == [('Admin', 'Second story of admin user :)'),
+                     ('test1', None),
+                     ('test2', None),
+                     ('test3', None),
+                     ('prova', 'First story of prova user :)')]
+
+
+def test_telegram_register(app, client, database):
+    reply = client.post('/bot/register',
+                        data={'username': 'Admin', 'chat_id': 42})
+    assert reply.status_code == 200
+    assert database.session.query(User).get(1).telegram_chat_id == 42
+
+    reply = client.post('/bot/register',
+                        data={'username': 'test', 'chat_id': 42})
+    assert reply.status_code == 404
+
+    reply = client.post('/bot/register', data={'username': 'test'})
+    assert reply.status_code == 400
+    reply = client.post('/bot/register', data={'chat_id': 42})
+    assert reply.status_code == 400
+
+def test_getuser(client, auth, database, templates):
+    reply = auth.login()
+    assert reply.status_code == 302
+
+    reply = client.get('/users/2')
+    assert reply.status_code == 200
+
+    user = templates[-1]['user']
+    stories = templates[-1]['stories']
+    assert user == 'test1'
+    assert stories == []
+
+    example = Story()
+    example.text = 'First story of test1 user :)'
+    example.author_id = 2
+    example.is_draft = False
+    example.deleted = False
+    example.dice_set = ['a', 'b', 'c']
+    database.session.add(example)
+    database.session.commit()
+
+    reply = client.get('/users/2')
+    assert reply.status_code == 200
+
+    user = templates[-1]['user']
+    stories = templates[-1]['stories']
+    assert user == 'test1'
+    assert len(stories) == 1
+    assert stories[0].id == example.id
+
+
+def test_getuser_fail(client, auth, database):
+    reply = auth.login()
+    assert reply.status_code == 302
+
+    reply = client.get('/users/utenteNonEsistente')
+    assert reply.status_code == 404
